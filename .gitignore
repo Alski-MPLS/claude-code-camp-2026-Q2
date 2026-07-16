@@ -26,3 +26,10 @@ bower_components/
 jspm_packages/
 
 week0_explore/preview/data/world/
+
+# Graphify build outputs
+graphify-out/
+
+# Claude Code local user overrides
+.claude/settings.local.json
+.claude/CLAUDE.local.md
