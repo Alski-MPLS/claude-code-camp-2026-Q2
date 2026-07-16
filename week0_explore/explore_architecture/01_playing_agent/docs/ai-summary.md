@@ -1,5 +1,7 @@
 # AI Summary: Finding the Bakery
 
+When the agent ran into some difficulties, I asked claude specifically to summarize this. Here is what it came up with. (AI generated)
+
 ## Tools/Scripts Created
 
 - **`/tmp/mud_login.py` → `/tmp/mud_play.py`** — Python `socket`-based MUD client with a regex `read_until()` helper to wait for specific prompts instead of blind `sleep()` timing. This replaced initial `nc`/shell-script attempts and was what got a reliable login working.
