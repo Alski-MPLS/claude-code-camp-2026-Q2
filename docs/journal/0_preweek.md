@@ -14,10 +14,10 @@ Now that I've had a chance to review the preweek environment and have had a chan
 ## Technical Hyphothesis
 I think building this as a Skill, rather than just using reference files, will make the agent more reliable and cheaper to run. A Skill can front-load the right questions and enforce clear rules for reading and updating memory (player.md/world.md), which should cut down on dumb repeat mistakes and reduce how much re-exploring the agent has to do each time. It should also hold up better on weaker models, since the Skill narrows down what the agent needs to figure out on its own. If memory updates still fail, that likely points to unclear instructions on my part, not a flaw in the approach.
 
-## Technical Observations
-## 1. Agent file with reference files eg. AGENT.md, @~/docs/*.MD
+### Technical Observations
+#### 1. Agent file with reference files eg. AGENT.md, @~/docs/*.MD
 
-## Observations
+#### Observations
 
 - Starting claude in the explore_architecure and presenting what to accomplish was an easy start.
 - It did have issues with login as the character was at a state that was already played.
@@ -26,16 +26,16 @@ I think building this as a Skill, rather than just using reference files, will m
 - It was having a hard time with the Haiku model on high effort. 
 - It did not save the details in the player.md or world.md files. I had to remind it when I changed models
 - It started looking outside of the explore_architecture folder and found the /preview/data/world/wld file and was able to identify the bakery name, location and path.
-## Additional Observations with the Agent file
+#### Additional Observations with the Agent file
 - Token usage on both tests seems to be random. At times, it would use less if the task was completed fast. For larger tasks, it will probably use much more but it will be hard to estimate.
 - Any scripts created ad-hoc were saved in the /tmp folder instead of a structured location. 
 
 
 
 
-## 2. Agent Skills drvien by main agent eg. ~/.skills
+#### 2. Agent Skills drvien by main agent eg. ~/.skills
 
-## Observations
+#### Observations
 - When I ran the request in claude, it asked me a number of questions before starting. I picked the recommended answers to start and play.
     - It asked if this was to what should it do once connected. I said this will be used to play the game
     - It should use a persistent backgroup connection
@@ -49,7 +49,7 @@ I think building this as a Skill, rather than just using reference files, will m
 - I asked it to find where I can purchase a dagger and how much it costs using sonnet 5 and medium effort. It had an issue with how it transcribed the map and couldn't find it without hints.
 - I asked it to find the minitaur and defeat it by using subtasks. It created a plan, purchase a dagger, locate the minotaur, assess the minotaur, engage the minotar if assessment allows -- or flee, update the memory with final outcome. It found a warning that if you are not level 7, then not to attempt it. It asked me if it should grind away and gain levels. I stopped the skill at that point to save on tokens. 
 
-## Additional Observations with the Agent Skills
+#### Additional Observations with the Agent Skills
 - It created the tbamud-explorer skill which packages all domain knowledge into a single reusable unit. Better than the flat prose in the CLAUDE.MD file. The skill has it's own helper script, defines it's own trigger phases and scopes it's memory paths.
 - The skill creates is in a CLAUDE format (from what I understand) but it should work with some simple conversions.
 - I would guess that as the world grows and the skill finds new areas, it will have a hard time using an MD file. I know that it had an issue with reviewing the town and it had to be reminded of some basics with the map. Plus, as the file grows, what does that do to the context size. I asked claude to review how it modifies the MD files and it said it has to read the entire file and any changes will have to re-write the entire contents, even for 1 entry. This seems inefficient and would need to change as more areas are discovered.
@@ -70,15 +70,15 @@ I think building this as a Skill, rather than just using reference files, will m
     - Speedrunner -- come up with direct pathing to the goal.
 - Update the risk tolerance so it's not hardcoded -- flee below one-third HP. This should be associated to the persona.
 
-## Conclusions
-- The agent was easy to setup to setup and get up and running quickly but there were challenges with utilizing an existing character. It couldn't figure out what to do and tried to create a new character.
+#### Conclusions
+- The agent was easy to setup and get up and running quickly but there were challenges with utilizing an existing character. It couldn't figure out what to do and tried to create a new character.
 - The agent built ad-hoc scripts in a temporary folder.
 - The agent decided to pull in data outside of what it was supposed to stay within. 
 - The skill is strong for descrete/specific tasks that are simple and bounded. If nothing changes mid-session, this should be good "as-is"
 - Multi-session goals are limited and does not work with with the current skill.
 - Both approaches had issues with memory and sessions had to be stopped, hints had to be given or it got stuck and asked for help. 
 
-## Approach Comparison
+#### Approach Comparison
 
 | | Plain Agent | Skill |
 |---|---|---|
