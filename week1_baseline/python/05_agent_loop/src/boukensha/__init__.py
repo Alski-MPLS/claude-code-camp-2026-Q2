@@ -1,5 +1,7 @@
 """Boukensha agent loop."""
 
+from __future__ import annotations
+
 from . import backends, tasks
 from .agent import Agent
 from .client import Client
