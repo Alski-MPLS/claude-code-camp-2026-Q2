@@ -72,6 +72,7 @@ class Agent:
                 self._log_response(text=text, response=response)
                 if self._logger:
                     self._logger.turn_end(reason="completed", iterations=self._iteration)
+                self._context.add_message("assistant", text)
                 return text
 
     # ---------- private -----------------------------------------------------
@@ -111,11 +112,13 @@ class Agent:
             self._log_response(text=result, response=response)
             if self._logger:
                 self._logger.turn_end(reason=reason, iterations=self._iteration)
+            self._context.add_message("assistant", result)
             return result
         except ApiError:
             msg = self._fallback_message(reason)
             if self._logger:
                 self._logger.turn_end(reason=reason, iterations=self._iteration)
+            self._context.add_message("assistant", msg)
             return msg
 
     def _fallback_message(self, reason: str) -> str:

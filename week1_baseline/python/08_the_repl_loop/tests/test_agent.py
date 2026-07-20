@@ -283,9 +283,9 @@ def test_agent_calls_tool_then_ends():
 
     assert result == "All done"
     assert tool_called == ["hi"]
-    # assistant message stored before tool_result
+    # assistant message stored before tool_result, and final assistant reply after tool_result
     roles = [m.role for m in ctx.messages]
-    assert roles == ["user", "assistant", "tool_result"]
+    assert roles == ["user", "assistant", "tool_result", "assistant"]
 
 
 def test_agent_wraps_up_at_max_iterations():
@@ -528,3 +528,52 @@ def test_logger_limit_reached_event():
         phases = _read_phases(logger.path)
         assert "limit_reached" in phases
         assert "turn_end" in phases
+
+
+def test_agent_run_adds_assistant_reply_to_context():
+    """Final reply must be stored in context so subsequent REPL turns see it."""
+    responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done!"}]}]
+    agent, _, _ = _make_agent(responses)
+    agent.run()
+    last_msg = agent._context.messages[-1]
+    assert last_msg.role == "assistant"
+    assert last_msg.content == "Done!"
+
+
+def test_agent_wrap_up_adds_assistant_reply_to_context():
+    """Wrap-up reply must also be stored in context."""
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}],
+    }
+    wrap_up_response = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Wrapping up"}]}
+
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("noop", description="noop", parameters={}, block=lambda: "ok")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [tool_response, wrap_up_response]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+    ctx.add_message("user", "go")
+
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        max_iterations=1,
+    )
+    agent.run()
+    roles = [m.role for m in ctx.messages]
+    assert roles[-1] == "assistant"
+    assert ctx.messages[-1].content == "Wrapping up"
