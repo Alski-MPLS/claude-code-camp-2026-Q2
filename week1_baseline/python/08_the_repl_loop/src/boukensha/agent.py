@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import boukensha
+
 from .errors import ApiError
 
 if TYPE_CHECKING:
@@ -58,7 +60,8 @@ class Agent:
             if self._logger:
                 self._logger.iteration(n=self._iteration, max=self._max_iterations)
                 self._logger.prompt(messages=self._context.messages, tools=self._context.tools)
-            print(f"[iteration {self._iteration}/{self._max_iterations}]")
+            if not boukensha.is_quiet():
+                print(f"[iteration {self._iteration}/{self._max_iterations}]")
 
             response = self._client.call(**self._call_opts())
             if self._logger:
@@ -156,7 +159,8 @@ class Agent:
 
             if self._logger:
                 self._logger.tool_call(name=name, args=args)
-            print(f"  tool call -> {name}({args})")
+            if not boukensha.is_quiet():
+                print(f"  tool call -> {name}({args})")
             try:
                 result = self._registry.dispatch(name, args)
                 if self._logger:
@@ -165,7 +169,8 @@ class Agent:
                 result = f"ERROR: {type(e).__name__}: {e}"
                 if self._logger:
                     self._logger.tool_result(name=name, result=result, ok=False, error=str(e))
-            print(f"  tool result -> {str(result)[:61]}")
+            if not boukensha.is_quiet():
+                print(f"  tool result -> {str(result)[:61]}")
 
             self._context.add_message("tool_result", str(result), tool_use_id=use_id)
 

@@ -36,7 +36,10 @@ __all__ = [
     "UnsupportedModelError",
     "backends",
     "debug",
+    "disable_quiet",
     "enable_debug",
+    "enable_quiet",
+    "is_quiet",
     "run",
     "tasks",
 ]
@@ -53,6 +56,23 @@ def enable_debug() -> None:
 
 def debug() -> bool:
     return _debug
+
+
+_quiet: bool = False
+
+
+def enable_quiet() -> None:
+    global _quiet
+    _quiet = True
+
+
+def disable_quiet() -> None:
+    global _quiet
+    _quiet = False
+
+
+def is_quiet() -> bool:
+    return _quiet
 
 
 def run(
