@@ -1,10 +1,4 @@
-"""Boukensha-specific error classes.
-
-Ruby's ``UnknownToolError < StandardError`` and
-``UnsupportedModelError < StandardError`` both map to Python's ``Exception``
-— the base for ordinary application errors (not ``BaseException``, which is
-reserved for system-exiting conditions like ``SystemExit``/``KeyboardInterrupt``).
-"""
+"""Boukensha-specific error classes."""
 
 from __future__ import annotations
 
@@ -19,3 +13,7 @@ class UnsupportedModelError(Exception):
 
 class ApiError(Exception):
     """Raised when an HTTP request to the LLM API fails."""
+
+
+class LoopError(Exception):
+    """Raised when the agent loop exceeds its iteration ceiling."""

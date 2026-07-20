@@ -12,6 +12,8 @@ from typing import Any
 
 class Base:
     TASK_NAME: str | None = None
+    DEFAULT_MAX_ITERATIONS: int = 25
+    DEFAULT_MAX_OUTPUT_TOKENS: int = 1024
 
     @classmethod
     def task_name(cls) -> str:
@@ -69,7 +71,22 @@ class Base:
             default_prompts_dir=default_prompts_dir,
         )
 
+    @classmethod
+    def max_iterations(cls, settings: dict[str, Any]) -> int:
+        return cls._integer_setting(settings, "max_iterations", cls.DEFAULT_MAX_ITERATIONS)
+
+    @classmethod
+    def max_output_tokens(cls, settings: dict[str, Any]) -> int:
+        return cls._integer_setting(settings, "max_output_tokens", cls.DEFAULT_MAX_OUTPUT_TOKENS)
+
     # ---------- private -----------------------------------------------------
+
+    @classmethod
+    def _integer_setting(cls, settings: dict[str, Any], key: str, default: int) -> int:
+        value = settings.get(key)
+        if value is None:
+            return default
+        return int(value)
 
     @classmethod
     def _read_user_prompt(cls, prompt_name: str, user_prompts_dir: str | None = None) -> str | None:
