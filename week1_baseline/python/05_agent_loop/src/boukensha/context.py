@@ -8,6 +8,8 @@ the precedent set by ``Config``.
 
 from __future__ import annotations
 
+from typing import Any
+
 from .message import Message
 from .tasks.base import Base
 from .tool import Tool
@@ -23,7 +25,7 @@ class Context:
     def register_tool(self, tool: Tool) -> None:
         self.tools[tool.name] = tool
 
-    def add_message(self, role: str, content: str, tool_use_id: str | None = None) -> None:
+    def add_message(self, role: str, content: Any, tool_use_id: str | None = None) -> None:
         self.messages.append(Message(role, content, tool_use_id))
 
     @property

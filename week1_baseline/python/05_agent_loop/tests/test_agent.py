@@ -319,3 +319,29 @@ def test_agent_exports_from_top_level():
     import boukensha
     assert hasattr(boukensha, "Agent")
     assert hasattr(boukensha, "LoopError")
+
+
+# --- OllamaCloud parse_response ---
+
+def test_ollama_cloud_parse_response_end_turn():
+    backend = OllamaCloud(api_key="test_key", model="gemma4:31b-cloud")
+    raw = {"message": {"role": "assistant", "content": "Hello", "tool_calls": []}}
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "end_turn"
+    assert result["content"] == [{"type": "text", "text": "Hello"}]
+
+
+def test_ollama_cloud_parse_response_tool_use():
+    backend = OllamaCloud(api_key="test_key", model="gemma4:31b-cloud")
+    raw = {
+        "message": {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": "read_file", "arguments": {"path": "f.txt"}}}]
+        }
+    }
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "tool_use"
+    assert result["content"][0]["type"] == "tool_use"
+    assert result["content"][0]["id"] == "read_file"
+    assert result["content"][0]["input"] == {"path": "f.txt"}
