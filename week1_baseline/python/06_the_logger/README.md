@@ -1,56 +1,37 @@
-# Python 05 Agent Loop
+# Step 6: The Logger
 
-Python port of `ruby/05_agent_loop`. Adds `Agent` — drives the tool-call loop until the model signals `end_turn` or the iteration ceiling is reached.
+Python port of `ruby/06_the_logger`. Adds `Logger` — captures events throughout the agent loop and writes a structured JSONL session log.
 
 ## New Files
 
 | File | Description |
 |---|---|
-| `src/boukensha/agent.py` | `Agent` — the loop, tool dispatch, and wind-down logic |
+| `src/boukensha/logger.py` | `Logger` — session logging with JSONL output and execution metadata |
 
 ## Updated Files
 
 | File | Change |
 |---|---|
-| `src/boukensha/errors.py` | Added `LoopError` for runaway agents |
-| `src/boukensha/client.py` | `call()` now accepts a `tools` kwarg (empty list disables tools for wind-down) |
-| `src/boukensha/prompt_builder.py` | Added `parse_response()`; `to_api_payload()` accepts `tools` kwarg |
-| `src/boukensha/tasks/base.py` | Added `max_iterations()` and `max_output_tokens()` classmethods |
-| `src/boukensha/message.py` | `content` widened to `Any` (stores normalised content blocks for assistant turns) |
-| `src/boukensha/backends/*.py` | Every backend gains `parse_response()`; OpenAI/Gemini/Ollama/OllamaCloud add inverse helpers |
+| `src/boukensha/__init__.py` | Added `Logger` export |
+| `src/boukensha/agent.py` | Added `logger` kwarg; calls `logger.session_start()`, `logger.iteration()`, `logger.prompt()`, `logger.tool_call()`, `logger.tool_result()`, `logger.response()`, `logger.limit_reached()`, `logger.turn_end()` |
+| `src/boukensha/backends/*.py` | All backends gain execution metadata: provider, model, tokens, cost_usd |
 
-## How It Works
-
-    send messages to API
-            |
-    stop_reason == "tool_use"?
-        yes -> extract tool calls
-            -> store assistant message (must precede tool_result)
-            -> dispatch each tool via Registry
-            -> inject results as tool_result messages
-            -> go back to top
-        no  -> return final text response
-
-## Normalised Response Shape
-
-Every backend's `parse_response` converts its provider-specific wire format into:
-
-    {
-        "stop_reason": "tool_use" | "end_turn",
-        "content": [
-            {"type": "text", "text": "..."},
-            {"type": "tool_use", "id": "...", "name": "...", "input": {...}},
-        ]
-    }
-
-`Agent` never inspects a raw provider response.
-
-## `Agent` API
+## Logger API
 
 | Method | Description |
 |---|---|
-| `Agent(context, registry, builder, client, task_settings=None, max_iterations=None, max_output_tokens=None)` | Construct the agent |
-| `agent.run()` | Run the loop; returns the final text string |
+| `Logger(dir=None, log=None, session_id=None, snapshot=None)` | Construct the logger; default dir is `.boukensha/sessions`, session_id auto-generated as `YYYYMMDDTHHMMSSZ-<hex>` |
+| `logger.path` | Read-only property: full path to the session log file (e.g., `.boukensha/sessions/20260720T121530Z-abc123.jsonl`) |
+| `logger.session_id` | Read-only property: session identifier |
+| `logger.session_start(task, backend, timestamp)` | Called when Agent starts; writes `session_start` event with snapshot and metadata |
+| `logger.iteration(number, timestamp)` | Called at the start of each iteration |
+| `logger.prompt(text, timestamp)` | Called after prompt is sent |
+| `logger.tool_call(name, input, id, timestamp)` | Called when a tool is invoked |
+| `logger.tool_result(name, result, ok, error, timestamp)` | Called with the tool result |
+| `logger.response(text, usage, stop_reason, task, backend, timestamp)` | Called when the model responds |
+| `logger.limit_reached(reason, timestamp)` | Called when iteration or token limit is reached |
+| `logger.turn_end(timestamp)` | Called at the end of the agent loop |
+| `logger.close()` | Closes the session log file |
 
 ## Task Configuration (~/.boukensha/settings.yaml)
 
@@ -63,14 +44,14 @@ Every backend's `parse_response` converts its provider-specific wire format into
 
 ## Run Example
 
-    cd week1_baseline/python/05_agent_loop
+    cd week1_baseline/python/06_the_logger
     uv pip install -e .
     python examples/example.py
 
-Requires `ANTHROPIC_API_KEY` (or whichever provider is configured).
+Requires `ANTHROPIC_API_KEY` (or whichever provider is configured). Writes a structured JSONL session log to `.boukensha/sessions/<session-id>.jsonl`.
 
 ## Run Tests
 
-    cd week1_baseline/python/05_agent_loop
+    cd week1_baseline/python/06_the_logger
     uv pip install pytest
     python -m pytest tests/ -v

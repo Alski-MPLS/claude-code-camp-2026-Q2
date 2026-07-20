@@ -6,7 +6,7 @@ os.environ.setdefault(
     str((Path(__file__).parent.parent.parent.parent.parent / ".boukensha").resolve()),
 )
 
-from boukensha import Agent, Client, Config, Context, PromptBuilder, Registry
+from boukensha import Agent, Client, Config, Context, Logger, PromptBuilder, Registry
 from boukensha.backends import Anthropic, Gemini, Ollama, OllamaCloud, OpenAI
 from boukensha.tasks import Player
 
@@ -41,11 +41,15 @@ else:
 
 builder = PromptBuilder(ctx, backend)
 client = Client(builder)
+# Writes structured JSONL events to .boukensha/sessions/<session-id>.jsonl.
+# Call boukensha.enable_debug() before this line to include raw API responses.
+logger = Logger()
 agent = Agent(
     context=ctx,
     registry=registry,
     builder=builder,
     client=client,
+    logger=logger,
     task_settings=player_settings,
 )
 
@@ -67,17 +71,22 @@ registry.tool(
 
 ctx.add_message("user", "Read the README.md file and summarise what this MUD player assistant framework can do.")
 
-print("=== BOUKENSHA Step 5: Agent Loop ===")
+print("=== BOUKENSHA Step 6: The Logger ===")
 print()
 print(f"Config: {config}")
 print(f"Provider: {provider}")
 print(f"Model: {model}")
 print(f"Max iterations: {Player.max_iterations(player_settings)}")
 print(f"Max output tokens: {Player.max_output_tokens(player_settings)}")
+print(f"Session log: {logger.path}")
 print()
 
 result = agent.run()
 
+logger.close()
+
 print()
 print("=== FINAL RESPONSE ===")
 print(result)
+print()
+print(f"Session log written to: {logger.path}")
