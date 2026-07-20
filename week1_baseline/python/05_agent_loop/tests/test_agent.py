@@ -38,7 +38,6 @@ def test_message_content_accepts_list():
 
 
 import json
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 from boukensha.client import Client
