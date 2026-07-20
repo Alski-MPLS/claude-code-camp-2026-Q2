@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import boukensha
 from .agent import Agent
-from .errors import ApiError, LoopError
+from .errors import ApiError
 
 if TYPE_CHECKING:
     from .context import Context
@@ -66,7 +66,11 @@ class Repl:
     def start(self) -> None:
         print(self._banner())
 
-        for line in sys.stdin:
+        while True:
+            print(PROMPT, end="", flush=True)
+            line = sys.stdin.readline()
+            if not line:
+                break
             text = line.rstrip("\n").strip()
             if not text:
                 continue
@@ -134,7 +138,5 @@ class Repl:
             result = agent.run()
             print()
             print(result)
-        except LoopError as e:
-            print(f"\n[error] {e}")
         except ApiError as e:
             print(f"\n[error] API call failed: {e}")
