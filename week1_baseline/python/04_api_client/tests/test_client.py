@@ -99,3 +99,11 @@ def test_client_raises_after_max_retries():
                 assert False, "Expected ApiError"
             except ApiError as e:
                 assert "3" in str(e)
+
+
+def test_top_level_exports():
+    import boukensha
+    assert hasattr(boukensha, "Client")
+    assert hasattr(boukensha, "ApiError")
+    assert hasattr(boukensha, "Config")
+    assert hasattr(boukensha, "PromptBuilder")
