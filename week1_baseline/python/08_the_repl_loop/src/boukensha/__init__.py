@@ -192,6 +192,8 @@ def run(
         logger.close()
 
 
+# Each step is a self-contained snapshot — the boilerplate below intentionally
+# mirrors run() rather than sharing a helper so step 08 can be read on its own.
 def repl(
     *,
     system: str | None = None,
