@@ -78,10 +78,15 @@ python/01_struct_skeleton/
 ## Config directory resolution
 
 Same as `00_config` — `Config()` looks for `.boukensha/` via `BOUKENSHA_DIR`,
-falling back to `~/.boukensha`. This step ships no `prompts/` directory, so
-`system_prompt` resolves only against a user override
-(`.boukensha/prompts/player/system.md`); with no override present it returns
-`None`.
+falling back to `~/.boukensha`. This step ships no `prompts/` directory.
+
+## System prompt resolution
+
+Per task, `system_prompt` is resolved in this order:
+
+1. **`.boukensha/prompts/<task>/system.md`** — used when the task's
+   `prompt_override.system` is `true` and the file exists.
+2. **Default** — since this step passes no `default_prompts_dir`, returns `None`.
 
 ## Run example
 
