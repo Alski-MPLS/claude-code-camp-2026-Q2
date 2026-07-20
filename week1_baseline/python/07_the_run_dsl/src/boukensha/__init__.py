@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Any
 
 from . import backends, tasks
@@ -64,7 +65,7 @@ def run(
     ollama_host: str = "http://localhost:11434",
     log: str | None = None,
     max_output_tokens: int | None = None,
-    tool_registrar: Any = None,
+    tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> str:
     """Wire together every primitive and run the agent loop.
 

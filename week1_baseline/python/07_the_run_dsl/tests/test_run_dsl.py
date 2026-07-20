@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 from boukensha.run_dsl import RunDSL
 from boukensha.context import Context
 from boukensha.registry import Registry
@@ -56,7 +54,7 @@ def test_run_returns_text(monkeypatch):
 
     # Provide a minimal .boukensha config so Config() doesn't fail
     with tempfile.TemporaryDirectory() as tmp:
-        os.environ["BOUKENSHA_DIR"] = tmp
+        monkeypatch.setenv("BOUKENSHA_DIR", tmp)
 
         # Write a minimal settings.yaml
         import yaml
@@ -78,7 +76,7 @@ def test_run_returns_text(monkeypatch):
         fake_agent = MagicMock()
         fake_agent.run.return_value = "mocked result"
 
-        with patch("boukensha.Agent", return_value=fake_agent) as MockAgent:
+        with patch("boukensha.Agent", return_value=fake_agent):
             result = boukensha.run(
                 task="What is 2+2?",
                 log=f"{tmp}/test-session.jsonl",
