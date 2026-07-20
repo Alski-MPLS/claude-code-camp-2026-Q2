@@ -47,19 +47,12 @@ class Gemini(Base):
         result: list[dict[str, Any]] = []
         for msg in messages:
             if msg.role == "assistant":
-                result.append({"role": "model", "parts": [{"text": msg.content}]})
+                result.append({"role": "model", "parts": self._assistant_parts(msg.content)})
             elif msg.role == "tool_result":
                 result.append(
                     {
                         "role": "user",
-                        "parts": [
-                            {
-                                "functionResponse": {
-                                    "name": msg.tool_use_id,
-                                    "response": {"content": msg.content},
-                                }
-                            }
-                        ],
+                        "parts": [{"functionResponse": {"name": msg.tool_use_id, "response": {"content": msg.content}}}],
                     }
                 )
             else:
@@ -87,13 +80,36 @@ class Gemini(Base):
             }
         ]
 
-    def to_payload(self, context: Any, *, max_output_tokens: int = 1024) -> dict[str, Any]:
+    def to_payload(self, context: Any, *, max_output_tokens: int = 1024, tools: list | None = None) -> dict[str, Any]:
         return {
             "systemInstruction": {"parts": [{"text": context.system}]},
             "contents": self.to_messages(context.messages),
-            "tools": self.to_tools(context.tools),
+            "tools": tools if tools is not None else self.to_tools(context.tools),
             "generationConfig": {"maxOutputTokens": max_output_tokens},
         }
+
+    def parse_response(self, response: dict[str, Any]) -> dict[str, Any]:
+        parts = ((response.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
+        content: list[dict[str, Any]] = []
+        tool_used = False
+        for part in parts:
+            if "functionCall" in part:
+                fc = part["functionCall"]
+                content.append({"type": "tool_use", "id": fc["name"], "name": fc["name"], "input": fc.get("args") or {}})
+                tool_used = True
+            elif "text" in part:
+                content.append({"type": "text", "text": part["text"]})
+        return {"stop_reason": "tool_use" if tool_used else "end_turn", "content": content}
+
+    def _assistant_parts(self, content: Any) -> list[dict[str, Any]]:
+        blocks = content if isinstance(content, list) else [{"type": "text", "text": content}]
+        parts: list[dict[str, Any]] = []
+        for b in blocks:
+            if b.get("type") == "tool_use":
+                parts.append({"functionCall": {"name": b["name"], "args": b["input"]}})
+            else:
+                parts.append({"text": b.get("text", "")})
+        return parts
 
     @property
     def headers(self) -> dict[str, str]:

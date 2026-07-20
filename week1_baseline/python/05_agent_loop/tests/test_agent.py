@@ -83,3 +83,129 @@ def test_prompt_builder_parse_response_delegates_to_backend():
     result = builder.parse_response({"some": "response"})
     backend.parse_response.assert_called_once_with({"some": "response"})
     assert result == {"stop_reason": "end_turn", "content": []}
+
+
+from boukensha.backends.anthropic import Anthropic
+from boukensha.backends.gemini import Gemini
+from boukensha.backends.ollama import Ollama
+from boukensha.backends.ollama_cloud import OllamaCloud
+from boukensha.backends.openai import OpenAI
+
+
+# --- Anthropic parse_response ---
+
+def test_anthropic_parse_response_end_turn():
+    backend = Anthropic(api_key="k", model="claude-haiku-4-5")
+    raw = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Hello"}]}
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "end_turn"
+    assert result["content"] == [{"type": "text", "text": "Hello"}]
+
+
+def test_anthropic_parse_response_tool_use():
+    backend = Anthropic(api_key="k", model="claude-haiku-4-5")
+    raw = {
+        "stop_reason": "tool_use",
+        "content": [
+            {"type": "tool_use", "id": "tu_1", "name": "read_file", "input": {"path": "f.txt"}}
+        ],
+    }
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "tool_use"
+    assert result["content"][0]["type"] == "tool_use"
+    assert result["content"][0]["id"] == "tu_1"
+
+
+# --- OpenAI parse_response ---
+
+def test_openai_parse_response_end_turn():
+    backend = OpenAI(api_key="k", model="gpt-5.4")
+    raw = {"choices": [{"message": {"role": "assistant", "content": "Hello", "tool_calls": None}}]}
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "end_turn"
+    assert result["content"] == [{"type": "text", "text": "Hello"}]
+
+
+def test_openai_parse_response_tool_use():
+    backend = OpenAI(api_key="k", model="gpt-5.4")
+    raw = {
+        "choices": [{
+            "message": {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [{
+                    "id": "call_1",
+                    "function": {"name": "read_file", "arguments": '{"path": "f.txt"}'}
+                }]
+            }
+        }]
+    }
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "tool_use"
+    assert result["content"][0]["type"] == "tool_use"
+    assert result["content"][0]["id"] == "call_1"
+    assert result["content"][0]["input"] == {"path": "f.txt"}
+
+
+# --- Gemini parse_response ---
+
+def test_gemini_parse_response_end_turn():
+    backend = Gemini(api_key="k", model="gemini-2.5-flash")
+    raw = {"candidates": [{"content": {"parts": [{"text": "Hello"}]}}]}
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "end_turn"
+    assert result["content"] == [{"type": "text", "text": "Hello"}]
+
+
+def test_gemini_parse_response_tool_use():
+    backend = Gemini(api_key="k", model="gemini-2.5-flash")
+    raw = {
+        "candidates": [{
+            "content": {
+                "parts": [{"functionCall": {"name": "read_file", "args": {"path": "f.txt"}}}]
+            }
+        }]
+    }
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "tool_use"
+    assert result["content"][0]["type"] == "tool_use"
+    assert result["content"][0]["id"] == "read_file"
+    assert result["content"][0]["name"] == "read_file"
+    assert result["content"][0]["input"] == {"path": "f.txt"}
+
+
+# --- Ollama parse_response ---
+
+def test_ollama_parse_response_end_turn():
+    backend = Ollama(model="gemma4")
+    raw = {"message": {"role": "assistant", "content": "Hello", "tool_calls": []}}
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "end_turn"
+    assert result["content"] == [{"type": "text", "text": "Hello"}]
+
+
+def test_ollama_parse_response_tool_use():
+    backend = Ollama(model="gemma4")
+    raw = {
+        "message": {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": "read_file", "arguments": {"path": "f.txt"}}}]
+        }
+    }
+    result = backend.parse_response(raw)
+    assert result["stop_reason"] == "tool_use"
+    assert result["content"][0]["type"] == "tool_use"
+    assert result["content"][0]["id"] == "read_file"
+    assert result["content"][0]["input"] == {"path": "f.txt"}
+
+
+# --- to_payload tools override ---
+
+def test_anthropic_to_payload_empty_tools_override():
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    backend = Anthropic(api_key="k", model="claude-haiku-4-5")
+    ctx = Context(task=Player, system="sys")
+    payload = backend.to_payload(ctx, tools=[])
+    assert payload["tools"] == []
