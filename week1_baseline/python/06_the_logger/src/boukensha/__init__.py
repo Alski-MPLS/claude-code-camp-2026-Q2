@@ -8,6 +8,7 @@ from .client import Client
 from .config import Config
 from .context import Context
 from .errors import ApiError, LoopError, UnknownToolError, UnsupportedModelError
+from .logger import Logger
 from .message import Message
 from .prompt_builder import PromptBuilder
 from .registry import Registry
@@ -19,6 +20,7 @@ __all__ = [
     "Client",
     "Config",
     "Context",
+    "Logger",
     "LoopError",
     "Message",
     "PromptBuilder",
@@ -27,7 +29,20 @@ __all__ = [
     "UnknownToolError",
     "UnsupportedModelError",
     "backends",
+    "debug",
+    "enable_debug",
     "tasks",
 ]
 
 __version__ = "0.1.0"
+
+_debug: bool = False
+
+
+def enable_debug() -> None:
+    global _debug
+    _debug = True
+
+
+def debug() -> bool:
+    return _debug
