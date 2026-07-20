@@ -345,3 +345,171 @@ def test_ollama_cloud_parse_response_tool_use():
     assert result["content"][0]["type"] == "tool_use"
     assert result["content"][0]["id"] == "read_file"
     assert result["content"][0]["input"] == {"path": "f.txt"}
+
+
+# -- Logger integration tests ------------------------------------------------
+
+import tempfile
+from pathlib import Path
+import json as _json
+
+from boukensha.logger import Logger
+
+
+def _make_agent_with_logger(responses, tmp_dir, max_iterations=25):
+    """Build an Agent with a real Logger writing to tmp_dir."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = responses
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    logger = Logger(dir=tmp_dir)
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        max_iterations=max_iterations,
+        logger=logger,
+    )
+    return agent, logger
+
+
+def _read_phases(path: str) -> list[str]:
+    return [_json.loads(l)["phase"] for l in Path(path).read_text().splitlines() if l.strip()]
+
+
+def test_logger_receives_iteration_events():
+    responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]}]
+    with tempfile.TemporaryDirectory() as d:
+        agent, logger = _make_agent_with_logger(responses, d)
+        agent.run()
+        logger.close()
+        phases = _read_phases(logger.path)
+        assert "session_start" in phases
+        assert "iteration" in phases
+        assert "prompt" in phases
+        assert "response" in phases
+        assert "turn_end" in phases
+
+
+def test_logger_records_tool_call_and_result():
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    tool_responses = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "tu_1", "name": "echo", "input": {"msg": "hi"}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]},
+    ]
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("echo", description="echo", parameters={"msg": {"type": "string"}}, block=lambda msg: f"echo:{msg}")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = tool_responses
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+    ctx.add_message("user", "hello")
+
+    with tempfile.TemporaryDirectory() as d:
+        logger = Logger(dir=d)
+        agent = Agent(
+            context=ctx,
+            registry=registry,
+            builder=mock_builder,
+            client=mock_client,
+            logger=logger,
+        )
+        agent.run()
+        logger.close()
+        phases = _read_phases(logger.path)
+        assert "tool_call" in phases
+        assert "tool_result" in phases
+
+
+def test_agent_works_without_logger():
+    """Passing no logger= must not raise."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    mock_builder = MagicMock()
+    mock_builder.parse_response.return_value = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "ok"}]}
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+    ctx.add_message("user", "hi")
+
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+    assert result == "ok"
+
+
+def test_logger_limit_reached_event():
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}],
+    }
+    wrap_up = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Wrapping up"}]}
+
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("noop", description="noop", parameters={}, block=lambda: "ok")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [tool_response, tool_response, wrap_up]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+    ctx.add_message("user", "go")
+
+    with tempfile.TemporaryDirectory() as d:
+        logger = Logger(dir=d)
+        agent = Agent(
+            context=ctx,
+            registry=registry,
+            builder=mock_builder,
+            client=mock_client,
+            max_iterations=2,
+            logger=logger,
+        )
+        agent.run()
+        logger.close()
+        phases = _read_phases(logger.path)
+        assert "limit_reached" in phases
+        assert "turn_end" in phases
