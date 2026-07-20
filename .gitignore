@@ -5,6 +5,8 @@
 .env
 .env.local
 !.env.example
+settings.yaml
+!settings.yaml.example
 
 
 # Package manager caches
