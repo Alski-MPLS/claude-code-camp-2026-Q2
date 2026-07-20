@@ -17,6 +17,7 @@ from .errors import ApiError
 RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
 MAX_RETRIES = 3
 BASE_RETRY_DELAY = 0.5
+REQUEST_TIMEOUT_SECONDS = 30
 
 
 class Client:
@@ -35,8 +36,14 @@ class Client:
         while True:
             attempts += 1
             try:
-                with urllib.request.urlopen(req) as resp:
-                    return json.loads(resp.read())
+                with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
+                    raw = resp.read()
+                    try:
+                        return json.loads(raw)
+                    except json.JSONDecodeError as e:
+                        raise ApiError(
+                            f"API returned non-JSON response ({type(e).__name__}): {raw[:200]!r}"
+                        ) from e
             except urllib.error.HTTPError as e:
                 if e.code in RETRYABLE_STATUS_CODES and attempts < MAX_RETRIES:
                     time.sleep(_retry_delay(attempts))

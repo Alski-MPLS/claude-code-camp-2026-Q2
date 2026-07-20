@@ -101,6 +101,31 @@ def test_client_raises_after_max_retries():
                 assert "3" in str(e)
 
 
+def test_client_raises_api_error_on_non_json_response():
+    builder = _make_builder()
+    html_body = b"<html><body>Service Unavailable</body></html>"
+    resp = MagicMock()
+    resp.read.return_value = html_body
+    resp.__enter__ = lambda s: s
+    resp.__exit__ = MagicMock(return_value=False)
+    with patch("boukensha.client.urllib.request.urlopen", return_value=resp):
+        try:
+            Client(builder).call()
+            assert False, "Expected ApiError"
+        except ApiError as e:
+            assert "non-JSON" in str(e)
+            assert "JSONDecodeError" in str(e)
+
+
+def test_client_passes_timeout_to_urlopen():
+    from boukensha.client import REQUEST_TIMEOUT_SECONDS
+    builder = _make_builder()
+    with patch("boukensha.client.urllib.request.urlopen", return_value=_fake_response({})) as mock_open:
+        Client(builder).call()
+    _, kwargs = mock_open.call_args
+    assert kwargs.get("timeout") == REQUEST_TIMEOUT_SECONDS
+
+
 def test_top_level_exports():
     import boukensha
     assert hasattr(boukensha, "Client")
