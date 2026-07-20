@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from boukensha.errors import ApiError, LoopError, UnknownToolError, UnsupportedModelError
 from boukensha.tasks.player import Player
 
