@@ -34,3 +34,55 @@ def test_run_dsl_tool_no_parameters():
     dsl.tool("ping", description="Ping", block=lambda: "pong")
     result = registry.dispatch("ping", {})
     assert result == "pong"
+
+
+import boukensha
+
+
+def test_run_is_callable():
+    assert callable(boukensha.run)
+
+
+def test_run_dsl_exported():
+    from boukensha import RunDSL
+    assert RunDSL is not None
+
+
+def test_run_returns_text(monkeypatch):
+    """boukensha.run() must return the agent's final text without error."""
+    import os
+    import tempfile
+    from unittest.mock import MagicMock, patch
+
+    # Provide a minimal .boukensha config so Config() doesn't fail
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["BOUKENSHA_DIR"] = tmp
+
+        # Write a minimal settings.yaml
+        import yaml
+        settings = {
+            "tasks": {
+                "player": {
+                    "provider": "anthropic",
+                    "model": "claude-haiku-4-5",
+                }
+            }
+        }
+        with open(f"{tmp}/settings.yaml", "w") as f:
+            yaml.dump(settings, f)
+
+        with open(f"{tmp}/.env", "w") as f:
+            f.write("ANTHROPIC_API_KEY=test-key\n")
+
+        # Patch the Agent so no real HTTP call is made
+        fake_agent = MagicMock()
+        fake_agent.run.return_value = "mocked result"
+
+        with patch("boukensha.Agent", return_value=fake_agent) as MockAgent:
+            result = boukensha.run(
+                task="What is 2+2?",
+                log=f"{tmp}/test-session.jsonl",
+            )
+
+        assert result == "mocked result"
+        fake_agent.run.assert_called_once()
