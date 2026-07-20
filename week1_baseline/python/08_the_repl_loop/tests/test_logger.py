@@ -215,3 +215,16 @@ def test_logger_session_id_format():
         lg.close()
         # Format: YYYYMMDDTHHMMSSZ-<8 hex chars>
         assert re.match(r"^\d{8}T\d{6}Z-[0-9a-f]{8}$", lg.session_id)
+
+
+def test_logger_turn_event():
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.turn(n=1)
+        lg.turn(n=2)
+        lg.close()
+        lines = _read_lines(lg.path)
+        turn_lines = [l for l in lines if l["phase"] == "turn"]
+        assert len(turn_lines) == 2
+        assert turn_lines[0]["n"] == 1
+        assert turn_lines[1]["n"] == 2

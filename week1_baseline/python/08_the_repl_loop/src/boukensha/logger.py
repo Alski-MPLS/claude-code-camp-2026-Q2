@@ -30,6 +30,9 @@ class Logger:
     def iteration(self, *, n: int, max: int) -> None:
         self._write_log({"phase": "iteration", "n": n, "max": max})
 
+    def turn(self, *, n: int) -> None:
+        self._write_log({"phase": "turn", "n": n})
+
     def limit_reached(self, *, kind: str, n: int, max: int) -> None:
         self._write_log({"phase": "limit_reached", "kind": kind, "n": n, "max": max})
 
