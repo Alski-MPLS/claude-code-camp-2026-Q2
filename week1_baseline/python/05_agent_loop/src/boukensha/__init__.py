@@ -1,20 +1,23 @@
-"""Boukensha API client."""
+"""Boukensha agent loop."""
 
 from . import backends, tasks
+from .agent import Agent
 from .client import Client
 from .config import Config
 from .context import Context
-from .errors import ApiError, UnknownToolError, UnsupportedModelError
+from .errors import ApiError, LoopError, UnknownToolError, UnsupportedModelError
 from .message import Message
 from .prompt_builder import PromptBuilder
 from .registry import Registry
 from .tool import Tool
 
 __all__ = [
+    "Agent",
     "ApiError",
     "Client",
     "Config",
     "Context",
+    "LoopError",
     "Message",
     "PromptBuilder",
     "Registry",

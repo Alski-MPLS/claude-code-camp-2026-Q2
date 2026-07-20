@@ -211,3 +211,111 @@ def test_anthropic_to_payload_empty_tools_override():
     ctx = Context(task=Player, system="sys")
     payload = backend.to_payload(ctx, tools=[])
     assert payload["tools"] == []
+
+
+from boukensha.agent import Agent
+from boukensha.context import Context
+from boukensha.registry import Registry
+from boukensha.tasks.player import Player
+
+
+def _make_agent(responses, max_iterations=25, tools_side_effect=None):
+    """Build an Agent wired to a sequence of mock parsed responses."""
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = responses
+    mock_builder.to_api_payload.return_value = {}
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    if tools_side_effect:
+        registry.tool("echo", description="echo", parameters={"msg": {"type": "string"}}, block=tools_side_effect)
+
+    ctx.add_message("user", "hello")
+    return Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        max_iterations=max_iterations,
+    ), mock_client, mock_builder
+
+
+def test_agent_returns_text_on_end_turn():
+    responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done!"}]}]
+    agent, _, _ = _make_agent(responses)
+    result = agent.run()
+    assert result == "Done!"
+
+
+def test_agent_calls_tool_then_ends():
+    tool_called = []
+
+    def echo(msg):
+        tool_called.append(msg)
+        return f"echo:{msg}"
+
+    responses = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "tu_1", "name": "echo", "input": {"msg": "hi"}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "All done"}]},
+    ]
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("echo", description="echo", parameters={"msg": {"type": "string"}}, block=echo)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = responses
+    mock_builder.to_api_payload.return_value = {}
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+
+    assert result == "All done"
+    assert tool_called == ["hi"]
+    # assistant message stored before tool_result
+    roles = [m.role for m in ctx.messages]
+    assert roles == ["user", "assistant", "tool_result"]
+
+
+def test_agent_wraps_up_at_max_iterations():
+    # All responses are tool_use so the agent would loop forever without the ceiling
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}],
+    }
+    wrap_up_response = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Wrapping up"}]}
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("noop", description="noop", parameters={}, block=lambda: "ok")
+
+    mock_builder = MagicMock()
+    # First 2 calls return tool_use, the wrap-up call returns end_turn
+    mock_builder.parse_response.side_effect = [tool_response, tool_response, wrap_up_response]
+    mock_builder.to_api_payload.return_value = {}
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "go")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client, max_iterations=2)
+    result = agent.run()
+
+    assert result == "Wrapping up"
+    # wrap-up call must pass tools=[]
+    wrap_up_call = mock_client.call.call_args_list[-1]
+    assert wrap_up_call.kwargs.get("tools") == []
+
+
+def test_agent_exports_from_top_level():
+    import boukensha
+    assert hasattr(boukensha, "Agent")
+    assert hasattr(boukensha, "LoopError")
