@@ -4,6 +4,7 @@
 # Environment / secrets
 .env
 .env.local
+!.env.example
 
 
 # Package manager caches
