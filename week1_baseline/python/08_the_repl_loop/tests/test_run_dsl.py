@@ -84,3 +84,39 @@ def test_run_returns_text(monkeypatch):
 
         assert result == "mocked result"
         fake_agent.run.assert_called_once()
+
+
+def test_repl_is_callable():
+    assert callable(boukensha.repl)
+
+
+def test_repl_exported():
+    from boukensha import Repl
+    assert Repl is not None
+
+
+def test_repl_starts_and_exits_immediately(monkeypatch):
+    """boukensha.repl() must start the REPL and exit cleanly on EOF."""
+    import io
+    import tempfile
+    import yaml
+    from unittest.mock import MagicMock, patch
+
+    with tempfile.TemporaryDirectory() as tmp:
+        monkeypatch.setenv("BOUKENSHA_DIR", tmp)
+
+        settings = {
+            "tasks": {
+                "player": {
+                    "provider": "anthropic",
+                    "model": "claude-haiku-4-5",
+                }
+            }
+        }
+        with open(f"{tmp}/settings.yaml", "w") as f:
+            yaml.dump(settings, f)
+        with open(f"{tmp}/.env", "w") as f:
+            f.write("ANTHROPIC_API_KEY=test-key\n")
+
+        with patch("sys.stdin", io.StringIO("")):
+            boukensha.repl(log=f"{tmp}/test-repl.jsonl")
