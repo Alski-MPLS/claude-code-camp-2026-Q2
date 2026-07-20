@@ -17,6 +17,8 @@ For this conversion
 - Some areas required more work (tokens) for AI to convert Ruby to Python.
 - I'm half-way through the different phases and I have not seen an issue with what was created in Claude Code.
 - Having the right skills was key to coming up with specific plans and write the code in stages using subagents. (I'm leaving the plan.md files for each phase in the repo for references).
+- Was able to build out .env file (and not commit it) while using Ollama. This will help get the agent up and running faster without wasting tokens. I still may have to put some money in Anthropics API area to test it out for speed. I don't have the right hardware to utilize the large gemma4 models. 
+
 
 ## Technical Conclusions
 [todo]
