@@ -24,9 +24,9 @@ class Client:
     def __init__(self, builder: Any) -> None:
         self._builder = builder
 
-    def call(self, *, max_output_tokens: int = 1024) -> dict[str, Any]:
+    def call(self, *, max_output_tokens: int = 1024, tools: list | None = None) -> dict[str, Any]:
         url = self._builder.url
-        payload = self._builder.to_api_payload(max_output_tokens=max_output_tokens)
+        payload = self._builder.to_api_payload(max_output_tokens=max_output_tokens, tools=tools)
         body = json.dumps(payload).encode()
         headers = self._builder.headers
 
