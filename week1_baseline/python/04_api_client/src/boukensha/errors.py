@@ -15,3 +15,7 @@ class UnknownToolError(Exception):
 
 class UnsupportedModelError(Exception):
     """Raised when a backend is configured with a model it does not support."""
+
+
+class ApiError(Exception):
+    """Raised when an HTTP request to the LLM API fails."""
