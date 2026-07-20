@@ -45,13 +45,13 @@ Python port of `ruby/06_the_logger`. Adds `Logger` — captures events throughou
 ## Run Example
 
     cd week1_baseline/python/06_the_logger
-    uv pip install -e .
-    python examples/example.py
+    uv sync
+    uv run python examples/example.py
 
-Requires `ANTHROPIC_API_KEY` (or whichever provider is configured). Writes a structured JSONL session log to `.boukensha/sessions/<session-id>.jsonl`.
+Requires the API key for whichever provider is configured in `~/.boukensha/settings.yaml` (e.g. `ANTHROPIC_API_KEY`). Writes a structured JSONL session log to `~/.boukensha/sessions/<session-id>.jsonl`.
 
 ## Run Tests
 
     cd week1_baseline/python/06_the_logger
-    uv pip install pytest
-    python -m pytest tests/ -v
+    uv sync
+    uv run pytest tests/ -v

@@ -64,13 +64,13 @@ Every backend's `parse_response` converts its provider-specific wire format into
 ## Run Example
 
     cd week1_baseline/python/05_agent_loop
-    uv pip install -e .
-    python examples/example.py
+    uv sync
+    uv run python examples/example.py
 
-Requires `ANTHROPIC_API_KEY` (or whichever provider is configured).
+Requires the API key for whichever provider is configured in `~/.boukensha/settings.yaml` (e.g. `ANTHROPIC_API_KEY`).
 
 ## Run Tests
 
     cd week1_baseline/python/05_agent_loop
-    uv pip install pytest
-    python -m pytest tests/ -v
+    uv sync
+    uv run pytest tests/ -v
