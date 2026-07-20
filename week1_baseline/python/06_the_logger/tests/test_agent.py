@@ -227,6 +227,7 @@ def _make_agent(responses, max_iterations=25, tools_side_effect=None):
     mock_builder = MagicMock()
     mock_builder.parse_response.side_effect = responses
     mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
 
     mock_client = MagicMock()
     mock_client.call.return_value = {}
@@ -272,6 +273,7 @@ def test_agent_calls_tool_then_ends():
     mock_builder = MagicMock()
     mock_builder.parse_response.side_effect = responses
     mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
     mock_client = MagicMock()
     mock_client.call.return_value = {}
 
@@ -302,6 +304,7 @@ def test_agent_wraps_up_at_max_iterations():
     # First 2 calls return tool_use, the wrap-up call returns end_turn
     mock_builder.parse_response.side_effect = [tool_response, tool_response, wrap_up_response]
     mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
     mock_client = MagicMock()
     mock_client.call.return_value = {}
 
@@ -471,6 +474,18 @@ def test_agent_works_without_logger():
     agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
     result = agent.run()
     assert result == "ok"
+
+
+def test_prompt_builder_exposes_backend():
+    from boukensha.backends.anthropic import Anthropic
+    from boukensha.context import Context
+    from boukensha.prompt_builder import PromptBuilder
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    backend = Anthropic(api_key="k", model="claude-haiku-4-5")
+    builder = PromptBuilder(ctx, backend)
+    assert builder.backend is backend
 
 
 def test_logger_limit_reached_event():

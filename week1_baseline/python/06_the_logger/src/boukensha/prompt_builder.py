@@ -47,3 +47,7 @@ class PromptBuilder:
     @property
     def url(self) -> str:
         return self._backend.url
+
+    @property
+    def backend(self) -> Any:
+        return self._backend

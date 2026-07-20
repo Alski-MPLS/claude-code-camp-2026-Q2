@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -33,7 +34,10 @@ class Logger:
         self._write_log({"phase": "limit_reached", "kind": kind, "n": n, "max": max})
 
     def turn_end(self, *, reason: str, iterations: int, tokens: Any = None) -> None:
-        self._write_log({"phase": "turn_end", "reason": reason, "iterations": iterations, "tokens": tokens})
+        event: dict[str, Any] = {"phase": "turn_end", "reason": reason, "iterations": iterations}
+        if tokens is not None:
+            event["tokens"] = tokens
+        self._write_log(event)
 
     def prompt(self, *, messages: list[Any], tools: dict[str, Any]) -> None:
         self._write_log({
@@ -48,7 +52,10 @@ class Logger:
         self._write_log({"phase": "tool_call", "name": name, "args": args})
 
     def tool_result(self, *, name: str, result: Any, ok: bool = True, error: str | None = None) -> None:
-        self._write_log({"phase": "tool_result", "name": name, "result": str(result), "ok": ok, "error": error})
+        event: dict[str, Any] = {"phase": "tool_result", "name": name, "result": str(result), "ok": ok}
+        if error is not None:
+            event["error"] = error
+        self._write_log(event)
 
     def response(
         self,
@@ -59,12 +66,11 @@ class Logger:
         task: Any = None,
         backend: Any = None,
     ) -> None:
-        event: dict[str, Any] = {
-            "phase": "response",
-            "text": str(text).strip(),
-            "usage": usage,
-            "stop_reason": stop_reason,
-        }
+        event: dict[str, Any] = {"phase": "response", "text": str(text).strip()}
+        if stop_reason is not None:
+            event["stop_reason"] = stop_reason
+        if usage is not None:
+            event["usage"] = usage
         event.update(_execution_metadata(task=task, backend=backend, usage=usage))
         self._write_log(event)
 
@@ -130,7 +136,6 @@ def _task_name(task: Any) -> str | None:
 def _provider_name(backend: Any) -> str | None:
     if backend is None:
         return None
-    import re
     name = type(backend).__name__
     # CamelCase -> snake_case
     return re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name).lower()

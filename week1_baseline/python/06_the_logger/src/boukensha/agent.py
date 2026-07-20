@@ -37,6 +37,9 @@ class Agent:
         self._registry = registry
         self._builder = builder
         self._client = client
+        if logger is None:
+            from .logger import Logger as _Logger
+            logger = _Logger()
         self._logger = logger
         self._max_iterations = self._resolve_max_iterations(task_settings, max_iterations)
         self._max_output_tokens = self._resolve_max_output_tokens(task_settings, max_output_tokens)
