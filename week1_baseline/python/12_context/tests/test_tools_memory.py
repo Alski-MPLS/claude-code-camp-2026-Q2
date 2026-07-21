@@ -86,6 +86,13 @@ def test_prompt_block_contains_both_files_and_content(tmp_path):
     assert "Level 3 warrior." in block
 
 
+def test_prompt_block_instructs_writing_on_every_new_room(tmp_path):
+    block = Memory.prompt_block(str(tmp_path))
+    assert "new room" in block
+    assert "before" in block
+    assert "write_memory" in block
+
+
 def test_prompt_block_creates_files_if_missing(tmp_path):
     memory_dir = tmp_path / "fresh"
     block = Memory.prompt_block(str(memory_dir))
