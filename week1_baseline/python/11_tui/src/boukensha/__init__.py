@@ -19,6 +19,7 @@ from .prompt_builder import PromptBuilder
 from .registry import Registry
 from .run_dsl import RunDSL
 from .tool import Tool
+from .tui import Tui
 
 __all__ = [
     "Agent",
@@ -34,6 +35,7 @@ __all__ = [
     "Repl",
     "RunDSL",
     "Tool",
+    "Tui",
     "UnknownToolError",
     "UnsupportedModelError",
     "backends",
@@ -217,6 +219,7 @@ def run(
 # mirrors run() rather than sharing a helper so step 08 can be read on its own.
 def repl(
     *,
+    tui: bool = True,
     system: str | None = None,
     model: str | None = None,
     backend: str | None = None,
@@ -313,22 +316,26 @@ def repl(
         },
     )
 
+    repl_instance = _Repl(
+        context=ctx,
+        registry=registry,
+        builder=builder,
+        client=client,
+        logger=logger,
+        task_settings=task_settings,
+        max_iterations=effective_max_iterations,
+        max_output_tokens=effective_max_output_tokens,
+        config_dir=str(cfg.dir),
+        provider=resolved_backend,
+        model=resolved_model,
+        version=__version__,
+        api_key=resolved_api_key,
+    )
     try:
-        _Repl(
-            context=ctx,
-            registry=registry,
-            builder=builder,
-            client=client,
-            logger=logger,
-            task_settings=task_settings,
-            max_iterations=effective_max_iterations,
-            max_output_tokens=effective_max_output_tokens,
-            config_dir=str(cfg.dir),
-            provider=resolved_backend,
-            model=resolved_model,
-            version=__version__,
-            api_key=resolved_api_key,
-        ).start()
+        if tui:
+            Tui(repl_instance).run()
+        else:
+            repl_instance.start()
     except KeyboardInterrupt:
         print("\nInterrupted.")
     finally:

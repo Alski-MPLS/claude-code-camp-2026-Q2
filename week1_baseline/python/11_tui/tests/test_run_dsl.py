@@ -212,3 +212,37 @@ def test_tools_exported():
     assert hasattr(boukensha, "tools")
     assert hasattr(boukensha.tools, "FileSystem")
     assert hasattr(boukensha.tools, "Shell")
+
+
+def test_tui_exported():
+    import boukensha
+    assert hasattr(boukensha, "Tui")
+    from boukensha.tui import Tui
+    assert boukensha.Tui is Tui
+
+
+def test_repl_tui_false_calls_repl_start(monkeypatch, tmp_path):
+    import yaml, os
+    bdir = tmp_path / "bdir"
+    bdir.mkdir()
+    settings = {"tasks": {"player": {"provider": "anthropic", "model": "claude-haiku-4-5"}}}
+    (bdir / "settings.yaml").write_text(yaml.dump(settings))
+    (bdir / ".env").write_text("ANTHROPIC_API_KEY=test-key\n")
+    monkeypatch.setenv("BOUKENSHA_DIR", str(bdir))
+
+    started = []
+
+    import boukensha
+    from boukensha.repl import Repl as _Repl
+    original_start = _Repl.start
+
+    def fake_start(self):
+        started.append(True)
+
+    monkeypatch.setattr(_Repl, "start", fake_start)
+    try:
+        boukensha.repl(tui=False)
+    except Exception:
+        pass
+
+    assert started, "Repl.start() was not called when tui=False"
