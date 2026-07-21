@@ -345,6 +345,7 @@ def repl(
     )
     try:
         if tui:
+            from .tui import Tui
             Tui(repl_instance).run()
         else:
             repl_instance.start()
