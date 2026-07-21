@@ -228,3 +228,50 @@ def test_logger_turn_event():
         assert len(turn_lines) == 2
         assert turn_lines[0]["n"] == 1
         assert turn_lines[1]["n"] == 2
+
+
+def test_logger_subscribe_receives_events():
+    received = []
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.subscribe(received.append)
+        lg.tool_call(name="read_file", args={"path": "f.txt"})
+        lg.close()
+    phases = [e["phase"] for e in received]
+    assert "tool_call" in phases
+
+
+def test_logger_subscribe_multiple_callbacks():
+    received_a = []
+    received_b = []
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.subscribe(received_a.append)
+        lg.subscribe(received_b.append)
+        lg.iteration(n=1, max=10)
+        lg.close()
+    assert any(e["phase"] == "iteration" for e in received_a)
+    assert any(e["phase"] == "iteration" for e in received_b)
+
+
+def test_logger_subscribe_receives_session_start():
+    received = []
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.subscribe(received.append)
+        lg.close()
+    # session_start is written in __init__ before subscribe is called,
+    # but close() triggers no extra write — received should be empty here
+    assert received == []
+
+
+def test_logger_subscribe_event_has_session_id():
+    received = []
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.subscribe(received.append)
+        lg.turn(n=1)
+        lg.close()
+    turn_events = [e for e in received if e["phase"] == "turn"]
+    assert len(turn_events) == 1
+    assert "session_id" in turn_events[0]

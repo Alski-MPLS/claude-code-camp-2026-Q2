@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,7 @@ class Logger:
         self.path = log or str(Path(dir or _default_dir()) / f"{self.session_id}.jsonl")
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._log_io = open(self.path, "a", encoding="utf-8")  # noqa: WPS515
+        self._subscribers: list[Callable[[dict[str, Any]], None]] = []
         self._write_log({"phase": "session_start", **(snapshot or {})})
 
     def iteration(self, *, n: int, max: int) -> None:
@@ -87,12 +89,18 @@ class Logger:
         if self._log_io:
             self._log_io.close()
 
+    def subscribe(self, callback: Callable[[dict[str, Any]], None]) -> None:
+        self._subscribers.append(callback)
+
     # ---------- private -----------------------------------------------------
 
     def _write_log(self, event: dict[str, Any]) -> None:
-        line = json.dumps({**event, "session_id": self.session_id, "at": _now_iso()})
+        full = {**event, "session_id": self.session_id, "at": _now_iso()}
+        line = json.dumps(full)
         self._log_io.write(line + "\n")
         self._log_io.flush()
+        for cb in self._subscribers:
+            cb(full)
 
 
 # ---------- module helpers --------------------------------------------------
