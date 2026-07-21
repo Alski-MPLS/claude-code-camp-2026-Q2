@@ -104,39 +104,63 @@ def _clear_boukensha_modules():
     sys.path[:] = [p for p in sys.path if "fake_step/src" not in p]
 
 
+def _snapshot_boukensha_state() -> tuple[dict[str, object], list[str]]:
+    modules = {
+        name: sys.modules[name]
+        for name in list(sys.modules)
+        if name == "boukensha" or name.startswith("boukensha.")
+    }
+    return modules, list(sys.path)
+
+
+def _restore_boukensha_state(modules_snapshot: dict[str, object], path_snapshot: list[str]) -> None:
+    for name in [m for m in list(sys.modules) if m == "boukensha" or m.startswith("boukensha.")]:
+        del sys.modules[name]
+    sys.modules.update(modules_snapshot)
+    sys.path[:] = path_snapshot
+
+
 def test_load_and_start_repl_calls_repl(monkeypatch, tmp_path):
-    _clear_boukensha_modules()
-    _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
-    monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
+    modules_snapshot, path_snapshot = _snapshot_boukensha_state()
+    try:
+        _clear_boukensha_modules()
+        _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
+        monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
 
-    boukensha_loader.load_and_start_repl()
+        boukensha_loader.load_and_start_repl()
 
-    import boukensha
-    assert boukensha.REPL_CALLS == [1]
-    _clear_boukensha_modules()
+        import boukensha
+        assert boukensha.REPL_CALLS == [1]
+    finally:
+        _restore_boukensha_state(modules_snapshot, path_snapshot)
 
 
 def test_load_and_start_repl_aborts_without_repl_support(monkeypatch, tmp_path, capsys):
-    _clear_boukensha_modules()
-    step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=False)
-    monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
+    modules_snapshot, path_snapshot = _snapshot_boukensha_state()
+    try:
+        _clear_boukensha_modules()
+        step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=False)
+        monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
 
-    with pytest.raises(SystemExit, match="does not support the interactive REPL"):
-        boukensha_loader.load_and_start_repl()
-
-    _clear_boukensha_modules()
+        with pytest.raises(SystemExit, match="does not support the interactive REPL"):
+            boukensha_loader.load_and_start_repl()
+    finally:
+        _restore_boukensha_state(modules_snapshot, path_snapshot)
 
 
 def test_load_and_start_repl_prints_debug_line(monkeypatch, tmp_path, capsys):
-    _clear_boukensha_modules()
-    step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
-    monkeypatch.setenv("BOUKENSHA_DEBUG", "1")
+    modules_snapshot, path_snapshot = _snapshot_boukensha_state()
+    try:
+        _clear_boukensha_modules()
+        step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
+        monkeypatch.setenv("BOUKENSHA_DEBUG", "1")
 
-    boukensha_loader.load_and_start_repl()
+        boukensha_loader.load_and_start_repl()
 
-    captured = capsys.readouterr()
-    assert f"[boukensha] loading from: {step_dir}" in captured.out
-    _clear_boukensha_modules()
+        captured = capsys.readouterr()
+        assert f"[boukensha] loading from: {step_dir}" in captured.out
+    finally:
+        _restore_boukensha_state(modules_snapshot, path_snapshot)
 
 
 def test_main_delegates_to_load_and_start_repl(monkeypatch):
