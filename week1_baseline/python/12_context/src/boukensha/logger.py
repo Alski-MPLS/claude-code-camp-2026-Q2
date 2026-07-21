@@ -44,14 +44,21 @@ class Logger:
             event["tokens"] = tokens
         self._write_log(event)
 
-    def prompt(self, *, messages: list[Any], tools: dict[str, Any]) -> None:
+    def prompt(self, *, messages: list[Any], tools: dict[str, Any], context_window: int = 0) -> None:
         self._write_log({
             "phase": "prompt",
             "message_count": len(messages),
             "messages": [{"role": m.role, "content": m.content} for m in messages],
             "tool_count": len(tools),
             "tools": list(tools.keys()),
+            "context_window": context_window,
         })
+
+    def compaction(self, *, before: int, dropped: int, context_window: int) -> None:
+        self._write_log({"phase": "compaction", "before": before, "dropped": dropped, "context_window": context_window})
+
+    def reasoning(self, *, text: str, redacted: bool = False) -> None:
+        self._write_log({"phase": "reasoning", "text": str(text), "redacted": redacted})
 
     def tool_call(self, *, name: str, args: dict[str, Any]) -> None:
         self._write_log({"phase": "tool_call", "name": name, "args": args})

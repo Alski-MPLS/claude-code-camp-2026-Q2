@@ -275,3 +275,49 @@ def test_logger_subscribe_event_has_session_id():
     turn_events = [e for e in received if e["phase"] == "turn"]
     assert len(turn_events) == 1
     assert "session_id" in turn_events[0]
+
+
+def test_logger_compaction_event():
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.compaction(before=170_000, dropped=4, context_window=200_000)
+        lg.close()
+        lines = _read_lines(lg.path)
+        evt = next(l for l in lines if l["phase"] == "compaction")
+        assert evt["before"] == 170_000
+        assert evt["dropped"] == 4
+        assert evt["context_window"] == 200_000
+
+
+def test_logger_reasoning_event():
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.reasoning(text="I should look at the inventory.", redacted=False)
+        lg.close()
+        lines = _read_lines(lg.path)
+        evt = next(l for l in lines if l["phase"] == "reasoning")
+        assert evt["text"] == "I should look at the inventory."
+        assert evt["redacted"] is False
+
+
+def test_logger_reasoning_event_redacted():
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.reasoning(text="", redacted=True)
+        lg.close()
+        lines = _read_lines(lg.path)
+        evt = next(l for l in lines if l["phase"] == "reasoning")
+        assert evt["redacted"] is True
+
+
+def test_logger_prompt_includes_context_window():
+    from boukensha.message import Message
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        msgs = [Message(role="user", content="hello")]
+        tools = {"read_file": object()}
+        lg.prompt(messages=msgs, tools=tools, context_window=200_000)
+        lg.close()
+        lines = _read_lines(lg.path)
+        p = next(l for l in lines if l["phase"] == "prompt")
+        assert p["context_window"] == 200_000
