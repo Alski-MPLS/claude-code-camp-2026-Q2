@@ -23,9 +23,13 @@ _PROMPT_HEADER = (
     "## Persistent memory\n"
     "You maintain two memory files across sessions — player.md (your character: "
     "stats, goals, notes) and world.md (the map: rooms, exits, shops, landmarks). "
-    "Use read_memory/write_memory to keep them current, especially after entering "
-    "a new room or a notable change to your character. Rewrite rather than let "
-    "them grow unbounded."
+    "write_memory OVERWRITES the whole file — it does not append. So before every "
+    "write_memory call, first call read_memory on that file to get its current "
+    "contents, then merge the new information into it (keep existing rooms/notes, "
+    "add or update the new ones), and write the full merged result back. Never "
+    "write a file containing only the newest entry — that discards everything "
+    "recorded before it. Condense and reorganize for clarity as needed, but don't "
+    "let genuinely new information get dropped."
 )
 
 
