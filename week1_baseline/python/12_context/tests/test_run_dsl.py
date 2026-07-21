@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import yaml
@@ -245,3 +246,92 @@ def test_repl_tui_false_calls_repl_start(monkeypatch, tmp_path):
         pass
 
     assert started, "Repl.start() was not called when tui=False"
+
+
+def test_memory_enabled_helper_defaults_to_config():
+    import boukensha
+    from boukensha.config import Config
+
+    mock_cfg = MagicMock(spec=Config)
+    mock_cfg.memory_enabled = True
+    assert boukensha._memory_enabled(mock_cfg, None) is True
+
+    mock_cfg.memory_enabled = False
+    assert boukensha._memory_enabled(mock_cfg, None) is False
+
+
+def test_memory_enabled_helper_explicit_override_wins():
+    import boukensha
+    from boukensha.config import Config
+
+    mock_cfg = MagicMock(spec=Config)
+    mock_cfg.memory_enabled = False
+    assert boukensha._memory_enabled(mock_cfg, True) is True
+
+    mock_cfg.memory_enabled = True
+    assert boukensha._memory_enabled(mock_cfg, False) is False
+
+
+def test_run_registers_memory_tools_and_injects_prompt_by_default(monkeypatch):
+    """memory=None (default) reads config (defaults to enabled) and wires everything."""
+    with tempfile.TemporaryDirectory() as tmp:
+        monkeypatch.setenv("BOUKENSHA_DIR", tmp)
+
+        settings = {
+            "tasks": {"player": {"provider": "anthropic", "model": "claude-haiku-4-5"}}
+        }
+        with open(f"{tmp}/settings.yaml", "w") as f:
+            yaml.dump(settings, f)
+        with open(f"{tmp}/.env", "w") as f:
+            f.write("ANTHROPIC_API_KEY=test-key\n")
+
+        fake_agent = MagicMock()
+        fake_agent.run.return_value = "mocked result"
+
+        captured_ctx = {}
+
+        def _capture_agent(**kwargs):
+            captured_ctx["context"] = kwargs["context"]
+            return fake_agent
+
+        with patch("boukensha.Agent", side_effect=_capture_agent):
+            boukensha.run(task="hello", log=f"{tmp}/session.jsonl", working_dir=False)
+
+        ctx = captured_ctx["context"]
+        assert "read_memory" in ctx.tools
+        assert "write_memory" in ctx.tools
+        assert "player.md" in ctx.system
+        assert "world.md" in ctx.system
+        assert (Path(tmp) / "memory" / "player.md").exists()
+
+
+def test_run_memory_false_disables_memory_entirely(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        monkeypatch.setenv("BOUKENSHA_DIR", tmp)
+
+        settings = {
+            "tasks": {"player": {"provider": "anthropic", "model": "claude-haiku-4-5"}}
+        }
+        with open(f"{tmp}/settings.yaml", "w") as f:
+            yaml.dump(settings, f)
+        with open(f"{tmp}/.env", "w") as f:
+            f.write("ANTHROPIC_API_KEY=test-key\n")
+
+        fake_agent = MagicMock()
+        fake_agent.run.return_value = "mocked result"
+
+        captured_ctx = {}
+
+        def _capture_agent(**kwargs):
+            captured_ctx["context"] = kwargs["context"]
+            return fake_agent
+
+        with patch("boukensha.Agent", side_effect=_capture_agent):
+            boukensha.run(
+                task="hello", log=f"{tmp}/session.jsonl", working_dir=False, memory=False
+            )
+
+        ctx = captured_ctx["context"]
+        assert "read_memory" not in ctx.tools
+        assert "write_memory" not in ctx.tools
+        assert not (Path(tmp) / "memory").exists()

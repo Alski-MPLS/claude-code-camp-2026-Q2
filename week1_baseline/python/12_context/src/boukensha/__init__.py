@@ -99,6 +99,11 @@ def _mud_opts_from_config(cfg: Config) -> dict | None:
     }
 
 
+def _memory_enabled(cfg: Config, memory: bool | None) -> bool:
+    """Resolve the memory toggle: explicit True/False wins, None reads config."""
+    return cfg.memory_enabled if memory is None else bool(memory)
+
+
 def run(
     task: str,
     *,
@@ -115,6 +120,7 @@ def run(
     allowed_commands: list[str] | None = None,
     shell_timeout: int = 30,
     mud: dict | bool | None = None,
+    memory: bool | None = None,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> str:
     """Wire together every primitive and run the agent loop.
@@ -134,6 +140,10 @@ def run(
             None (default) reads from config if mud.username is set.
             False disables MUD tools entirely.
             A dict uses those connection params directly.
+        memory: Persistent player.md/world.md memory toggle.
+            None (default) reads from config (memory.enabled, default True).
+            False disables memory entirely — no tools, no prompt injection.
+            True forces it on regardless of config.
         tool_registrar: A callable that accepts a RunDSL and registers tools.
 
     Returns:
@@ -166,6 +176,11 @@ def run(
     else:
         resolved_wd = str(working_dir)
 
+    resolved_memory_enabled = _memory_enabled(cfg, memory)
+    if resolved_memory_enabled:
+        memory_block = tools.Memory.prompt_block(cfg.memory_dir)
+        resolved_system = f"{resolved_system}\n\n{memory_block}" if resolved_system else memory_block
+
     ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
     registry = Registry(ctx)
 
@@ -181,6 +196,9 @@ def run(
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
         tools.Mud.register(registry, **resolved_mud)
+
+    if resolved_memory_enabled:
+        tools.Memory.register(registry, memory_dir=cfg.memory_dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -255,12 +273,13 @@ def repl(
     allowed_commands: list[str] | None = None,
     shell_timeout: int = 30,
     mud: dict | bool | None = None,
+    memory: bool | None = None,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> None:
     """Start the interactive REPL loop.
 
     Same plumbing as run() but stays alive across multiple turns.
-    See run() for full parameter documentation including the mud parameter.
+    See run() for full parameter documentation including the mud and memory parameters.
     """
     from .repl import Repl as _Repl
     from .tui import Tui
@@ -292,6 +311,11 @@ def repl(
     else:
         resolved_wd = str(working_dir)
 
+    resolved_memory_enabled = _memory_enabled(cfg, memory)
+    if resolved_memory_enabled:
+        memory_block = tools.Memory.prompt_block(cfg.memory_dir)
+        resolved_system = f"{resolved_system}\n\n{memory_block}" if resolved_system else memory_block
+
     ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
     registry = Registry(ctx)
 
@@ -307,6 +331,9 @@ def repl(
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
         tools.Mud.register(registry, **resolved_mud)
+
+    if resolved_memory_enabled:
+        tools.Memory.register(registry, memory_dir=cfg.memory_dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
