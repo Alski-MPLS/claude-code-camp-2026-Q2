@@ -1,0 +1,27 @@
+[project]
+name = "boukensha-tui"
+version = "0.1.0"
+description = "Boukensha TUI (Step 11)"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "textual>=0.80",
+]
+
+[dependency-groups]
+dev = ["pytest>=7.0"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+boukensha = "boukensha_loader:main"
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+include = ["src/boukensha/**", "src/boukensha_loader.py"]
