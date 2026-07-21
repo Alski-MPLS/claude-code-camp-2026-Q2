@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-"""Step 10 — A Standard Tool Library demo.
+"""Step 11 — TUI demo.
 
-Demonstrates auto-registration of FileSystem and Shell tools via working_dir.
+Launches the Textual TUI by default.  Pass --no-tui for the plain REPL.
 """
 
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 os.environ.setdefault(
@@ -19,15 +19,9 @@ os.environ.setdefault(
 
 import boukensha
 
-cfg = boukensha.Config()
-print(f"Config: {cfg}")
-print(f"API key set? {bool(os.environ.get('ANTHROPIC_API_KEY'))}")
-print()
+use_tui = "--no-tui" not in sys.argv
 
-boukensha.run(
-    task=(
-        "List the files in the current working directory, read one of them, "
-        "then tell me what you found."
-    ),
+boukensha.repl(
+    tui=use_tui,
     working_dir=str(Path(__file__).parent),
 )

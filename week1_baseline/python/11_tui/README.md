@@ -1,75 +1,80 @@
-# Step 10 — A Standard Tool Library
+# Step 11 — A Terminal UI
 
-Boukensha now ships two built-in tool modules. Instead of manually registering tools, the framework gives the agent a standard library of capabilities out of the box when `working_dir` is set.
+Boukensha now ships a full terminal UI (TUI) built on [Textual](https://github.com/Textualize/textual). The plain REPL from step 10 is still available with `tui=False`.
 
 ## What's new
 
-### `boukensha.tools.FileSystem`
+### `boukensha.Tui`
 
-Registers automatically when `working_dir` is set:
+New class. Wraps a `Repl` instance and replaces its raw `print`/`input` I/O with a structured four-zone display:
 
-| Tool | Description |
-|------|-------------|
-| `pwd` | Return the working directory |
-| `list_directory` | List files at a path (default `.`) |
-| `read_file` | Read a file's contents |
-| `write_file` | Write (or create) a file |
-| `delete_file` | Delete a file |
-| `search_files` | Grep for a regex pattern across the working tree, returns `path:line:content` matches |
-
-All paths are **relative to the working directory**. Absolute paths and `..` traversals that escape the root are rejected with an error string.
-
-### `boukensha.tools.Shell`
-
-Registers automatically when `working_dir` is set:
-
-| Tool | Description |
-|------|-------------|
-| `run_command` | Run a shell command inside the working directory |
-
-Commands run with a configurable timeout and an optional allow-list of permitted executables.
-
-### New `boukensha.run` / `boukensha.repl` keyword arguments
-
-```python
-boukensha.run(
-    task="...",
-    working_dir="/my/project",          # None (default) = os.getcwd(); False = no tools
-    allowed_commands=["python", "git"], # None = allow all (default)
-    shell_timeout=30                    # seconds, default 30
-)
+```
+┌──────────────────────────────────────────────┐
+│  conversation viewport (scrollable)           │
+├──────────────────────────────────────────────┤
+│  ⟳ live progress line (idle when not running) │
+├──────────────────────────────────────────────┤
+│  boukensha> input box                         │
+├──────────────────────────────────────────────┤
+│  status line (always-on)                      │
+└──────────────────────────────────────────────┘
 ```
 
-`allowed_commands=None` permits any executable. Pass an explicit list to lock the agent down:
+The **progress line** shows a spinner, current action, iteration counter (`n/MAX`), elapsed seconds, token counts (↑ in / ↓ out), and tool call count while the agent is running. When idle it shows context usage and turn count.
+
+The **status line** always shows: version · model · context tokens used · registered tool count · wall-clock time.
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Submit input or slash command |
+| `Esc` | Interrupt the running agent turn |
+| `Ctrl+L` | Clear conversation history |
+| `PgUp` / `PgDn` | Scroll conversation viewport |
+| `Ctrl+C` / `Ctrl+D` | Quit |
+
+### `boukensha.repl()` — new `tui:` keyword
 
 ```python
-# Only allow python and git — rm, curl, etc. will be rejected
-boukensha.run(task="...", allowed_commands=["python", "git"])
+boukensha.repl(tui=True)   # default — launches Textual TUI
+boukensha.repl(tui=False)  # falls back to plain terminal REPL
 ```
 
-### Direct registration
+### `Repl` refactored for composability
 
-Both modules can be registered manually for finer control:
+`Repl` now exposes three methods so `Tui` (or any other front-end) can drive it:
+
+| Method | Purpose |
+|--------|---------|
+| `on_output(callback)` | Route all REPL output through a callback instead of stdout |
+| `handle_command(text)` | Process a slash command; returns `"quit"`, `"command"`, or `None` |
+| `run_turn(text)` | Run one agent turn and route the result through `on_output` |
+
+`banner`, `logger`, `context`, `model`, and `version` are also exposed as properties.
+
+### `Logger.subscribe()`
 
 ```python
-from boukensha.tools import FileSystem, Shell
-
-FileSystem.register(registry, working_dir="/my/project")
-Shell.register(registry, working_dir="/my/project", timeout=10, allowed_commands=["python"])
+logger.subscribe(lambda event: ...)
 ```
 
-## Run the example
+Every structured log event is now broadcast to all registered subscribers. `Tui` uses this to update the live progress line in real time.
+
+## Run
 
 ```sh
-cd week1_baseline/python/10_standard_tool_library
+cd week1_baseline/python/11_tui
 uv sync
+
+# TUI (default):
 uv run python examples/example.py
 
-# or via the global executable pointed at this step:
-BOUKENSHA_PATH=~/Sites/boukensha/python/10_standard_tool_library boukensha
+# Plain REPL:
+uv run python examples/example.py --no-tui
 ```
 
-## Running the tests
+## Tests
 
 ```sh
 uv run pytest tests/ -v
