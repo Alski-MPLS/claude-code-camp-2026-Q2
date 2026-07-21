@@ -263,6 +263,7 @@ def repl(
     See run() for full parameter documentation including the mud parameter.
     """
     from .repl import Repl as _Repl
+    from .tui import Tui
 
     cfg = Config()
     task_class = tasks.Player
