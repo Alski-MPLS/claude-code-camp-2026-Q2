@@ -120,3 +120,105 @@ def test_repl_starts_and_exits_immediately(monkeypatch):
 
         with patch("sys.stdin", io.StringIO("")):
             boukensha.repl(log=f"{tmp}/test-repl.jsonl")
+
+
+import os
+import tempfile
+import yaml
+from unittest.mock import MagicMock, patch
+
+
+def _make_boukensha_dir(tmp_path):
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    settings = {
+        "tasks": {"player": {"provider": "anthropic", "model": "claude-haiku-4-5"}}
+    }
+    with open(f"{tmp_path}/settings.yaml", "w") as f:
+        yaml.dump(settings, f)
+    with open(f"{tmp_path}/.env", "w") as f:
+        f.write("ANTHROPIC_API_KEY=test-key\n")
+    return tmp_path
+
+
+def test_run_registers_filesystem_tools_when_working_dir_set(monkeypatch, tmp_path):
+    bdir = _make_boukensha_dir(tmp_path / "bdir")
+    wdir = tmp_path / "wdir"
+    wdir.mkdir()
+    monkeypatch.setenv("BOUKENSHA_DIR", str(bdir))
+
+    captured_registry = []
+
+    def fake_agent_init(**kwargs):
+        captured_registry.append(kwargs["registry"])
+        m = MagicMock()
+        m.run.return_value = "done"
+        return m
+
+    with patch("boukensha.Agent", side_effect=fake_agent_init):
+        import boukensha
+        boukensha.run(
+            task="test",
+            working_dir=str(wdir),
+            log=f"{tmp_path}/test.jsonl",
+        )
+
+    registry = captured_registry[0]
+    tool_names = set(registry._context.tools.keys())
+    assert "pwd" in tool_names
+    assert "list_directory" in tool_names
+    assert "read_file" in tool_names
+    assert "write_file" in tool_names
+    assert "delete_file" in tool_names
+    assert "search_files" in tool_names
+    assert "run_command" in tool_names
+
+
+def test_run_skips_tools_when_working_dir_false(monkeypatch, tmp_path):
+    bdir = _make_boukensha_dir(tmp_path / "bdir")
+    monkeypatch.setenv("BOUKENSHA_DIR", str(bdir))
+
+    captured_registry = []
+
+    def fake_agent_init(**kwargs):
+        captured_registry.append(kwargs["registry"])
+        m = MagicMock()
+        m.run.return_value = "done"
+        return m
+
+    with patch("boukensha.Agent", side_effect=fake_agent_init):
+        import boukensha
+        boukensha.run(
+            task="test",
+            working_dir=False,
+            log=f"{tmp_path}/test.jsonl",
+        )
+
+    registry = captured_registry[0]
+    assert "pwd" not in registry._context.tools
+    assert "run_command" not in registry._context.tools
+
+
+def test_run_defaults_working_dir_to_cwd(monkeypatch, tmp_path):
+    bdir = _make_boukensha_dir(tmp_path / "bdir")
+    monkeypatch.setenv("BOUKENSHA_DIR", str(bdir))
+
+    captured_ctx = []
+
+    def fake_agent_init(**kwargs):
+        captured_ctx.append(kwargs["context"])
+        m = MagicMock()
+        m.run.return_value = "done"
+        return m
+
+    with patch("boukensha.Agent", side_effect=fake_agent_init):
+        import boukensha
+        boukensha.run(task="test", log=f"{tmp_path}/test.jsonl")
+
+    assert captured_ctx[0].working_dir == os.getcwd()
+
+
+def test_tools_exported():
+    import boukensha
+    assert hasattr(boukensha, "tools")
+    assert hasattr(boukensha.tools, "FileSystem")
+    assert hasattr(boukensha.tools, "Shell")

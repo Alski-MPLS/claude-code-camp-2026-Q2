@@ -6,7 +6,7 @@ import os
 from collections.abc import Callable
 from typing import Any
 
-from . import backends, tasks
+from . import backends, tasks, tools
 from .agent import Agent
 from .client import Client
 from .repl import Repl
@@ -45,6 +45,7 @@ __all__ = [
     "repl",
     "run",
     "tasks",
+    "tools",
 ]
 
 __version__ = "0.1.0"
@@ -88,6 +89,9 @@ def run(
     ollama_host: str = "http://localhost:11434",
     log: str | None = None,
     max_output_tokens: int | None = None,
+    working_dir: str | bool | None = None,
+    allowed_commands: list[str] | None = None,
+    shell_timeout: int = 30,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> str:
     """Wire together every primitive and run the agent loop.
@@ -135,8 +139,25 @@ def run(
         "ollama_cloud": os.environ.get("OLLAMA_API_KEY"),
     }.get(resolved_backend)
 
-    ctx = Context(task=task_class, system=resolved_system)
+    resolved_wd: str | None
+    if working_dir is None:
+        resolved_wd = os.getcwd()
+    elif not working_dir:
+        resolved_wd = None
+    else:
+        resolved_wd = str(working_dir)
+
+    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd)
     registry = Registry(ctx)
+
+    if resolved_wd:
+        tools.FileSystem.register(registry, working_dir=resolved_wd)
+        tools.Shell.register(
+            registry,
+            working_dir=resolved_wd,
+            timeout=shell_timeout,
+            allowed_commands=allowed_commands,
+        )
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -203,6 +224,9 @@ def repl(
     ollama_host: str = "http://localhost:11434",
     log: str | None = None,
     max_output_tokens: int | None = None,
+    working_dir: str | bool | None = None,
+    allowed_commands: list[str] | None = None,
+    shell_timeout: int = 30,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> None:
     """Start the interactive REPL loop.
@@ -232,8 +256,25 @@ def repl(
         "ollama_cloud": os.environ.get("OLLAMA_API_KEY"),
     }.get(resolved_backend)
 
-    ctx = Context(task=task_class, system=resolved_system)
+    resolved_wd: str | None
+    if working_dir is None:
+        resolved_wd = os.getcwd()
+    elif not working_dir:
+        resolved_wd = None
+    else:
+        resolved_wd = str(working_dir)
+
+    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd)
     registry = Registry(ctx)
+
+    if resolved_wd:
+        tools.FileSystem.register(registry, working_dir=resolved_wd)
+        tools.Shell.register(
+            registry,
+            working_dir=resolved_wd,
+            timeout=shell_timeout,
+            allowed_commands=allowed_commands,
+        )
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
