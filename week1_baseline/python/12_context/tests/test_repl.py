@@ -343,3 +343,46 @@ def test_repl_compact_via_start(capsys):
         logger.close()
     captured = capsys.readouterr()
     assert "compacted" in captured.out
+
+
+# ── Step 13: /memory command ────────────────────────────────────────────────
+
+
+def test_repl_memory_command_lists_registered_tools(capsys):
+    repl, ctx, _ = _make_repl()
+    from boukensha.registry import Registry
+    registry = Registry(ctx)
+    registry.tool("read_memory", "Read memory", {}, block=lambda **_: "")
+    registry.tool("write_memory", "Write memory", {}, block=lambda **_: "")
+    result = repl.handle_command("/memory")
+    assert result == "command"
+    captured = capsys.readouterr()
+    assert "read_memory" in captured.out
+    assert "write_memory" in captured.out
+
+
+def test_repl_memory_command_when_no_memory_tools(capsys):
+    repl, ctx, _ = _make_repl()
+    result = repl.handle_command("/memory")
+    assert result == "command"
+    captured = capsys.readouterr()
+    assert "no MEMORY tools registered" in captured.out
+
+
+def test_repl_file_command_excludes_memory_tools(capsys):
+    repl, ctx, _ = _make_repl()
+    from boukensha.registry import Registry
+    registry = Registry(ctx)
+    registry.tool("read_memory", "Read memory", {}, block=lambda **_: "")
+    registry.tool("read_file", "Read file", {}, block=lambda **_: "")
+    repl.handle_command("/file")
+    captured = capsys.readouterr()
+    assert "read_file" in captured.out
+    assert "read_memory" not in captured.out
+
+
+def test_repl_memory_in_help_text(capsys):
+    repl, ctx, _ = _make_repl()
+    repl.handle_command("/help")
+    captured = capsys.readouterr()
+    assert "/memory" in captured.out

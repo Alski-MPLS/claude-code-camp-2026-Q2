@@ -25,6 +25,7 @@ Commands:
   /compact drop oldest 40% of messages to free context
   /mud     list registered MUD tool names
   /file    list registered FILE tool names
+  /memory  list registered MEMORY tool names
   /exit    leave the REPL
   /help    show this message"""
 
@@ -37,6 +38,10 @@ _MUD_TOOL_NAMES: frozenset[str] = frozenset({
     "get_item", "drop_item", "put_item", "equip_item", "consume_item",
     "cast_spell", "use_magic_item",
     "shop", "practice", "save_character", "send_raw",
+})
+
+_MEMORY_TOOL_NAMES: frozenset[str] = frozenset({
+    "read_memory", "write_memory",
 })
 
 
@@ -143,11 +148,18 @@ class Repl:
                 self._output("(no MUD tools registered)")
             return "command"
         if text == "/file":
-            file_tools = sorted(set(self._context.tools) - _MUD_TOOL_NAMES)
+            file_tools = sorted(set(self._context.tools) - _MUD_TOOL_NAMES - _MEMORY_TOOL_NAMES)
             if file_tools:
                 self._output("FILE tools:\n" + "\n".join(f"  {n}" for n in file_tools))
             else:
                 self._output("(no FILE tools registered)")
+            return "command"
+        if text == "/memory":
+            memory_tools = sorted(set(self._context.tools) & _MEMORY_TOOL_NAMES)
+            if memory_tools:
+                self._output("MEMORY tools:\n" + "\n".join(f"  {n}" for n in memory_tools))
+            else:
+                self._output("(no MEMORY tools registered)")
             return "command"
         return None
 
@@ -220,8 +232,9 @@ class Repl:
 
         all_tools = set(self._context.tools)
         mud_count = len(all_tools & _MUD_TOOL_NAMES)
-        file_count = len(all_tools - _MUD_TOOL_NAMES)
-        tools_line = f"MUD ({mud_count})  FILE ({file_count})"
+        memory_count = len(all_tools & _MEMORY_TOOL_NAMES)
+        file_count = len(all_tools - _MUD_TOOL_NAMES - _MEMORY_TOOL_NAMES)
+        tools_line = f"MUD ({mud_count})  FILE ({file_count})  MEMORY ({memory_count})"
         pad = max(0, 9 - len(ver))
         return (
             f"\n"
@@ -235,6 +248,6 @@ class Repl:
             f"  /quiet or /loud   toggle logging\n"
             f"  /clear           reset conversation history\n"
             f"  /compact         free context (drop oldest messages)\n"
-            f"  /mud or /file    list tools by group\n"
+            f"  /mud, /file, /memory   list tools by group\n"
             f"  /exit or /quit    leave the REPL\n"
         )
