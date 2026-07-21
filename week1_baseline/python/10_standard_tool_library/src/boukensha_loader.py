@@ -91,7 +91,27 @@ def load_and_start_repl() -> None:
             "       Or point BOUKENSHA_PATH at step 08 or later."
         )
 
-    boukensha.repl()
+    repl_kwargs: dict = {}
+
+    mud_name = os.environ.get("MUD_NAME")
+    if mud_name:
+        mud_password = os.environ.get("MUD_PASSWORD")
+        if not mud_password:
+            raise SystemExit("boukensha: MUD_NAME is set but MUD_PASSWORD is missing.")
+        repl_kwargs["mud"] = {
+            "host":     os.environ.get("MUD_HOST", "localhost"),
+            "port":     int(os.environ.get("MUD_PORT", "4000")),
+            "name":     mud_name,
+            "password": mud_password,
+        }
+        repl_kwargs["working_dir"] = False
+
+    import inspect
+    repl_sig = inspect.signature(boukensha.repl)
+    if "tui" in repl_sig.parameters:
+        repl_kwargs["tui"] = sys.stdin.isatty()
+
+    boukensha.repl(**repl_kwargs)
 
 
 def main() -> None:

@@ -158,3 +158,34 @@ def test_mud_register_classmethod_calls_internal():
         Mud.register(registry, host="localhost", port=4000, name="Hero", password="pw")
 
     assert registry.get("mud_connect") is not None
+
+
+def test_tools_module_exports_mud():
+    from boukensha import tools
+    assert hasattr(tools, "Mud")
+
+
+def test_mud_opts_from_config_returns_none_when_no_username(tmp_path):
+    """_mud_opts_from_config returns None when mud.username is not set."""
+    import boukensha
+    from boukensha.config import Config
+    from unittest.mock import patch, PropertyMock
+
+    mock_cfg = MagicMock(spec=Config)
+    mock_cfg.mud_username = None
+    result = boukensha._mud_opts_from_config(mock_cfg)
+    assert result is None
+
+
+def test_mud_opts_from_config_returns_dict_when_username_set():
+    """_mud_opts_from_config returns a dict with connection params when username is set."""
+    import boukensha
+    from boukensha.config import Config
+
+    mock_cfg = MagicMock(spec=Config)
+    mock_cfg.mud_host = "localhost"
+    mock_cfg.mud_port = 4000
+    mock_cfg.mud_username = "Hero"
+    mock_cfg.mud_password = "secret"
+    result = boukensha._mud_opts_from_config(mock_cfg)
+    assert result == {"host": "localhost", "port": 4000, "name": "Hero", "password": "secret"}
