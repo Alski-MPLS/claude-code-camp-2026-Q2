@@ -20,7 +20,7 @@ For this conversion
 - Was able to build out .env file (and not commit it) while using Ollama. This will help get the agent up and running faster without wasting tokens. I still may have to put some money in Anthropics API area to test it out for speed. I don't have the right hardware to utilize the large gemma4 models. 
 - During the port, when i got to 08_the_repl_loop, it had an issue where the example didn't work. I was able to use the example.py file and explain why it wasn't working. Claude was able to find an issue in the code and was able to fix it on the first try.
 - I started porting the 09 folder to python before I watched the video's. This might not be needed but I'll let it go and figure out how to test it since there is no example program.
-
+- Once I got to the last step for the conversion over to python, I was able to run it but it did not have any tools to connect to the MUD. I could ask it about local file information but not with the MUD. I used AI to find the issues and it had to go back and add what was missed. I had it fix the 10, 11 and 12 phases. It also did not have the details on how to connect to MUD so it's adding them to the .boukensha settings.yaml.example file.
 
 
 ## Technical Conclusions
