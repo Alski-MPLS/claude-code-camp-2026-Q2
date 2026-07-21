@@ -115,7 +115,7 @@ def test_repl_starts_and_exits_immediately(monkeypatch):
             f.write("ANTHROPIC_API_KEY=test-key\n")
 
         with patch("sys.stdin", io.StringIO("")):
-            boukensha.repl(log=f"{tmp}/test-repl.jsonl")
+            boukensha.repl(tui=False, log=f"{tmp}/test-repl.jsonl")
 
 
 def _make_boukensha_dir(tmp_path):

@@ -91,7 +91,15 @@ def load_and_start_repl() -> None:
             "       Or point BOUKENSHA_PATH at step 08 or later."
         )
 
-    boukensha.repl()
+    # Disable TUI if stdin is not a TTY (e.g., in tests or piped input)
+    # Only pass tui parameter if the repl function accepts it (for backward compatibility)
+    import inspect
+    repl_sig = inspect.signature(boukensha.repl)
+    if "tui" in repl_sig.parameters:
+        use_tui = sys.stdin.isatty()
+        boukensha.repl(tui=use_tui)
+    else:
+        boukensha.repl()
 
 
 def main() -> None:
