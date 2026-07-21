@@ -71,6 +71,37 @@ Emitted whenever auto- or manual compaction runs. The TUI subscribes to this eve
 boukensha.repl(context_window=128_000)  # for a smaller model
 ```
 
+### Persistent memory (`player.md` / `world.md`)
+
+The agent can maintain two long-term markdown files across sessions —
+`player.md` (character stats, goals, notes) and `world.md` (the map: rooms,
+exits, shops, landmarks) — instead of rediscovering everything each run.
+They live in `~/.boukensha/memory/` by default (configurable via
+`memory.dir` in `settings.yaml`) and are never git-tracked.
+
+On, by default: at startup their current contents are injected into the
+system prompt, and the agent gets two tools, `read_memory` and
+`write_memory`, to keep them updated as it plays.
+
+Toggle with the `memory=` parameter on `run()`/`repl()`, same shape as the
+existing `mud=` toggle:
+
+```python
+boukensha.repl(memory=False)  # disable entirely — no tools, no prompt injection
+boukensha.repl(memory=True)   # force on regardless of settings.yaml
+```
+
+Or via `settings.yaml`:
+
+```yaml
+memory:
+  enabled: false        # default: true
+  dir: ~/custom/memory  # default: <config dir>/memory
+```
+
+`/memory` in the REPL lists the registered memory tools, matching `/mud`
+and `/file`.
+
 ## Run the demo
 
 ```sh

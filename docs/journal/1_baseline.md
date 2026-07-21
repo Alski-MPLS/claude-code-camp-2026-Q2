@@ -25,6 +25,7 @@ For this conversion
 - I asked it to find water to drink and it found the fountain but didn't understand it could drink until I told it to. I wonder if I should add that.
 - I also noticed that I can't interject until it hits 25 iterations. So, I just have to watch the agent run through the instructions until it completes. It definatly needs constant baby-sitting. I also noticed that it might understand how to loot for gold and items.
 - It doesn't seem to understand how to get out of resting. I might have to tweak the code. Not sure if this was solved in RUBY and didn't come over correclty. I'll ask AI to review everything related to commands.
+- There is no memory and the program seems to get confused easily. I've had to tweak some of the descriptions. It didn't know how to "wake" up. I asked AI to review the RUBY code and make sure nothing was missed when converted to python. 
 
 
 ## Technical Conclusions
