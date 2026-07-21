@@ -31,8 +31,7 @@ def test_console_script_debug_flag_reports_bundled_path(boukensha_dir_with_setti
     result = _run_console_script(
         env_overrides={"BOUKENSHA_DIR": str(boukensha_dir_with_settings), "BOUKENSHA_DEBUG": "1"},
     )
-    assert "[boukensha] loading from:" in result.stdout
-    assert str(STEP_DIR) in result.stdout
+    assert f"[boukensha] loading from: {STEP_DIR}\n" in result.stdout
 
 
 def test_console_script_boukensha_path_missing_package_errors(boukensha_dir_with_settings, tmp_path):

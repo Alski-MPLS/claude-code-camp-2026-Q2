@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -158,7 +157,7 @@ def test_load_and_start_repl_prints_debug_line(monkeypatch, tmp_path, capsys):
         boukensha_loader.load_and_start_repl()
 
         captured = capsys.readouterr()
-        assert f"[boukensha] loading from: {step_dir}" in captured.out
+        assert f"[boukensha] loading from: {step_dir}\n" in captured.out
     finally:
         _restore_boukensha_state(modules_snapshot, path_snapshot)
 
