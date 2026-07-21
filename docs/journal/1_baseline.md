@@ -18,6 +18,9 @@ For this conversion
 - I'm half-way through the different phases and I have not seen an issue with what was created in Claude Code.
 - Having the right skills was key to coming up with specific plans and write the code in stages using subagents. (I'm leaving the plan.md files for each phase in the repo for references).
 - Was able to build out .env file (and not commit it) while using Ollama. This will help get the agent up and running faster without wasting tokens. I still may have to put some money in Anthropics API area to test it out for speed. I don't have the right hardware to utilize the large gemma4 models. 
+- During the port, when i got to 08_the_repl_loop, it had an issue where the example didn't work. I was able to use the example.py file and explain why it wasn't working. Claude was able to find an issue in the code and was able to fix it on the first try.
+- I started porting the 09 folder to python before I watched the video's. This might not be needed but I'll let it go and figure out how to test it since there is no example program.
+
 
 
 ## Technical Conclusions
