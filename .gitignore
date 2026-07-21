@@ -31,6 +31,7 @@ jspm_packages/
 week0_explore/preview/data/world/
 
 .boukensha/sessions/
+.boukensha/memory/
 
 # Graphify build outputs
 graphify-out/
