@@ -66,10 +66,10 @@ def test_mud_register_adds_expected_tools():
     expected = [
         "mud_connect", "mud_disconnect", "mud_status",
         "look", "examine", "check",
-        "move", "flee", "set_position", "track",
+        "move", "flee", "set_position", "track", "door", "portal",
         "attack", "skill_strike", "consider",
         "say", "tell", "channel_say",
-        "get_item", "drop_item", "put_item", "equip_item", "consume_item",
+        "get_item", "drop_item", "put_item", "give_item", "equip_item", "consume_item", "pour_liquid",
         "cast_spell", "use_magic_item",
         "shop", "practice", "save_character", "send_raw",
     ]

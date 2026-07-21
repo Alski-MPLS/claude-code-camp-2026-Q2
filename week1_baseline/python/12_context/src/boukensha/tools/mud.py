@@ -21,6 +21,8 @@ Tools registered (grouped by concern):
     flee              — flee from combat
     set_position      — change body position (stand/sit/rest/sleep/wake)
     track             — track a mob or player by name
+    door              — open, close, lock, or unlock a door or container
+    portal            — enter a portal/vehicle, or leave the one you're in
 
   Combat
     attack            — attack a target
@@ -33,11 +35,13 @@ Tools registered (grouped by concern):
     channel_say       — broadcast over a channel (shout, gossip, auction…)
 
   Inventory & equipment
-    get_item          — pick up an item
+    get_item          — pick up an item, including looting one off a corpse
     drop_item         — drop, donate, or junk an item
     put_item          — put an item into a container
+    give_item         — give an item to another player or mob
     equip_item        — wear, wield, hold, grab, or remove an item
     consume_item      — eat, drink, taste, or sip something
+    pour_liquid       — pour liquid from a container into another, or out
 
   Magic
     cast_spell        — cast a named spell with an optional target
@@ -83,6 +87,8 @@ _DROP_MODES    = {"drop", "donate", "junk"}
 _EQUIP_OPS     = {"wear", "wield", "hold", "grab", "remove"}
 _CONSUME_MODES = {"eat", "drink", "taste", "sip"}
 _SHOP_OPS      = {"buy", "sell", "list", "value", "offer"}
+_DOOR_OPS      = {"open", "close", "lock", "unlock"}
+_PORTAL_OPS    = {"enter", "leave"}
 _INFO_SELF     = {
     "score", "inventory", "equipment", "gold", "exits",
     "time", "weather", "levels", "wimpy", "toggle", "where",
@@ -389,6 +395,33 @@ class Mud:
             block=lambda target, **_: _guard(session) or _send(session, f"track {target}"),
         )
 
+        registry.tool(
+            "door",
+            description=(
+                "Open, close, lock, or unlock a door or container. "
+                "Target may be a compass direction (e.g. 'north') for a room exit, "
+                "or an item/container name."
+            ),
+            parameters={
+                "action": {"type": "string", "description": "open | close | lock | unlock"},
+                "target": {"type": "string", "description": "Direction or door/container name"},
+            },
+            block=lambda action, target, **_: _door(session, action, target),
+        )
+
+        registry.tool(
+            "portal",
+            description=(
+                "Enter a portal, vehicle, or other enterable object, or leave the one "
+                "you're currently in. Target is required for 'enter', ignored for 'leave'."
+            ),
+            parameters={
+                "action": {"type": "string", "description": "enter | leave"},
+                "target": {"type": "string", "description": "Name of the portal/vehicle to enter (required for 'enter')"},
+            },
+            block=lambda action, target=None, **_: _portal(session, action, target),
+        )
+
         # ── Combat ────────────────────────────────────────────────────────────
 
         registry.tool(
@@ -463,10 +496,14 @@ class Mud:
 
         registry.tool(
             "get_item",
-            description="Pick up an item from the room or from a container.",
+            description=(
+                "Pick up an item from the room or from a container. "
+                "To loot a dead body, pass item='all' and container='corpse' "
+                "(sends 'get all corpse')."
+            ),
             parameters={
-                "item":      {"type": "string",  "description": "Name of the item to get"},
-                "container": {"type": "string",  "description": "Container to get it from (optional)"},
+                "item":      {"type": "string",  "description": "Name of the item to get, or 'all' to get everything"},
+                "container": {"type": "string",  "description": "Container to get it from, e.g. 'corpse' to loot a body (optional)"},
                 "count":     {"type": "integer", "description": "Number of items to get (optional)"},
             },
             block=lambda item, container=None, count=None, **_: _get_item(session, item, container, count),
@@ -495,6 +532,17 @@ class Mud:
         )
 
         registry.tool(
+            "give_item",
+            description="Give an item to another player or mob in the room.",
+            parameters={
+                "item":    {"type": "string",  "description": "Name of the item to give"},
+                "target":  {"type": "string",  "description": "Name of the player or mob to give it to"},
+                "count":   {"type": "integer", "description": "Number of items to give (optional)"},
+            },
+            block=lambda item, target, count=None, **_: _give_item(session, item, target, count),
+        )
+
+        registry.tool(
             "equip_item",
             description="Wear, wield, hold, grab, or remove an item.",
             parameters={
@@ -513,6 +561,19 @@ class Mud:
                 "mode": {"type": "string", "description": "eat | drink | taste | sip (default: eat)"},
             },
             block=lambda item, mode="eat", **_: _consume_item(session, item, mode),
+        )
+
+        registry.tool(
+            "pour_liquid",
+            description=(
+                "Pour liquid from one container into another, or pour a container out. "
+                "Omit destination to empty the source container."
+            ),
+            parameters={
+                "source":      {"type": "string", "description": "Container to pour from"},
+                "destination": {"type": "string", "description": "Container to pour into (omit to pour out)"},
+            },
+            block=lambda source, destination=None, **_: _pour_liquid(session, source, destination),
         )
 
         # ── Magic ─────────────────────────────────────────────────────────────
@@ -664,6 +725,31 @@ def _set_position(session: MudSession, position: str) -> str:
     return _send(session, position.strip().lower())
 
 
+def _door(session: MudSession, action: str, target: str) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    err = _check_enum(action, _DOOR_OPS, "action")
+    if err:
+        return err
+    return _send(session, f"{action.strip().lower()} {target}")
+
+
+def _portal(session: MudSession, action: str, target: str | None) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    err = _check_enum(action, _PORTAL_OPS, "action")
+    if err:
+        return err
+    action = action.strip().lower()
+    if action == "enter":
+        if not target:
+            return "error: 'enter' requires a target"
+        return _send(session, f"enter {target}")
+    return _send(session, "leave")
+
+
 def _attack(session: MudSession, target: str, style: str) -> str:
     err = _guard(session)
     if err:
@@ -753,6 +839,18 @@ def _put_item(session: MudSession, item: str, container: str, count: int | None)
     return _send(session, " ".join(parts))
 
 
+def _give_item(session: MudSession, item: str, target: str, count: int | None) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    parts = ["give"]
+    if count is not None:
+        parts.append(str(count))
+    parts.append(item)
+    parts.append(target)
+    return _send(session, " ".join(parts))
+
+
 def _equip_item(session: MudSession, item: str, action: str, body_loc: str | None) -> str:
     err = _guard(session)
     if err:
@@ -774,6 +872,15 @@ def _consume_item(session: MudSession, item: str, mode: str) -> str:
     if err:
         return err
     return _send(session, f"{mode.strip().lower()} {item}")
+
+
+def _pour_liquid(session: MudSession, source: str, destination: str | None) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    if destination:
+        return _send(session, f"pour {source} {destination}")
+    return _send(session, f"pour {source} out")
 
 
 def _use_magic_item(session: MudSession, item: str, mode: str, target_args: str | None) -> str:
