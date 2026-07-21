@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import threading
 import time
 from concurrent.futures import Future
 from typing import TYPE_CHECKING, Any
@@ -85,6 +86,7 @@ class Tui(App):
         self._live: dict[str, Any] = self._idle_state()
         self._spinner_idx = 0
         self._future: Future | None = None
+        self._app_thread: threading.Thread | None = None
 
     # ── layout ────────────────────────────────────────────────────────────
 
@@ -95,6 +97,7 @@ class Tui(App):
         yield Label("", id="status")
 
     def on_mount(self) -> None:
+        self._app_thread = threading.current_thread()
         self._repl.on_output(self._on_repl_output)
         if self._repl.logger:
             self._repl.logger.subscribe(self._on_logger_event_from_thread)
@@ -198,7 +201,13 @@ class Tui(App):
             log.write(f"[context compacted — {dropped} messages dropped to free space]")
 
     def _on_repl_output(self, text: str) -> None:
-        self.call_from_thread(self._append_to_log, text)
+        # handle_command() runs on the Textual event-loop thread; agent turns
+        # run in a worker thread via run_in_executor. call_from_thread is only
+        # valid from a non-app thread, so we call directly when already on it.
+        if threading.current_thread() is self._app_thread:
+            self._append_to_log(text)
+        else:
+            self.call_from_thread(self._append_to_log, text)
 
     def _append_to_log(self, text: str) -> None:
         self.query_one("#log", RichLog).write(text)

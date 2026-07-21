@@ -191,6 +191,8 @@ class Repl:
         provider_line = f"{self._provider or 'default'} ({self._model or 'default'})  {key_status}"
         config_line = self._config_dir or "(default)"
 
+        tool_count = len(self._context.tools)
+        tool_names = ", ".join(sorted(self._context.tools)) if tool_count else "(none)"
         pad = max(0, 9 - len(ver))
         return (
             f"\n"
@@ -199,6 +201,7 @@ class Repl:
             f"╚══════════════════════════════════════╝\n"
             f"  config:    {config_line}\n"
             f"  provider:  {provider_line}\n"
+            f"  tools ({tool_count}): {tool_names}\n"
             f"\n"
             f"  /quiet or /loud   toggle logging\n"
             f"  /clear           reset conversation history\n"
