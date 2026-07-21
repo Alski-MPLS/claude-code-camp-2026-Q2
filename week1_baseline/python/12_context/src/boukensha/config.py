@@ -58,17 +58,6 @@ class Config:
     def mud_password(self) -> str | None:
         return self.dig("mud", "password")
 
-    # ---------- persistent memory --------------------------------------------
-
-    @property
-    def memory_enabled(self) -> bool:
-        value = self.dig("memory", "enabled")
-        return True if value is None else bool(value)
-
-    @property
-    def memory_dir(self) -> str:
-        return self.dig("memory", "dir") or str(Path(self.dir) / "memory")
-
     # ---------- low-level helpers -------------------------------------------
 
     def dig(self, *keys: str) -> Any:
