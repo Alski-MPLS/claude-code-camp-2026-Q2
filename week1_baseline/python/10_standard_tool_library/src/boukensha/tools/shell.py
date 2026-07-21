@@ -63,8 +63,6 @@ class Shell:
                 return f"(no output){exit_note}" if not output else f"{output}{exit_note}"
             except subprocess.TimeoutExpired:
                 return _oops(f"command timed out after {timeout}s: {command}")
-            except FileNotFoundError as e:
-                return _oops(f"command not found: {e}")
             except Exception as e:
                 return _oops(str(e))
 

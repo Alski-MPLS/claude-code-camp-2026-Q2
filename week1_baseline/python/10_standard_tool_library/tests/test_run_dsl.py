@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+import os
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import yaml
+
 from boukensha.run_dsl import RunDSL
 from boukensha.context import Context
 from boukensha.registry import Registry
 from boukensha.tasks.player import Player
+import boukensha
 
 
 def _make_registry() -> Registry:
@@ -34,9 +41,6 @@ def test_run_dsl_tool_no_parameters():
     assert result == "pong"
 
 
-import boukensha
-
-
 def test_run_is_callable():
     assert callable(boukensha.run)
 
@@ -48,16 +52,11 @@ def test_run_dsl_exported():
 
 def test_run_returns_text(monkeypatch):
     """boukensha.run() must return the agent's final text without error."""
-    import os
-    import tempfile
-    from unittest.mock import MagicMock, patch
-
     # Provide a minimal .boukensha config so Config() doesn't fail
     with tempfile.TemporaryDirectory() as tmp:
         monkeypatch.setenv("BOUKENSHA_DIR", tmp)
 
         # Write a minimal settings.yaml
-        import yaml
         settings = {
             "tasks": {
                 "player": {
@@ -98,9 +97,6 @@ def test_repl_exported():
 def test_repl_starts_and_exits_immediately(monkeypatch):
     """boukensha.repl() must start the REPL and exit cleanly on EOF."""
     import io
-    import tempfile
-    import yaml
-    from unittest.mock import MagicMock, patch
 
     with tempfile.TemporaryDirectory() as tmp:
         monkeypatch.setenv("BOUKENSHA_DIR", tmp)
@@ -120,12 +116,6 @@ def test_repl_starts_and_exits_immediately(monkeypatch):
 
         with patch("sys.stdin", io.StringIO("")):
             boukensha.repl(log=f"{tmp}/test-repl.jsonl")
-
-
-import os
-import tempfile
-import yaml
-from unittest.mock import MagicMock, patch
 
 
 def _make_boukensha_dir(tmp_path):
