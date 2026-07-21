@@ -23,8 +23,21 @@ Commands:
   /loud    re-enable logging output
   /clear   wipe conversation history (tools stay)
   /compact drop oldest 40% of messages to free context
+  /mud     list registered MUD tool names
+  /file    list registered FILE tool names
   /exit    leave the REPL
   /help    show this message"""
+
+_MUD_TOOL_NAMES: frozenset[str] = frozenset({
+    "mud_connect", "mud_disconnect", "mud_status",
+    "look", "examine", "check",
+    "move", "flee", "set_position", "track",
+    "attack", "skill_strike", "consider",
+    "say", "tell", "channel_say",
+    "get_item", "drop_item", "put_item", "equip_item", "consume_item",
+    "cast_spell", "use_magic_item",
+    "shop", "practice", "save_character", "send_raw",
+})
 
 
 class Repl:
@@ -122,6 +135,20 @@ class Repl:
             dropped = self._context.compact_messages()
             self._output(f"(compacted context — {dropped} messages dropped)")
             return "command"
+        if text == "/mud":
+            mud_tools = sorted(set(self._context.tools) & _MUD_TOOL_NAMES)
+            if mud_tools:
+                self._output("MUD tools:\n" + "\n".join(f"  {n}" for n in mud_tools))
+            else:
+                self._output("(no MUD tools registered)")
+            return "command"
+        if text == "/file":
+            file_tools = sorted(set(self._context.tools) - _MUD_TOOL_NAMES)
+            if file_tools:
+                self._output("FILE tools:\n" + "\n".join(f"  {n}" for n in file_tools))
+            else:
+                self._output("(no FILE tools registered)")
+            return "command"
         return None
 
     def run_turn(self, user_input: str) -> None:
@@ -191,8 +218,10 @@ class Repl:
         provider_line = f"{self._provider or 'default'} ({self._model or 'default'})  {key_status}"
         config_line = self._config_dir or "(default)"
 
-        tool_count = len(self._context.tools)
-        tool_names = ", ".join(sorted(self._context.tools)) if tool_count else "(none)"
+        all_tools = set(self._context.tools)
+        mud_count = len(all_tools & _MUD_TOOL_NAMES)
+        file_count = len(all_tools - _MUD_TOOL_NAMES)
+        tools_line = f"MUD ({mud_count})  FILE ({file_count})"
         pad = max(0, 9 - len(ver))
         return (
             f"\n"
@@ -201,10 +230,11 @@ class Repl:
             f"╚══════════════════════════════════════╝\n"
             f"  config:    {config_line}\n"
             f"  provider:  {provider_line}\n"
-            f"  tools ({tool_count}): {tool_names}\n"
+            f"  tools:     {tools_line}\n"
             f"\n"
             f"  /quiet or /loud   toggle logging\n"
             f"  /clear           reset conversation history\n"
             f"  /compact         free context (drop oldest messages)\n"
+            f"  /mud or /file    list tools by group\n"
             f"  /exit or /quit    leave the REPL\n"
         )
