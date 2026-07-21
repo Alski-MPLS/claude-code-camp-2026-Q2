@@ -19,7 +19,13 @@ from .prompt_builder import PromptBuilder
 from .registry import Registry
 from .run_dsl import RunDSL
 from .tool import Tool
-from .tui import Tui
+
+
+def __getattr__(name: str):
+    if name == "Tui":
+        from .tui import Tui
+        return Tui
+    raise AttributeError(f"module 'boukensha' has no attribute {name!r}")
 
 __all__ = [
     "Agent",

@@ -234,7 +234,6 @@ def test_repl_tui_false_calls_repl_start(monkeypatch, tmp_path):
 
     import boukensha
     from boukensha.repl import Repl as _Repl
-    original_start = _Repl.start
 
     def fake_start(self):
         started.append(True)

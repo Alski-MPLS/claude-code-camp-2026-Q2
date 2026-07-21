@@ -150,6 +150,7 @@ class Tui(App):
         }
         loop = asyncio.get_running_loop()
         self._future = loop.run_in_executor(None, self._run_turn_sync, text)
+        self.query_one("#input", Input).disabled = True
 
     def _run_turn_sync(self, text: str) -> None:
         try:
@@ -168,6 +169,7 @@ class Tui(App):
         phase = event.get("phase", "")
         if phase == "iteration":
             self._live["iteration"] = int(event.get("n", 0))
+            self._live["max_iterations"] = int(event.get("max", MAX_ITERATIONS))
             self._live["current_action"] = "Thinking…"
         elif phase == "tool_call":
             self._live["current_action"] = f"Calling tool: {event.get('name', '')}"
@@ -189,10 +191,12 @@ class Tui(App):
         self.query_one("#log", RichLog).write(text)
 
     def _on_turn_complete(self) -> None:
+        self.query_one("#input", Input).disabled = False
         self._live = self._idle_state()
         self._turn_count += 1
 
     def _on_turn_error(self, message: str) -> None:
+        self.query_one("#input", Input).disabled = False
         self._live = self._idle_state()
         self.query_one("#log", RichLog).write(f"[error] {message}")
 
@@ -215,9 +219,10 @@ class Tui(App):
             itok = _fmt_tokens(self._live.get("turn_input_tokens", 0))
             otok = _fmt_tokens(self._live.get("turn_output_tokens", 0))
             calls = self._live.get("tool_call_count", 0)
+            max_iter = self._live.get("max_iterations", MAX_ITERATIONS)
             label.update(
                 f"{frame} {action}  "
-                f"(iter {iteration}/{MAX_ITERATIONS} · {elapsed}s · "
+                f"(iter {iteration}/{max_iter} · {elapsed}s · "
                 f"↑ {itok} · ↓ {otok} · {calls} calls)"
             )
             label.add_class("active")
