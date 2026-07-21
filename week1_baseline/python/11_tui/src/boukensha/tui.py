@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import time
 from concurrent.futures import Future
 from typing import TYPE_CHECKING, Any
@@ -71,7 +72,6 @@ class Tui(App):
         self._repl = repl
         self._turn_count = 0
         self._session_input_tokens = 0
-        self._session_output_tokens = 0
         self._live: dict[str, Any] = self._idle_state()
         self._spinner_idx = 0
         self._future: Future | None = None
@@ -148,7 +148,7 @@ class Tui(App):
             "turn_input_tokens": 0,
             "turn_output_tokens": 0,
         }
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         self._future = loop.run_in_executor(None, self._run_turn_sync, text)
 
     def _run_turn_sync(self, text: str) -> None:
@@ -181,7 +181,6 @@ class Tui(App):
             self._live["turn_input_tokens"] = self._live.get("turn_input_tokens", 0) + itu
             self._live["turn_output_tokens"] = self._live.get("turn_output_tokens", 0) + otu
             self._session_input_tokens += itu
-            self._session_output_tokens += otu
 
     def _on_repl_output(self, text: str) -> None:
         self.call_from_thread(self._append_to_log, text)
@@ -228,8 +227,6 @@ class Tui(App):
             label.remove_class("active")
 
     def _refresh_status(self) -> None:
-        import datetime
-
         label = self.query_one("#status", Label)
         ver = self._repl.version or "?.?.?"
         model = self._repl.model or "(model)"
