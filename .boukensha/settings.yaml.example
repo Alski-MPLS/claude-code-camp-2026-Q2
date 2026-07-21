@@ -1,3 +1,9 @@
+mud:
+   host: localhost
+   port: 4000
+   username: <username> 
+   password: <password> 
+
 tasks:
   player:
     # provider: anthropic        # anthropic | openai | gemini | ollama | ollama_cloud
