@@ -577,3 +577,190 @@ def test_agent_wrap_up_adds_assistant_reply_to_context():
     roles = [m.role for m in ctx.messages]
     assert roles[-1] == "assistant"
     assert ctx.messages[-1].content == "Wrapping up"
+
+
+# ── Step 12: token tracking and compaction tests ─────────────────────────────
+
+from boukensha.context import Context
+from boukensha.registry import Registry
+from boukensha.tasks.player import Player
+
+
+def _make_agent_12(responses, max_iterations=25, max_turn_tokens=None, context_window=200_000):
+    """Build Agent with token-tracking context and mock builder/client."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+
+    ctx = Context(task=Player, system="sys", context_window=context_window)
+    registry = Registry(ctx)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = responses
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    # Each call returns a response dict with usage
+    mock_client.call.return_value = {
+        "usage": {"input_tokens": 1000, "output_tokens": 100}
+    }
+    # Override for each response when usage varies
+    mock_builder.parse_response.side_effect = responses
+
+    ctx.add_message("user", "hello")
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        max_iterations=max_iterations,
+        max_turn_tokens=max_turn_tokens,
+    )
+    return agent, ctx, mock_client, mock_builder
+
+
+def test_agent_records_usage_in_context():
+    responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]}]
+    agent, ctx, mock_client, _ = _make_agent_12(responses)
+    mock_client.call.return_value = {"usage": {"input_tokens": 5000, "output_tokens": 200}}
+    agent.run()
+    # current_tokens updated from input_tokens of last API call
+    assert ctx.current_tokens == 5000
+
+
+def test_agent_resets_turn_tokens_at_start():
+    responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]}]
+    agent, ctx, mock_client, _ = _make_agent_12(responses)
+    # Pre-load stale turn_tokens
+    ctx.add_turn_tokens(99_999, 0)
+    mock_client.call.return_value = {"usage": {"input_tokens": 100, "output_tokens": 50}}
+    agent.run()
+    # After run, turn_tokens = 100+50 = 150 (stale value was reset)
+    assert ctx.turn_tokens == 150
+
+
+def test_agent_stops_at_max_turn_tokens():
+    """Agent should trigger wrap-up when turn tokens exceed max_turn_tokens."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+
+    ctx = Context(task=Player, system="sys", context_window=200_000)
+    registry = Registry(ctx)
+    registry.tool("noop", description="noop", parameters={}, block=lambda: "ok")
+
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}],
+    }
+    wrap_up_response = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Token limit hit"}]}
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [tool_response, wrap_up_response]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    # Each call consumes 600 tokens; max_turn_tokens=500 so first call already exceeds it
+    mock_client.call.return_value = {"usage": {"input_tokens": 400, "output_tokens": 200}}
+
+    ctx.add_message("user", "go")
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        max_iterations=25,
+        max_turn_tokens=500,
+    )
+    result = agent.run()
+    assert result == "Token limit hit"
+
+
+def test_agent_compact_if_needed_runs_before_loop():
+    """When context is at threshold, compact_messages is called before the first iteration."""
+    import tempfile
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.logger import Logger
+
+    ctx = Context(task=Player, system="sys", context_window=200_000)
+    # Fill context to 90% — above 85% threshold
+    ctx.update_tokens(180_000)
+    for i in range(10):
+        ctx.add_message("user", f"msg {i}")
+
+    registry = Registry(ctx)
+    mock_builder = MagicMock()
+    mock_builder.parse_response.return_value = {
+        "stop_reason": "end_turn",
+        "content": [{"type": "text", "text": "ok"}],
+    }
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {"usage": {"input_tokens": 0, "output_tokens": 0}}
+
+    msg_count_before = len(ctx.messages)
+
+    with tempfile.TemporaryDirectory() as d:
+        logger = Logger(dir=d)
+        agent = Agent(
+            context=ctx,
+            registry=registry,
+            builder=mock_builder,
+            client=mock_client,
+            logger=logger,
+        )
+        agent.run()
+        logger.close()
+        import json
+        from pathlib import Path
+        lines = [json.loads(l) for l in Path(logger.path).read_text().splitlines() if l.strip()]
+        phases = [l["phase"] for l in lines]
+        assert "compaction" in phases
+    # Messages were reduced
+    assert len(ctx.messages) < msg_count_before
+
+
+def test_agent_reasoning_blocks_logged():
+    """Reasoning blocks in the response content are forwarded to logger.reasoning()."""
+    import tempfile
+    from unittest.mock import MagicMock, call
+    from boukensha.agent import Agent
+    from boukensha.logger import Logger
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+
+    reasoning_block = {"type": "reasoning", "text": "Let me think about this.", "redacted": False}
+    text_block = {"type": "text", "text": "Done"}
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.return_value = {
+        "stop_reason": "end_turn",
+        "content": [reasoning_block, text_block],
+    }
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    with tempfile.TemporaryDirectory() as d:
+        logger = Logger(dir=d)
+        agent = Agent(
+            context=ctx,
+            registry=registry,
+            builder=mock_builder,
+            client=mock_client,
+            logger=logger,
+        )
+        agent.run()
+        logger.close()
+        import json
+        from pathlib import Path
+        lines = [json.loads(l) for l in Path(logger.path).read_text().splitlines() if l.strip()]
+        reasoning_events = [l for l in lines if l["phase"] == "reasoning"]
+        assert len(reasoning_events) == 1
+        assert reasoning_events[0]["text"] == "Let me think about this."
+        assert reasoning_events[0]["redacted"] is False
