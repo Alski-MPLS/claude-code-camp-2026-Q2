@@ -21,6 +21,7 @@ Examples:
 
 from __future__ import annotations
 
+import inspect
 import os
 import sys
 from pathlib import Path
@@ -93,7 +94,6 @@ def load_and_start_repl() -> None:
 
     # Disable TUI if stdin is not a TTY (e.g., in tests or piped input)
     # Only pass tui parameter if the repl function accepts it (for backward compatibility)
-    import inspect
     repl_sig = inspect.signature(boukensha.repl)
     if "tui" in repl_sig.parameters:
         use_tui = sys.stdin.isatty()
