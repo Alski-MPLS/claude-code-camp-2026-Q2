@@ -36,6 +36,9 @@ class Registry:
         self._context.register_tool(registered)
         return registered
 
+    def get(self, name: str) -> "Tool | None":
+        return self._context.tools.get(str(name))
+
     def dispatch(self, name: str, args: dict[str, Any] | None = None) -> Any:
         tool = self._context.tools.get(str(name))
         if tool is None:
