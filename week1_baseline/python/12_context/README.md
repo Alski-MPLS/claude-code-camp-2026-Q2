@@ -1,70 +1,80 @@
-# Step 11 — A Terminal UI
+# Step 12 — Context Management
 
-Boukensha now ships a full terminal UI (TUI) built on [Textual](https://github.com/Textualize/textual). The plain REPL from step 10 is still available with `tui=False`.
+When you call an LLM directly you are responsible for the context window. There is no auto-compacting. This step adds proper token tracking, visual warnings, and automatic compaction so the agent never silently blows past the limit.
 
 ## What's new
 
-### `boukensha.Tui`
+### Accurate context tracking
 
-New class. Wraps a `Repl` instance and replaces its raw `print`/`input` I/O with a structured four-zone display:
+`Context` now maintains two distinct token counts:
+
+| Attribute | What it measures |
+|-----------|-----------------|
+| `context_window` | The model's maximum input token capacity (default 200,000 for Anthropic) |
+| `current_tokens` | Tokens actually used in the most recent API call (`usage.input_tokens` from the response) |
+
+Previously `token_budget` (8,192) was displayed as the limit — that was the *output* `max_tokens`, not the context window. And the cumulative session token sum was shown as usage, which grew without bound even after `/clear`. Both are fixed.
+
+The Agent updates `current_tokens` after every API response (including mid-turn tool-use calls), so the display always reflects what the next call will actually send.
+
+### Context colour coding
+
+The progress and status lines now colour the context indicator based on how full the window is:
+
+| Usage | Colour | Meaning |
+|-------|--------|---------|
+| < 70% | Grey | Normal |
+| 70–84% | Yellow | Approaching limit |
+| ≥ 85% | Red | Compaction imminent |
+
+A `⚠` symbol also appears in the status bar at 85%+.
+
+### Auto-compaction
+
+At the start of each agent turn, if `current_tokens / context_window >= 0.85`, the Agent automatically compacts the context before making any API call:
 
 ```
-┌──────────────────────────────────────────────┐
-│  conversation viewport (scrollable)           │
-├──────────────────────────────────────────────┤
-│  ⟳ live progress line (idle when not running) │
-├──────────────────────────────────────────────┤
-│  boukensha> input box                         │
-├──────────────────────────────────────────────┤
-│  status line (always-on)                      │
-└──────────────────────────────────────────────┘
+[context compacted — 12 messages dropped to free space]
 ```
 
-The **progress line** shows a spinner, current action, iteration counter (`n/MAX`), elapsed seconds, token counts (↑ in / ↓ out), and tool call count while the agent is running. When idle it shows context usage and turn count.
+Compaction drops the oldest 40% of messages (keeping at least 2) and resets `current_tokens` to 0. The first API call after compaction will report the true new size.
 
-The **status line** always shows: version · model · context tokens used · registered tool count · wall-clock time.
-
-**Keyboard shortcuts:**
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit input or slash command |
-| `Esc` | Interrupt the running agent turn |
-| `Ctrl+L` | Clear conversation history |
-| `PgUp` / `PgDn` | Scroll conversation viewport |
-| `Ctrl+C` / `Ctrl+D` | Quit |
-
-### `boukensha.repl()` — new `tui:` keyword
+### `Context.compact_messages()`
 
 ```python
-boukensha.repl(tui=True)   # default — launches Textual TUI
-boukensha.repl(tui=False)  # falls back to plain terminal REPL
+dropped = context.compact_messages(target_fraction=0.60)
+# => 12  (number of messages dropped)
 ```
 
-### `Repl` refactored for composability
+### `/compact` command
 
-`Repl` now exposes three methods so `Tui` (or any other front-end) can drive it:
+Manual compaction from the REPL or TUI:
 
-| Method | Purpose |
-|--------|---------|
-| `on_output(callback)` | Route all REPL output through a callback instead of stdout |
-| `handle_command(text)` | Process a slash command; returns `"quit"`, `"command"`, or `None` |
-| `run_turn(text)` | Run one agent turn and route the result through `on_output` |
+```
+boukensha> /compact
+(compacted context — 12 messages dropped)
+```
 
-`banner`, `logger`, `context`, `model`, and `version` are also exposed as properties.
+### Logger `compaction` event
 
-### `Logger.subscribe()`
+```json
+{"phase": "compaction", "before": 172000, "dropped": 12, "context_window": 200000}
+```
+
+Emitted whenever auto- or manual compaction runs. The TUI subscribes to this event to display the compaction notice in the conversation view.
+
+### `boukensha.repl()` — `context_window=` parameter
+
+`token_budget` is replaced by `context_window` (default `200_000`):
 
 ```python
-logger.subscribe(lambda event: ...)
+boukensha.repl(context_window=128_000)  # for a smaller model
 ```
 
-Every structured log event is now broadcast to all registered subscribers. `Tui` uses this to update the live progress line in real time.
-
-## Run
+## Run the demo
 
 ```sh
-cd week1_baseline/python/11_tui
+cd week1_baseline/python/12_context
 uv sync
 
 # TUI (default):
