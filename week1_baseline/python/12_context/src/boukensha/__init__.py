@@ -56,7 +56,7 @@ __all__ = [
     "tools",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.12.0"
 
 _debug: bool = False
 
@@ -96,6 +96,8 @@ def run(
     api_key: str | None = None,
     ollama_host: str = "http://localhost:11434",
     log: str | None = None,
+    context_window: int = 200_000,
+    max_turn_tokens: int | None = None,
     max_output_tokens: int | None = None,
     working_dir: str | bool | None = None,
     allowed_commands: list[str] | None = None,
@@ -155,7 +157,7 @@ def run(
     else:
         resolved_wd = str(working_dir)
 
-    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd)
+    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
     registry = Registry(ctx)
 
     if resolved_wd:
@@ -211,6 +213,7 @@ def run(
         logger=logger,
         task_settings=task_settings,
         max_iterations=effective_max_iterations,
+        max_turn_tokens=max_turn_tokens,
         max_output_tokens=effective_max_output_tokens,
     )
 
@@ -232,6 +235,7 @@ def repl(
     api_key: str | None = None,
     ollama_host: str = "http://localhost:11434",
     log: str | None = None,
+    context_window: int = 200_000,
     max_turn_tokens: int | None = None,
     max_output_tokens: int | None = None,
     working_dir: str | bool | None = None,
@@ -274,7 +278,7 @@ def repl(
     else:
         resolved_wd = str(working_dir)
 
-    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd)
+    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
     registry = Registry(ctx)
 
     if resolved_wd:
