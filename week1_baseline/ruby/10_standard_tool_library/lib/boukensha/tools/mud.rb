@@ -161,10 +161,12 @@ module Boukensha
 
         registry.tool "check",
           description: "Query information about your character or surroundings. " \
-                       "Kinds: score, inventory, equipment, gold, exits, time, weather, " \
-                       "levels, wimpy, toggle, where.",
+                       "Use kind: 'score' for your core stats — HP, mana, moves, " \
+                       "experience, level, and gold carried — all in one report. " \
+                       "Other kinds: inventory, equipment, gold (coin purse only), exits, " \
+                       "time, weather, levels, wimpy, toggle, where.",
           parameters: {
-            kind: { type: "string", description: "What to check: score | inventory | equipment | gold | exits | time | weather | levels | wimpy | toggle | where" }
+            kind: { type: "string", description: "score | inventory | equipment | gold | exits | time | weather | levels | wimpy | toggle | where. Use 'score' to check health, experience, gold, and level." }
           } do |kind:|
           next guard.call if guard.call
           begin
