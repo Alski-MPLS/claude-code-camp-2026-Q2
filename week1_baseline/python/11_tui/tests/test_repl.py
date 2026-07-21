@@ -192,3 +192,102 @@ def test_repl_api_key_status_in_banner(capsys):
         logger_no.close()
     out_without = capsys.readouterr().out
     assert "API key not set" in out_without
+
+
+def test_repl_on_output_routes_banner():
+    repl, _, logger = _make_repl()
+    received = []
+    repl.on_output(received.append)
+    try:
+        import io
+        with patch("sys.stdin", io.StringIO("/exit\n")):
+            repl.start()
+    finally:
+        logger.close()
+    all_output = "\n".join(received)
+    assert "BOUKENSHA" in all_output
+
+
+def test_repl_on_output_routes_agent_reply():
+    repl, _, logger = _make_repl()
+    received = []
+    repl.on_output(received.append)
+    try:
+        import io
+        with patch("sys.stdin", io.StringIO("hello\n/exit\n")):
+            repl.start()
+    finally:
+        logger.close()
+    all_output = "\n".join(received)
+    assert "ok" in all_output
+
+
+def test_repl_handle_command_exit_returns_quit():
+    repl, _, logger = _make_repl()
+    try:
+        result = repl.handle_command("/exit")
+    finally:
+        logger.close()
+    assert result == "quit"
+
+
+def test_repl_handle_command_quit_returns_quit():
+    repl, _, logger = _make_repl()
+    try:
+        result = repl.handle_command("/quit")
+    finally:
+        logger.close()
+    assert result == "quit"
+
+
+def test_repl_handle_command_clear_wipes_history():
+    repl, ctx, logger = _make_repl()
+    ctx.add_message("user", "earlier message")
+    try:
+        result = repl.handle_command("/clear")
+    finally:
+        logger.close()
+    assert result == "command"
+    assert ctx.messages == []
+
+
+def test_repl_handle_command_help_returns_command():
+    repl, _, logger = _make_repl()
+    try:
+        result = repl.handle_command("/help")
+    finally:
+        logger.close()
+    assert result == "command"
+
+
+def test_repl_handle_command_none_for_non_command():
+    repl, _, logger = _make_repl()
+    try:
+        result = repl.handle_command("hello world")
+    finally:
+        logger.close()
+    assert result is None
+
+
+def test_repl_run_turn_calls_agent_and_routes_output():
+    repl, _, logger = _make_repl()
+    received = []
+    repl.on_output(received.append)
+    try:
+        repl.run_turn("say hello")
+    finally:
+        logger.close()
+    all_output = "\n".join(received)
+    assert "ok" in all_output
+
+
+def test_repl_properties_exposed():
+    repl, ctx, logger = _make_repl(model="claude-haiku-4-5", version="0.1.0")
+    try:
+        assert repl.model == "claude-haiku-4-5"
+        assert repl.version == "0.1.0"
+        assert repl.context is ctx
+        assert repl.logger is logger
+        assert "BOUKENSHA" in repl.banner
+    finally:
+        logger.close()
