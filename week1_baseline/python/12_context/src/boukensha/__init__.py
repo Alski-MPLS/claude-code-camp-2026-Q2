@@ -87,6 +87,18 @@ def is_quiet() -> bool:
     return _quiet
 
 
+def _mud_opts_from_config(cfg: Config) -> dict | None:
+    """Build mud kwargs from config. Returns None if mud.username is not set."""
+    if not cfg.mud_username:
+        return None
+    return {
+        "host":     cfg.mud_host,
+        "port":     cfg.mud_port,
+        "name":     cfg.mud_username,
+        "password": cfg.mud_password,
+    }
+
+
 def run(
     task: str,
     *,
@@ -102,30 +114,27 @@ def run(
     working_dir: str | bool | None = None,
     allowed_commands: list[str] | None = None,
     shell_timeout: int = 30,
+    mud: dict | bool | None = None,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> str:
     """Wire together every primitive and run the agent loop.
 
-    The caller supplies *what* to do (task text + optional tools via a
-    ``RunDSL`` closure); this function handles all plumbing.
-
     Args:
         task: The user message handed to the agent.
         system: System prompt. Defaults to the Player task's prompt from Config.
-        model: Model name. Defaults to the player task's model from settings.yaml.
-        backend: Provider name string — "anthropic", "openai", "gemini", "ollama",
-            or "ollama_cloud". Defaults to the player task's provider from settings.yaml.
-        api_key: API key for the chosen backend. Defaults to the matching
-            ``ANTHROPIC_API_KEY`` / ``OPENAI_API_KEY`` / ``GEMINI_API_KEY`` /
-            ``OLLAMA_API_KEY`` env var.
+        model: Model name. Defaults to settings.yaml.
+        backend: Provider name string. Defaults to settings.yaml.
+        api_key: API key for the chosen backend.
         ollama_host: Ollama base URL. Defaults to "http://localhost:11434".
-        log: Optional JSONL path override. Defaults to
-            ``.boukensha/sessions/<session-id>.jsonl``.
-        max_output_tokens: Per-reply output cap. Defaults to the player task's
-            setting (1024).
-        tool_registrar: A callable that accepts a ``RunDSL`` and registers tools
-            on it. Typical usage is via the module-level ``run()`` function
-            called with a helper; the example script uses a plain function.
+        log: Optional JSONL path override.
+        context_window: Token budget for the context window (default 200_000).
+        max_turn_tokens: Per-turn token budget for compaction trigger.
+        max_output_tokens: Per-reply output cap.
+        mud: MUD connection options dict (host, port, name, password).
+            None (default) reads from config if mud.username is set.
+            False disables MUD tools entirely.
+            A dict uses those connection params directly.
+        tool_registrar: A callable that accepts a RunDSL and registers tools.
 
     Returns:
         The agent's final text response.
@@ -168,6 +177,10 @@ def run(
             timeout=shell_timeout,
             allowed_commands=allowed_commands,
         )
+
+    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    if resolved_mud:
+        tools.Mud.register(registry, **resolved_mud)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -241,13 +254,13 @@ def repl(
     working_dir: str | bool | None = None,
     allowed_commands: list[str] | None = None,
     shell_timeout: int = 30,
+    mud: dict | bool | None = None,
     tool_registrar: Callable[[RunDSL], None] | None = None,
 ) -> None:
     """Start the interactive REPL loop.
 
-    Same plumbing as ``run()`` but stays alive across multiple turns, reading
-    tasks from stdin and accumulating history in a shared Context. Exits on
-    EOF, KeyboardInterrupt, or the ``/exit`` / ``/quit`` commands.
+    Same plumbing as run() but stays alive across multiple turns.
+    See run() for full parameter documentation including the mud parameter.
     """
     from .repl import Repl as _Repl
 
@@ -289,6 +302,10 @@ def repl(
             timeout=shell_timeout,
             allowed_commands=allowed_commands,
         )
+
+    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    if resolved_mud:
+        tools.Mud.register(registry, **resolved_mud)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -345,7 +362,6 @@ def repl(
     )
     try:
         if tui:
-            from .tui import Tui
             Tui(repl_instance).run()
         else:
             repl_instance.start()
