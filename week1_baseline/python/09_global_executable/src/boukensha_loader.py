@@ -67,3 +67,32 @@ def resolve() -> str:
             )
 
     return BUNDLED_SRC_DIR
+
+
+def load_and_start_repl() -> None:
+    src_dir = resolve()
+    step_dir = str(Path(src_dir).parent)
+
+    if os.environ.get("BOUKENSHA_DEBUG"):
+        print(f"[boukensha] loading from: {step_dir}")
+
+    for name in [m for m in list(sys.modules) if m == "boukensha" or m.startswith("boukensha.")]:
+        del sys.modules[name]
+    sys.path.insert(0, src_dir)
+
+    import boukensha
+
+    if not hasattr(boukensha, "repl"):
+        raise SystemExit(
+            f"boukensha: the step at {step_dir}\n"
+            "       does not support the interactive REPL (added in step 08).\n"
+            "       Run its examples directly, e.g.:\n"
+            f"         python {step_dir}/examples/*.py\n"
+            "       Or point BOUKENSHA_PATH at step 08 or later."
+        )
+
+    boukensha.repl()
+
+
+def main() -> None:
+    load_and_start_repl()

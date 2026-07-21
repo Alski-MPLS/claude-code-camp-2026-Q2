@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -81,3 +83,64 @@ def test_resolve_blank_boukensharc_falls_through_to_bundled(monkeypatch, tmp_pat
     (fake_home / ".boukensharc").write_text("   \n")
     monkeypatch.setattr(boukensha_loader.Path, "home", lambda: fake_home)
     assert boukensha_loader.resolve() == boukensha_loader.BUNDLED_SRC_DIR
+
+
+def _install_fake_boukensha(monkeypatch, tmp_path, *, with_repl: bool) -> Path:
+    step_dir = tmp_path / "fake_step"
+    pkg_dir = step_dir / "src" / "boukensha"
+    pkg_dir.mkdir(parents=True)
+    body = "REPL_CALLS = []\n"
+    if with_repl:
+        body += "def repl():\n    REPL_CALLS.append(1)\n"
+    (pkg_dir / "__init__.py").write_text(body)
+    monkeypatch.setenv("BOUKENSHA_PATH", str(step_dir))
+    return step_dir
+
+
+def _clear_boukensha_modules():
+    for name in [m for m in list(sys.modules) if m == "boukensha" or m.startswith("boukensha.")]:
+        del sys.modules[name]
+    # Also remove any temporary src directories from sys.path to prevent cross-test pollution
+    sys.path[:] = [p for p in sys.path if "fake_step/src" not in p]
+
+
+def test_load_and_start_repl_calls_repl(monkeypatch, tmp_path):
+    _clear_boukensha_modules()
+    _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
+    monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
+
+    boukensha_loader.load_and_start_repl()
+
+    import boukensha
+    assert boukensha.REPL_CALLS == [1]
+    _clear_boukensha_modules()
+
+
+def test_load_and_start_repl_aborts_without_repl_support(monkeypatch, tmp_path, capsys):
+    _clear_boukensha_modules()
+    step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=False)
+    monkeypatch.delenv("BOUKENSHA_DEBUG", raising=False)
+
+    with pytest.raises(SystemExit, match="does not support the interactive REPL"):
+        boukensha_loader.load_and_start_repl()
+
+    _clear_boukensha_modules()
+
+
+def test_load_and_start_repl_prints_debug_line(monkeypatch, tmp_path, capsys):
+    _clear_boukensha_modules()
+    step_dir = _install_fake_boukensha(monkeypatch, tmp_path, with_repl=True)
+    monkeypatch.setenv("BOUKENSHA_DEBUG", "1")
+
+    boukensha_loader.load_and_start_repl()
+
+    captured = capsys.readouterr()
+    assert f"[boukensha] loading from: {step_dir}" in captured.out
+    _clear_boukensha_modules()
+
+
+def test_main_delegates_to_load_and_start_repl(monkeypatch):
+    called = []
+    monkeypatch.setattr(boukensha_loader, "load_and_start_repl", lambda: called.append(1))
+    boukensha_loader.main()
+    assert called == [1]
