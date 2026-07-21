@@ -181,6 +181,16 @@ def test_context_compact_messages_returns_zero_for_empty():
     assert dropped == 0
 
 
+def test_context_compact_messages_custom_target_fraction():
+    ctx = _make_ctx()
+    for i in range(10):
+        ctx.add_message("user", f"msg {i}")
+    # target_fraction=0.30 → drop_fraction=0.70 → ceil(10*0.70)=7
+    dropped = ctx.compact_messages(target_fraction=0.30)
+    assert dropped == 7
+    assert len(ctx.messages) == 3
+
+
 def test_context_clear_messages_resets_current_tokens():
     ctx = _make_ctx()
     ctx.update_tokens(5000)

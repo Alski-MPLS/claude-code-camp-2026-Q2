@@ -53,7 +53,7 @@ class Context:
 
     @property
     def usage_pct(self) -> int:
-        return round(self.usage_fraction * 100)
+        return math.floor(self.usage_fraction * 100)
 
     def needs_compaction(self, threshold: float | None = None) -> bool:
         t = threshold if threshold is not None else self.compaction_threshold
@@ -62,7 +62,8 @@ class Context:
     def compact_messages(self, target_fraction: float = 0.60) -> int:
         if not self.messages:
             return 0
-        drop_count = math.ceil(len(self.messages) * 0.40)
+        drop_fraction = 1.0 - target_fraction
+        drop_count = math.ceil(len(self.messages) * drop_fraction)
         drop_count = min(drop_count, len(self.messages) - 2)
         drop_count = max(drop_count, 0)
         self.messages = self.messages[drop_count:]
