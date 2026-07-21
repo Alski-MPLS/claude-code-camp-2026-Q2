@@ -45,7 +45,7 @@ BOUKENSHA_PATH=~/Sites/boukensha/python/07_the_run_dsl boukensha
 
 ```bash
 BOUKENSHA_DEBUG=1 boukensha
-# => [boukensha] loading from: /path/to/step/src
+# => [boukensha] loading from: /path/to/step
 ```
 
 ## The key idea
