@@ -14,7 +14,7 @@ Tools registered (grouped by concern):
   Perception
     look              — look at the room or a specific target
     examine           — examine something in detail
-    check             — query self-info (score, inventory, equipment, exits…)
+    check             — query self-info (score = HP/exp/gold/level, inventory, equipment, exits…)
 
   Movement
     move              — go a compass direction or up/down
@@ -344,11 +344,20 @@ class Mud:
             "check",
             description=(
                 "Query information about your character or surroundings. "
-                "Kinds: score, inventory, equipment, gold, exits, time, weather, "
-                "levels, wimpy, toggle, where."
+                "Use kind='score' for your core stats — HP, mana, moves, "
+                "experience, level, and gold carried — all in one report. "
+                "Other kinds: inventory, equipment, gold (coin purse only), "
+                "exits, time, weather, levels, wimpy, toggle, where."
             ),
             parameters={
-                "kind": {"type": "string", "description": "score | inventory | equipment | gold | exits | time | weather | levels | wimpy | toggle | where"},
+                "kind": {
+                    "type": "string",
+                    "description": (
+                        "score | inventory | equipment | gold | exits | time | weather | "
+                        "levels | wimpy | toggle | where. "
+                        "Use 'score' to check health, experience, gold, and level."
+                    ),
+                },
             },
             block=lambda kind, **_: _check_info(session, kind),
         )
