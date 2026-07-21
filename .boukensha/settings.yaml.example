@@ -42,3 +42,10 @@ tasks:
     # model: gemma4:31b-cloud
     # model: minimax-m3:cloud
     # model: kimi-k2.5:cloud
+
+# MUD connection (optional — remove the mud: block entirely to disable MUD tools)
+# mud:
+#   host: localhost
+#   port: 4000
+#   username: YourCharacterName
+#   password: YourPassword
