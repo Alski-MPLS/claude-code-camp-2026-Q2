@@ -8,6 +8,7 @@ the precedent set by ``Config``.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from .message import Message
@@ -16,9 +17,15 @@ from .tool import Tool
 
 
 class Context:
-    def __init__(self, task: type[Base], system: str | None = None) -> None:
+    def __init__(
+        self,
+        task: type[Base],
+        system: str | None = None,
+        working_dir: str | None = None,
+    ) -> None:
         self.task = task
         self.system = system
+        self.working_dir = str(Path(working_dir).expanduser().resolve()) if working_dir else None
         self.messages: list[Message] = []
         self.tools: dict[str, Tool] = {}
 
