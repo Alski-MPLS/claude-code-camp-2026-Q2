@@ -10,7 +10,7 @@ import boukensha
 from boukensha import Config
 
 # The step 07 folder makes a good playground — it already has source files.
-base_dir = Path(__file__).parent.parent.parent.parent / "07_the_run_dsl"
+base_dir = Path(__file__).parent.parent.parent / "07_the_run_dsl"
 
 print(f"Config: {Config()}")
 print()
