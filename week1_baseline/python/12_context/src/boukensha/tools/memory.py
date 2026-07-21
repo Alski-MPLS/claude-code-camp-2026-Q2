@@ -52,7 +52,10 @@ class Memory:
             path = paths.get(file.strip().lower())
             if path is None:
                 return f"error: invalid file: {file!r} (expected one of {', '.join(sorted(_FILES))})"
-            return path.read_text(encoding="utf-8")
+            try:
+                return path.read_text(encoding="utf-8")
+            except Exception as e:
+                return f"error: {e}"
 
         registry.tool(
             "read_memory",
@@ -65,8 +68,11 @@ class Memory:
             path = paths.get(file.strip().lower())
             if path is None:
                 return f"error: invalid file: {file!r} (expected one of {', '.join(sorted(_FILES))})"
-            path.write_text(content, encoding="utf-8")
-            return f"ok: wrote {len(content.encode('utf-8'))} bytes to {path.name}"
+            try:
+                path.write_text(content, encoding="utf-8")
+                return f"ok: wrote {len(content.encode('utf-8'))} bytes to {path.name}"
+            except Exception as e:
+                return f"error: {e}"
 
         registry.tool(
             "write_memory",

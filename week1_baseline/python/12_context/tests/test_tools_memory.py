@@ -97,3 +97,31 @@ def test_prompt_block_creates_files_if_missing(tmp_path):
 def test_tools_module_exports_memory():
     from boukensha import tools
     assert hasattr(tools, "Memory")
+
+
+def test_read_memory_catches_io_exception_and_returns_error(tmp_path):
+    from unittest.mock import patch
+    from pathlib import Path
+
+    registry = _make_registry()
+    Memory.register(registry, memory_dir=str(tmp_path))
+
+    # Monkeypatch Path.read_text to raise an OSError
+    with patch.object(Path, "read_text", side_effect=OSError("permission denied")):
+        result = registry.dispatch("read_memory", {"file": "player"})
+        assert result.startswith("error:")
+        assert "permission denied" in result
+
+
+def test_write_memory_catches_io_exception_and_returns_error(tmp_path):
+    from unittest.mock import patch
+    from pathlib import Path
+
+    registry = _make_registry()
+    Memory.register(registry, memory_dir=str(tmp_path))
+
+    # Monkeypatch Path.write_text to raise an OSError
+    with patch.object(Path, "write_text", side_effect=OSError("disk full")):
+        result = registry.dispatch("write_memory", {"file": "world", "content": "test"})
+        assert result.startswith("error:")
+        assert "disk full" in result
