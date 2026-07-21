@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Step 11 — TUI demo.
+"""Step 12 — Context Management demo.
 
 Launches the Textual TUI by default.  Pass --no-tui for the plain REPL.
 """
