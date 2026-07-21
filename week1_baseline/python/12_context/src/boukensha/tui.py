@@ -19,6 +19,9 @@ SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇",
 TICK_S = 0.06
 MAX_ITERATIONS = 25
 
+CTX_WARN_PCT = 70
+CTX_ALERT_PCT = 85
+
 CSS = """
 Screen {
     layout: vertical;
@@ -38,6 +41,14 @@ RichLog {
 
 #progress.active {
     color: cyan;
+}
+
+#progress.ctx-warn {
+    color: yellow;
+}
+
+#progress.ctx-alert {
+    color: red;
 }
 
 Input {
@@ -71,7 +82,6 @@ class Tui(App):
         super().__init__()
         self._repl = repl
         self._turn_count = 0
-        self._session_input_tokens = 0
         self._live: dict[str, Any] = self._idle_state()
         self._spinner_idx = 0
         self._future: Future | None = None
@@ -182,7 +192,10 @@ class Tui(App):
             otu = int(usage.get("output_tokens", 0))
             self._live["turn_input_tokens"] = self._live.get("turn_input_tokens", 0) + itu
             self._live["turn_output_tokens"] = self._live.get("turn_output_tokens", 0) + otu
-            self._session_input_tokens += itu
+        elif phase == "compaction":
+            dropped = event.get("dropped", 0)
+            log = self.query_one("#log", RichLog)
+            log.write(f"[context compacted — {dropped} messages dropped to free space]")
 
     def _on_repl_output(self, text: str) -> None:
         self.call_from_thread(self._append_to_log, text)
@@ -226,20 +239,41 @@ class Tui(App):
                 f"↑ {itok} · ↓ {otok} · {calls} calls)"
             )
             label.add_class("active")
+            label.remove_class("ctx-warn", "ctx-alert")
         else:
-            used = _fmt_tokens(self._session_input_tokens)
-            label.update(f"  [ready]   ctx {used}   {self._turn_count} turns")
+            ctx = self._repl.context
+            pct = ctx.usage_pct
+            used = _fmt_tokens(ctx.current_tokens)
+            max_tok = _fmt_tokens(ctx.context_window)
+            label.update(
+                f"  [ready]   ctx {used} / {max_tok} ({pct}%)   {self._turn_count} turns"
+            )
             label.remove_class("active")
+            # Apply colour class based on context pressure
+            if pct >= CTX_ALERT_PCT:
+                label.add_class("ctx-alert")
+                label.remove_class("ctx-warn")
+            elif pct >= CTX_WARN_PCT:
+                label.add_class("ctx-warn")
+                label.remove_class("ctx-alert")
+            else:
+                label.remove_class("ctx-warn", "ctx-alert")
 
     def _refresh_status(self) -> None:
         label = self.query_one("#status", Label)
+        ctx = self._repl.context
         ver = self._repl.version or "?.?.?"
         model = self._repl.model or "(model)"
-        used = _fmt_tokens(self._session_input_tokens)
-        tool_count = len(self._repl.context.tools)
+        pct = ctx.usage_pct
+        used = _fmt_tokens(ctx.current_tokens)
+        max_tok = _fmt_tokens(ctx.context_window)
+        tool_count = len(ctx.tools)
         clock = datetime.datetime.now().strftime("%H:%M:%S")
+        ctx_indicator = " ⚠ " if pct >= CTX_ALERT_PCT else " "
         label.update(
-            f" boukensha v{ver} · {model}  ·  ctx {used}  ·  {tool_count} tools  ·  {clock} "
+            f" boukensha v{ver} · {model}  ·  "
+            f"ctx {used}/{max_tok} ({pct}%){ctx_indicator}·  "
+            f"{tool_count} tools  ·  {clock} "
         )
 
     # ── helpers ───────────────────────────────────────────────────────────
