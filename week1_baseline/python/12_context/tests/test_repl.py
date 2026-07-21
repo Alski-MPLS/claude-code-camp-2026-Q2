@@ -40,6 +40,7 @@ def _make_repl(responses=None, **kwargs):
         logger=_logger,
         task_settings={},
         max_iterations=25,
+        max_turn_tokens=None,
         max_output_tokens=None,
         config_dir=None,
         provider="anthropic",
@@ -291,3 +292,54 @@ def test_repl_properties_exposed():
         assert "BOUKENSHA" in repl.banner
     finally:
         logger.close()
+
+
+# ── Step 12: /compact command ────────────────────────────────────────────────
+
+def test_repl_compact_command_drops_messages(capsys):
+    repl, ctx, logger = _make_repl()
+    # Pre-load 10 messages
+    for i in range(10):
+        ctx.add_message("user", f"msg {i}")
+    count_before = len(ctx.messages)
+    try:
+        result = repl.handle_command("/compact")
+    finally:
+        logger.close()
+    assert result == "command"
+    assert len(ctx.messages) < count_before
+
+
+def test_repl_compact_command_prints_dropped_count(capsys):
+    repl, ctx, logger = _make_repl()
+    for i in range(10):
+        ctx.add_message("user", f"msg {i}")
+    try:
+        repl.handle_command("/compact")
+    finally:
+        logger.close()
+    captured = capsys.readouterr()
+    assert "compacted" in captured.out
+    assert "dropped" in captured.out
+
+
+def test_repl_compact_in_help_text(capsys):
+    repl, _, logger = _make_repl()
+    try:
+        _run_with_input(repl, ["/help", "/exit"])
+    finally:
+        logger.close()
+    captured = capsys.readouterr()
+    assert "/compact" in captured.out
+
+
+def test_repl_compact_via_start(capsys):
+    repl, ctx, logger = _make_repl()
+    for i in range(6):
+        ctx.add_message("user", f"msg {i}")
+    try:
+        _run_with_input(repl, ["/compact", "/exit"])
+    finally:
+        logger.close()
+    captured = capsys.readouterr()
+    assert "compacted" in captured.out

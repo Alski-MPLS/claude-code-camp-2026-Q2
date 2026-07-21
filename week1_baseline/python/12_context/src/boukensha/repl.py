@@ -1,9 +1,4 @@
-"""Boukensha::Repl port: interactive session loop.
-
-Wraps the same primitives as a single boukensha.run() call but stays alive:
-reads a task from stdin, runs the agent, prints the reply, and loops back.
-The Context is shared across every turn so conversation history accumulates.
-"""
+"""Boukensha::Repl port: interactive session loop."""
 
 from __future__ import annotations
 
@@ -27,6 +22,7 @@ Commands:
   /quiet   suppress logging output
   /loud    re-enable logging output
   /clear   wipe conversation history (tools stay)
+  /compact drop oldest 40% of messages to free context
   /exit    leave the REPL
   /help    show this message"""
 
@@ -42,6 +38,7 @@ class Repl:
         logger: Logger | None,
         task_settings: dict[str, Any] | None,
         max_iterations: int | None,
+        max_turn_tokens: int | None,
         max_output_tokens: int | None,
         config_dir: str | None,
         provider: str | None,
@@ -56,6 +53,7 @@ class Repl:
         self._logger = logger
         self._task_settings = task_settings
         self._max_iterations = max_iterations
+        self._max_turn_tokens = max_turn_tokens
         self._max_output_tokens = max_output_tokens
         self._config_dir = config_dir
         self._provider = provider
@@ -120,6 +118,10 @@ class Repl:
             self._turn = 0
             self._output("(conversation history cleared)")
             return "command"
+        if text == "/compact":
+            dropped = self._context.compact_messages()
+            self._output(f"(compacted context — {dropped} messages dropped)")
+            return "command"
         return None
 
     def run_turn(self, user_input: str) -> None:
@@ -138,6 +140,7 @@ class Repl:
             logger=self._logger,
             task_settings=self._task_settings,
             max_iterations=self._max_iterations,
+            max_turn_tokens=self._max_turn_tokens,
             max_output_tokens=self._max_output_tokens,
         )
         try:
@@ -199,5 +202,6 @@ class Repl:
             f"\n"
             f"  /quiet or /loud   toggle logging\n"
             f"  /clear           reset conversation history\n"
+            f"  /compact         free context (drop oldest messages)\n"
             f"  /exit or /quit    leave the REPL\n"
         )
