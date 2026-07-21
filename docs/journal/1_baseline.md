@@ -22,6 +22,9 @@ For this conversion
 - I started porting the 09 folder to python before I watched the video's. This might not be needed but I'll let it go and figure out how to test it since there is no example program.
 - Once I got to the last step for the conversion over to python, I was able to run it but it did not have any tools to connect to the MUD. I could ask it about local file information but not with the MUD. I used AI to find the issues and it had to go back and add what was missed. I had it fix the 10, 11 and 12 phases. It also did not have the details on how to connect to MUD so it's adding them to the .boukensha settings.yaml.example file.
 - Finally got the program working now. I asked it to find the bakery and it was able to do so in 25 steps. I watched it in the ruby log_viz program. It's using local Ollama as the AI. I'm adding some differnet features to help with the TUI. 
+- I asked it to find water to drink and it found the fountain but didn't understand it could drink until I told it to. I wonder if I should add that.
+- I also noticed that I can't interject until it hits 25 iterations. So, I just have to watch the agent run through the instructions until it completes. It definatly needs constant baby-sitting. I also noticed that it might understand how to loot for gold and items.
+- It doesn't seem to understand how to get out of resting. I might have to tweak the code. Not sure if this was solved in RUBY and didn't come over correclty. I'll ask AI to review everything related to commands.
 
 
 ## Technical Conclusions
