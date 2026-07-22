@@ -1,4 +1,3 @@
-uv run python -c "
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('src')))
