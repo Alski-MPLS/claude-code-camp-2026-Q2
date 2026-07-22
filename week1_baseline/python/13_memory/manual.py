@@ -1,6 +1,10 @@
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('src')))
+os.environ.setdefault(
+    "BOUKENSHA_DIR",
+    str(Path(__file__).parent.parent.parent.parent / ".boukensha"),
+)
 import boukensha
 from boukensha.config import Config
 cfg = Config()
