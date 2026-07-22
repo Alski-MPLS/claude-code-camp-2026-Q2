@@ -1,4 +1,4 @@
-# Step 12 — Context Management
+# Step 13 — Memory
 
 When you call an LLM directly you are responsible for the context window. There is no auto-compacting. This step adds proper token tracking, visual warnings, and automatic compaction so the agent never silently blows past the limit.
 
@@ -74,7 +74,7 @@ boukensha.repl(context_window=128_000)  # for a smaller model
 ## Run the demo
 
 ```sh
-cd week1_baseline/python/12_context
+cd week1_baseline/python/13_memory
 uv sync
 
 # TUI (default):

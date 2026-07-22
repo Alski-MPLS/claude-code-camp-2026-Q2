@@ -294,7 +294,7 @@ def test_repl_properties_exposed():
         logger.close()
 
 
-# ── Step 12: /compact command ────────────────────────────────────────────────
+# ── Step 13: /compact command ────────────────────────────────────────────────
 
 def test_repl_compact_command_drops_messages(capsys):
     repl, ctx, logger = _make_repl()

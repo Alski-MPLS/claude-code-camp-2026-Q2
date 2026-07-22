@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Step 12 — Context Management demo.
+"""Step 13 — Memory demo.
 
 Launches the Textual TUI by default.  Pass --no-tui for the plain REPL.
 The context_window= parameter controls how many tokens trigger compaction.

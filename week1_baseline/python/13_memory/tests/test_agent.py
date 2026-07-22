@@ -579,14 +579,14 @@ def test_agent_wrap_up_adds_assistant_reply_to_context():
     assert ctx.messages[-1].content == "Wrapping up"
 
 
-# ── Step 12: token tracking and compaction tests ─────────────────────────────
+# ── Step 13: token tracking and compaction tests ─────────────────────────────
 
 from boukensha.context import Context
 from boukensha.registry import Registry
 from boukensha.tasks.player import Player
 
 
-def _make_agent_12(responses, max_iterations=25, max_turn_tokens=None, context_window=200_000):
+def _make_agent_13(responses, max_iterations=25, max_turn_tokens=None, context_window=200_000):
     """Build Agent with token-tracking context and mock builder/client."""
     from unittest.mock import MagicMock
     from boukensha.agent import Agent
@@ -621,7 +621,7 @@ def _make_agent_12(responses, max_iterations=25, max_turn_tokens=None, context_w
 
 def test_agent_records_usage_in_context():
     responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]}]
-    agent, ctx, mock_client, _ = _make_agent_12(responses)
+    agent, ctx, mock_client, _ = _make_agent_13(responses)
     mock_client.call.return_value = {"usage": {"input_tokens": 5000, "output_tokens": 200}}
     agent.run()
     # current_tokens updated from input_tokens of last API call
@@ -630,7 +630,7 @@ def test_agent_records_usage_in_context():
 
 def test_agent_resets_turn_tokens_at_start():
     responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Done"}]}]
-    agent, ctx, mock_client, _ = _make_agent_12(responses)
+    agent, ctx, mock_client, _ = _make_agent_13(responses)
     # Pre-load stale turn_tokens
     ctx.add_turn_tokens(99_999, 0)
     mock_client.call.return_value = {"usage": {"input_tokens": 100, "output_tokens": 50}}

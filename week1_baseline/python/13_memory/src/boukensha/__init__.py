@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from collections.abc import Callable
 from typing import Any
 
@@ -56,7 +57,7 @@ __all__ = [
     "tools",
 ]
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"
 
 _debug: bool = False
 
@@ -180,7 +181,10 @@ def run(
 
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
-        tools.Mud.register(registry, **resolved_mud)
+        _map_path = Path(cfg.dir) / "maps" / f"{resolved_mud['name']}.json"
+        _map_path.parent.mkdir(parents=True, exist_ok=True)
+        _map_graph = tools.Map.register(registry, save_path=_map_path)
+        tools.Mud.register(registry, **resolved_mud, graph=_map_graph)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -306,7 +310,10 @@ def repl(
 
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
-        tools.Mud.register(registry, **resolved_mud)
+        _map_path = Path(cfg.dir) / "maps" / f"{resolved_mud['name']}.json"
+        _map_path.parent.mkdir(parents=True, exist_ok=True)
+        _map_graph = tools.Map.register(registry, save_path=_map_path)
+        tools.Mud.register(registry, **resolved_mud, graph=_map_graph)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)

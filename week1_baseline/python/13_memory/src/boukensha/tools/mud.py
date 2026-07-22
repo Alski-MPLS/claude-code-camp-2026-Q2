@@ -65,6 +65,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from boukensha.registry import Registry
+    from boukensha.tools.map import RoomGraph
 
 _IAC_RE = re.compile(
     rb"\xff[\xfb-\xfe]."          # WILL/WONT/DO/DONT + option
@@ -262,6 +263,13 @@ def _check_enum(value: str, allowed: set[str], name: str) -> str | None:
     return None
 
 
+def _observe(graph: "RoomGraph | None", result: str, cmd: str | None) -> str:
+    """Call graph.observe() if a graph is attached, then pass result through."""
+    if graph is not None:
+        graph.observe(result, cmd)
+    return result
+
+
 class Mud:
     """Registers all MUD gameplay tools against a registry."""
 
@@ -274,9 +282,10 @@ class Mud:
         port: int = 4000,
         name: str,
         password: str,
+        graph: "RoomGraph | None" = None,
     ) -> None:
         session = MudSession(host=host, port=port)
-        cls._register_with_session(registry, session, name=name, password=password)
+        cls._register_with_session(registry, session, name=name, password=password, graph=graph)
 
     @classmethod
     def _register_with_session(
@@ -286,6 +295,7 @@ class Mud:
         *,
         name: str,
         password: str,
+        graph: "RoomGraph | None" = None,
     ) -> None:
         # ── Connection ────────────────────────────────────────────────────────
 
@@ -328,7 +338,9 @@ class Mud:
                 "target":      {"type": "string", "description": "Item, mob, or player to inspect (optional)"},
                 "preposition": {"type": "string", "description": "in | at | north | east | south | west | up | down (optional)"},
             },
-            block=lambda target=None, preposition=None, **_: _look(session, target, preposition),
+            block=lambda target=None, preposition=None, **_: _observe(
+                graph, _look(session, target, preposition), "look"
+            ),
         )
 
         registry.tool(
@@ -370,7 +382,9 @@ class Mud:
             parameters={
                 "direction": {"type": "string", "description": "north | east | south | west | up | down"},
             },
-            block=lambda direction, **_: _move(session, direction),
+            block=lambda direction, **_: _observe(
+                graph, _move(session, direction), direction
+            ),
         )
 
         registry.tool(
