@@ -11,7 +11,7 @@ print('mud.host:', cfg.mud_host)
 print('maps path would be:', Path(cfg.dir) / 'maps' / f'{cfg.mud_username}.json')
 
 
-BOUKENSHA_DIR: /Users/alanw/code/github/ai/claude-code-camp-2026-Q2/week1_baseline/python/13_memory/tests/.boukensha
-mud.username: None
-mud.host: localhost
-maps path would be: /Users/alanw/code/github/ai/claude-code-camp-2026-Q2/week1_baseline/python/13_memory/tests/.boukensha/maps/None.json
+# BOUKENSHA_DIR: /Users/alanw/code/github/ai/claude-code-camp-2026-Q2/week1_baseline/python/13_memory/tests/.boukensha
+# mud.username: None
+# mud.host: localhost
+# maps path would be: /Users/alanw/code/github/ai/claude-code-camp-2026-Q2/week1_baseline/python/13_memory/tests/.boukensha/maps/None.json
