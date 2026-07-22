@@ -1,0 +1,412 @@
+{
+  "current": "0bc9cb2b032f",
+  "nodes": [
+    {
+      "id": "3b215c6d3a12",
+      "title": "The Bakery",
+      "description": "You are standing inside the small bakery.  A sweet scent of danish and fine bread fills the room.  The bread and Danish are arranged in fine order on the shelves, and seem to be of the finest quality. A small sign is on the counter.",
+      "exits": [
+        "south"
+      ]
+    },
+    {
+      "id": "ce735bd797e9",
+      "title": "Main Street",
+      "description": "You are on the main street passing through the City of Midgaard.  South of here is the entrance to the Armory, and the bakery is to the north.  East of here is the market square.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    {
+      "id": "e937ade35217",
+      "title": "Market Square",
+      "description": "You are standing on the market square, the famous Square of Midgaard. A large, peculiar looking statue is standing in the middle of the square. Roads lead in every direction, north to the temple square, south to the common square, east and westbound is the main street.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    {
+      "id": "a4d1e20fdc21",
+      "title": "The Temple Square",
+      "description": "You are standing on the temple square.  Huge marble steps lead up to the temple gate.  The entrance to the Clerics' Guild is to the west, and the old Grunting Boar Inn, is to the east.  Just south of here you see the market square, the center of Midgaard.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    {
+      "id": "e8cfa390133b",
+      "title": "The Temple Of Midgaard",
+      "description": "You are in the southern end of the temple hall in the Temple of Midgaard. The temple has been constructed from giant marble blocks, eternal in appearance, and most of the walls are covered by ancient wall paintings picturing Gods, giants and peasants. Large steps lead down through the grand temple gate, descending the huge mound upon which the temple is built and ends on the temple square below. To the west, you see the Reading Room.  The donation room is in a small alcove to your east.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west",
+        "down"
+      ]
+    },
+    {
+      "id": "276137cff2fc",
+      "title": "By The Temple Altar",
+      "description": "You are by the temple altar in the northern end of the Temple of Midgaard. A huge altar made from white polished marble dominates this part of the temple. Towering behind the altar is a ten foot tall sitting statue of Odin, the King of the Gods. To the north, steps lead out the back of the temple towards the countryside.",
+      "exits": [
+        "north",
+        "south"
+      ]
+    },
+    {
+      "id": "8a8ec6817f3f",
+      "title": "Behind The Temple Altar",
+      "description": "You are on a dirt path leading away from the Temple Altar which is south of here.  To the north, the path continues through the lush contryside of Midgaard towards the Dragonhelm Mountains far off to the north.",
+      "exits": [
+        "north",
+        "south"
+      ]
+    },
+    {
+      "id": "d7765249ac0e",
+      "title": "The Great Field Of Midgaard",
+      "description": "You are walking on a wide dirt path through the lush, green, fresh Midgaard countryside.  You can see to the horizon to the north, east, and west; the busy city of Midgaard lies to the south.  All around you is healthy green grass and an occasional large oak tree.  The sun feels wonderful on your face and a pleasant wind blows through your hair.  Birds chirp quietly to themselves and you can smell the faint scent of flowers and freshly cut grass.  You feel like you could lie down in the grass and stay here forever, surrounded by powerful beauty in all directions. The path you are on continues north through the field and south back to Midgaard.",
+      "exits": [
+        "north",
+        "south"
+      ]
+    },
+    {
+      "id": "69181992c3a8",
+      "title": "The Entrance To The Clerics' Guild",
+      "description": "The entrance hall is a small modest room, reflecting the true nature of the Clerics.  The exit leads east to the temple square.  A small entrance to the bar is in the northern wall.",
+      "exits": [
+        "north",
+        "east"
+      ]
+    },
+    {
+      "id": "eba008988a8e",
+      "title": "The Reading Room",
+      "description": "You are in a small, simple room which is mostly empty, save a few wooden desks and benches.  To the east you hear the bustle of the Temple of Midgaard, a sharp contrast to the relative quiet of this peaceful room.",
+      "exits": [
+        "east"
+      ]
+    },
+    {
+      "id": "998e4fbbcad6",
+      "title": "The Great Field Of Midgaard",
+      "description": "You are walking on a wide dirt path through the lush, green, fresh Midgaard countryside.  You can see to the horizon to the north, east, and west; the busy city of Midgaard lies to the south.  All around you is healthy green grass and an occasional large oak tree.  The sun feels wonderful on your face and a pleasant wind blows through your hair.  Birds chirp quietly to themselves and you can smell the faint scent of flowers and freshly cut grass.  You feel like you could lie down in the grass and stay here forever, surrounded by powerful beauty in all directions. There is a strange structure on the eastern side of the path.  A small dirt path splits off of the main path and leads off to the west.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    {
+      "id": "6cac442ab831",
+      "title": "The Entrance To The Newbie Zone",
+      "description": "Ahhh... the entrance to the newbie zone!  Just the place you have been looking for.  Well, when you've readied yourself you can enter to the north.",
+      "exits": [
+        "north",
+        "west"
+      ]
+    },
+    {
+      "id": "7764b6ce766d",
+      "title": "The Beginning Of The Passage",
+      "description": "You find yourself entering a long corridor.  You can hear the sound of creatures roaming about, but you can't tell where the sound emanates from exactly. Exits lead to the east along the hallway, and south back to the entrance.",
+      "exits": [
+        "east",
+        "south"
+      ]
+    },
+    {
+      "id": "300c57a8d7ce",
+      "title": "The Dirty Hallway",
+      "description": "You continue wandering down the hallway.  Nothing much different here, but you are positive you here noises behind the door to the south, and coming from the east.  The walls are a bit slimy and moldy here... yeech, couldn't they hire someone to clean this place?  What will the newbies think?  Oh well, you can continue along the hallway to the east or west.",
+      "exits": [
+        "east",
+        "west"
+      ]
+    },
+    {
+      "id": "129b0241bb3a",
+      "title": "A Nexus",
+      "description": "Well... you've reached an intersection of two passages, to the north and east, the passage brightens, while the darker hallway continues to the south.",
+      "exits": [
+        "south",
+        "west"
+      ]
+    },
+    {
+      "id": "606c883e8b31",
+      "title": "More Of The Hallway",
+      "description": "Oh joy!  More of this annoying passage.  Perhaps there is something more exciting through that door to the west?  Or you can keep searching the hallways to the north or south.",
+      "exits": [
+        "north",
+        "south"
+      ]
+    },
+    {
+      "id": "59854a041a8d",
+      "title": "Another Corner",
+      "description": "Another corner of the passage, and just as untidy as the rest of this place (maybe more so?).  There is a door to the east though... wonder where that leads?  Oh, and the hallway continues west and north.",
+      "exits": [
+        "north",
+        "west"
+      ]
+    },
+    {
+      "id": "7796e133b585",
+      "title": "A Brighter Hallway",
+      "description": "The hallway continues on in a east-west direction... and it seems to be brightening up to the west.",
+      "exits": [
+        "east",
+        "west"
+      ]
+    },
+    {
+      "id": "42b28f3174ec",
+      "title": "The End Of The Passage",
+      "description": "Ahhh... at last, the end of the hallway... you can exit into open air to the west,or return to the east and make sure you didn't miss anything.",
+      "exits": [
+        "east",
+        "west"
+      ]
+    },
+    {
+      "id": "7e04d146ed21",
+      "title": "An Open Field By The Great Field",
+      "description": "Finally, you are in an open field... it is so nice to breathe fresh air again!  You can return to that dank, smelly place to the east, or take the exit to the north which appears to lead into a large field.",
+      "exits": [
+        "north",
+        "east"
+      ]
+    },
+    {
+      "id": "862196265119",
+      "title": "The Entrance Hall Of The Grunting Boar Inn",
+      "description": "You are standing in the entrance hall of the Grunting Boar Inn.  The hall has been wisely decorated with simple, functional furniture.  The heavy smell of dust and aging paper drifts in from the Post Office to the north.  A small staircase leads up to the reception and the bar is to the east.",
+      "exits": [
+        "north",
+        "east",
+        "west",
+        "up"
+      ]
+    },
+    {
+      "id": "acf2284bc70f",
+      "title": "The Post Office",
+      "description": "You are in the central post office for Midgaard.  Piles of assorted mail lay untouched in the corners, collecting cobwebs.  Several large crates have been pried open by curious customs agents, and are now stacked along the west wall, hiding plenty of 'WANTED' posters. There is a sign posted on the wall here.",
+      "exits": [
+        "south"
+      ]
+    },
+    {
+      "id": "0bc9cb2b032f",
+      "title": "The Grunting Boar",
+      "description": "You are standing in the bar.  The bar is set against the northern wall, old archaic writing, carvings and symbols cover its top.  A fireplace is built into the western wall, and through the southeastern windows you can see the temple square.  This place makes you feel like home. A small sign with big letters is fastened to the bar.",
+      "exits": [
+        "west"
+      ]
+    },
+    {
+      "id": "ee4d23d4c30b",
+      "title": "The Reception",
+      "description": "You are standing in the reception.  The staircase leads down to the entrance hall.  An exit to the north leads to the Cryogenic Center. There is a small sign on the counter.",
+      "exits": [
+        "north",
+        "down"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "3b215c6d3a12",
+      "target": "ce735bd797e9",
+      "direction": "south"
+    },
+    {
+      "source": "ce735bd797e9",
+      "target": "e937ade35217",
+      "direction": "east"
+    },
+    {
+      "source": "e937ade35217",
+      "target": "a4d1e20fdc21",
+      "direction": "north"
+    },
+    {
+      "source": "a4d1e20fdc21",
+      "target": "e8cfa390133b",
+      "direction": "north"
+    },
+    {
+      "source": "a4d1e20fdc21",
+      "target": "69181992c3a8",
+      "direction": "west"
+    },
+    {
+      "source": "a4d1e20fdc21",
+      "target": "e937ade35217",
+      "direction": "south"
+    },
+    {
+      "source": "a4d1e20fdc21",
+      "target": "862196265119",
+      "direction": "east"
+    },
+    {
+      "source": "e8cfa390133b",
+      "target": "276137cff2fc",
+      "direction": "north"
+    },
+    {
+      "source": "e8cfa390133b",
+      "target": "a4d1e20fdc21",
+      "direction": "south"
+    },
+    {
+      "source": "e8cfa390133b",
+      "target": "eba008988a8e",
+      "direction": "west"
+    },
+    {
+      "source": "276137cff2fc",
+      "target": "8a8ec6817f3f",
+      "direction": "north"
+    },
+    {
+      "source": "276137cff2fc",
+      "target": "e8cfa390133b",
+      "direction": "south"
+    },
+    {
+      "source": "8a8ec6817f3f",
+      "target": "d7765249ac0e",
+      "direction": "north"
+    },
+    {
+      "source": "8a8ec6817f3f",
+      "target": "276137cff2fc",
+      "direction": "south"
+    },
+    {
+      "source": "d7765249ac0e",
+      "target": "8a8ec6817f3f",
+      "direction": "south"
+    },
+    {
+      "source": "d7765249ac0e",
+      "target": "998e4fbbcad6",
+      "direction": "north"
+    },
+    {
+      "source": "69181992c3a8",
+      "target": "a4d1e20fdc21",
+      "direction": "east"
+    },
+    {
+      "source": "eba008988a8e",
+      "target": "e8cfa390133b",
+      "direction": "east"
+    },
+    {
+      "source": "998e4fbbcad6",
+      "target": "6cac442ab831",
+      "direction": "east"
+    },
+    {
+      "source": "998e4fbbcad6",
+      "target": "d7765249ac0e",
+      "direction": "south"
+    },
+    {
+      "source": "6cac442ab831",
+      "target": "7764b6ce766d",
+      "direction": "north"
+    },
+    {
+      "source": "7764b6ce766d",
+      "target": "300c57a8d7ce",
+      "direction": "east"
+    },
+    {
+      "source": "300c57a8d7ce",
+      "target": "7764b6ce766d",
+      "direction": "west"
+    },
+    {
+      "source": "300c57a8d7ce",
+      "target": "129b0241bb3a",
+      "direction": "east"
+    },
+    {
+      "source": "129b0241bb3a",
+      "target": "606c883e8b31",
+      "direction": "south"
+    },
+    {
+      "source": "606c883e8b31",
+      "target": "59854a041a8d",
+      "direction": "south"
+    },
+    {
+      "source": "59854a041a8d",
+      "target": "7796e133b585",
+      "direction": "west"
+    },
+    {
+      "source": "7796e133b585",
+      "target": "42b28f3174ec",
+      "direction": "west"
+    },
+    {
+      "source": "42b28f3174ec",
+      "target": "7e04d146ed21",
+      "direction": "west"
+    },
+    {
+      "source": "7e04d146ed21",
+      "target": "998e4fbbcad6",
+      "direction": "north"
+    },
+    {
+      "source": "862196265119",
+      "target": "acf2284bc70f",
+      "direction": "north"
+    },
+    {
+      "source": "862196265119",
+      "target": "0bc9cb2b032f",
+      "direction": "east"
+    },
+    {
+      "source": "862196265119",
+      "target": "ee4d23d4c30b",
+      "direction": "up"
+    },
+    {
+      "source": "acf2284bc70f",
+      "target": "862196265119",
+      "direction": "south"
+    },
+    {
+      "source": "0bc9cb2b032f",
+      "target": "862196265119",
+      "direction": "west"
+    },
+    {
+      "source": "ee4d23d4c30b",
+      "target": "862196265119",
+      "direction": "down"
+    }
+  ]
+}

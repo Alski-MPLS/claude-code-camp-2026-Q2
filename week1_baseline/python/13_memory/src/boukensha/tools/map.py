@@ -24,7 +24,10 @@ if TYPE_CHECKING:
     from boukensha.registry import Registry
 
 _DIRECTIONS = {"north", "east", "south", "west", "up", "down"}
-_EXITS_RE = re.compile(r"obvious exits\s*[:\-]\s*(.+)", re.IGNORECASE)
+_DIR_ABBREV = {"n": "north", "e": "east", "s": "south", "w": "west", "u": "up", "d": "down"}
+# Matches both "Obvious exits: north, east" and the bracketed brief form
+# emitted by this MUD, "[ Exits: s ]".
+_EXITS_RE = re.compile(r"exits\s*[:\-]\s*([^\]\r\n]+)", re.IGNORECASE)
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
 
@@ -60,12 +63,13 @@ def _parse_room(response: str) -> tuple[str, str, list[str]] | None:
     exits: list[str] = []
     if exits_match:
         raw = exits_match.group(1)
-        # "north, east, west." or "north east west"
-        exits = [
-            w.strip(" .,;").lower()
-            for w in re.split(r"[,\s]+", raw)
-            if w.strip(" .,;").lower() in _DIRECTIONS
-        ]
+        # "north, east, west." or "north east west" or brief "n e w"
+        for w in re.split(r"[,\s]+", raw):
+            token = w.strip(" .,;").lower()
+            if token in _DIRECTIONS:
+                exits.append(token)
+            elif token in _DIR_ABBREV:
+                exits.append(_DIR_ABBREV[token])
 
     return title, description, exits
 
