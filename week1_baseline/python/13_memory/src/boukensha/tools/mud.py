@@ -263,10 +263,23 @@ def _check_enum(value: str, allowed: set[str], name: str) -> str | None:
     return None
 
 
+# Commands that trigger affordance confirmation
+_DRINK_CMDS = {"drink", "quaff"}
+_EAT_CMDS   = {"eat"}
+_DRINK_FAIL = re.compile(r"nothing to drink|can't drink|you can't", re.IGNORECASE)
+_EAT_FAIL   = re.compile(r"nothing to eat|can't eat|you can't", re.IGNORECASE)
+
+
 def _observe(graph: "RoomGraph | None", result: str, cmd: str | None) -> str:
     """Call graph.observe() if a graph is attached, then pass result through."""
     if graph is not None:
         graph.observe(result, cmd)
+        if cmd is not None and graph._current is not None:
+            cmd_lower = cmd.strip().lower()
+            if cmd_lower in _DRINK_CMDS and not _DRINK_FAIL.search(result):
+                graph.confirm_affordance(graph._current, "can_drink")
+            elif cmd_lower in _EAT_CMDS and not _EAT_FAIL.search(result):
+                graph.confirm_affordance(graph._current, "can_eat")
     return result
 
 

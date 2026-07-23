@@ -189,3 +189,51 @@ def test_mud_opts_from_config_returns_dict_when_username_set():
     mock_cfg.mud_password = "secret"
     result = boukensha._mud_opts_from_config(mock_cfg)
     assert result == {"host": "localhost", "port": 4000, "name": "Hero", "password": "secret"}
+
+
+# ---------------------------------------------------------------------------
+# Affordance confirmation
+# ---------------------------------------------------------------------------
+
+def test_observe_confirms_can_drink_on_successful_drink(tmp_path):
+    from boukensha.tools.map import RoomGraph
+    from boukensha.tools.mud import _observe
+
+    save_path = tmp_path / "map.json"
+    graph = RoomGraph(save_path)
+
+    look_response = (
+        "The Town Square\n"
+        "A fountain gurgles here.\n"
+        "Obvious exits: north\n"
+    )
+    graph.observe(look_response, "look")
+    key = graph._current
+
+    drink_response = "You drink the water.  You don't feel thirsty anymore.\n> "
+    _observe(graph, drink_response, "drink")
+
+    node = graph._graph.nodes[key]
+    assert "can_drink" in node.get("affordances_confirmed", [])
+
+
+def test_observe_does_not_confirm_on_failed_drink(tmp_path):
+    from boukensha.tools.map import RoomGraph
+    from boukensha.tools.mud import _observe
+
+    save_path = tmp_path / "map.json"
+    graph = RoomGraph(save_path)
+
+    look_response = (
+        "A Dark Corridor\n"
+        "Nothing here.\n"
+        "Obvious exits: north\n"
+    )
+    graph.observe(look_response, "look")
+    key = graph._current
+
+    fail_response = "There is nothing to drink here.\n> "
+    _observe(graph, fail_response, "drink")
+
+    node = graph._graph.nodes[key]
+    assert "can_drink" not in node.get("affordances_confirmed", [])
