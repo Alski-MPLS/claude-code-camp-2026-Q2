@@ -30,6 +30,34 @@ _DIR_ABBREV = {"n": "north", "e": "east", "s": "south", "w": "west", "u": "up", 
 _EXITS_RE = re.compile(r"exits\s*[:\-]\s*([^\]\r\n]+)", re.IGNORECASE)
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
+# Affordance keyword sets — matched against title + description (case-insensitive)
+_AFFORDANCE_KEYWORDS: dict[str, list[str]] = {
+    "can_drink": [
+        "fountain", "well", "spring", "pool", "brook", "stream",
+        "water", "pitcher", "tap", "cistern",
+    ],
+    "can_eat": [
+        "bakery", "tavern", "inn", "kitchen", "food", "meal",
+        "feast", "bread", "vendor", "market",
+    ],
+    "can_rest": [
+        "inn", "tavern", "safe", "peaceful", "quiet",
+        "sanctuary", "temple", "chapel",
+    ],
+    "can_heal": [
+        "temple", "chapel", "shrine", "healer", "cleric", "priest", "medic",
+    ],
+}
+
+
+def _infer_affordances(title: str, description: str) -> list[str]:
+    text = (title + " " + description).lower()
+    return [
+        tag
+        for tag, keywords in _AFFORDANCE_KEYWORDS.items()
+        if any(kw in text for kw in keywords)
+    ]
+
 
 def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text)
@@ -99,11 +127,22 @@ class RoomGraph:
         title, description, exits = parsed
         key = _node_key(title, description, exits)
 
+        affordances = _infer_affordances(title, description)
         if not self._graph.has_node(key):
-            self._graph.add_node(key, title=title, description=description, exits=exits)
+            self._graph.add_node(
+                key,
+                title=title,
+                description=description,
+                exits=exits,
+                affordances=affordances,
+                affordances_confirmed=[],
+            )
         else:
-            # Refresh exits in case the room state changed (doors, etc.)
             self._graph.nodes[key]["exits"] = exits
+            # Merge any newly inferred affordances (don't drop confirmed ones)
+            existing = self._graph.nodes[key].get("affordances", [])
+            merged = list(dict.fromkeys(existing + affordances))
+            self._graph.nodes[key]["affordances"] = merged
 
         prev = self._current
         self._current = key
@@ -188,6 +227,27 @@ class RoomGraph:
             marker = " ← you are here" if node == self._current else ""
             lines.append(f"  • {data.get('title', node)}{marker}")
         return "\n".join(lines)
+
+    def rooms_with_affordance(self, tag: str) -> list[str]:
+        """Return node keys for all rooms tagged with the given affordance."""
+        return [
+            n for n, d in self._graph.nodes(data=True)
+            if tag in d.get("affordances", []) or tag in d.get("affordances_confirmed", [])
+        ]
+
+    def confirm_affordance(self, node_key: str, tag: str) -> None:
+        """Mark an affordance as confirmed (successful action) on a node."""
+        if not self._graph.has_node(node_key):
+            return
+        node = self._graph.nodes[node_key]
+        # Ensure inferred list also has it
+        inferred = node.get("affordances", [])
+        if tag not in inferred:
+            node["affordances"] = inferred + [tag]
+        confirmed = node.get("affordances_confirmed", [])
+        if tag not in confirmed:
+            node["affordances_confirmed"] = confirmed + [tag]
+        self._save()
 
     # ------------------------------------------------------------------
     # Persistence

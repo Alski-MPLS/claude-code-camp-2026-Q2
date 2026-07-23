@@ -293,3 +293,95 @@ def test_map_register_registers_three_tools(tmp_save: Path):
     assert registry.tool.call_count == 3
     names = {call.args[0] for call in registry.tool.call_args_list}
     assert names == {"map_here", "map_path_to", "map_summary"}
+
+
+# ---------------------------------------------------------------------------
+# Affordance tagging
+# ---------------------------------------------------------------------------
+
+LOOK_FOUNTAIN_ROOM = """\
+The Town Square
+A wide cobblestone plaza.  A stone fountain gurgles in the center.
+Obvious exits: north, east, south
+"""
+
+LOOK_BAKERY_ROOM = """\
+The Bakery
+The smell of fresh bread fills the air.  A vendor sells loaves here.
+Obvious exits: west
+"""
+
+LOOK_TEMPLE_ROOM = """\
+The Temple of Healing
+A cleric tends to the wounded at the shrine.
+Obvious exits: south
+"""
+
+LOOK_PLAIN_ROOM = """\
+A Dark Corridor
+Damp stone walls.  Nothing of note here.
+Obvious exits: north, south
+"""
+
+
+def test_affordance_can_drink_inferred_from_description(graph: RoomGraph):
+    graph.observe(LOOK_FOUNTAIN_ROOM, "look")
+    node_data = graph._graph.nodes[graph._current]
+    assert "can_drink" in node_data.get("affordances", [])
+
+
+def test_affordance_can_eat_inferred_from_description(graph: RoomGraph):
+    graph.observe(LOOK_BAKERY_ROOM, "look")
+    node_data = graph._graph.nodes[graph._current]
+    assert "can_eat" in node_data.get("affordances", [])
+
+
+def test_affordance_can_heal_inferred_from_description(graph: RoomGraph):
+    graph.observe(LOOK_TEMPLE_ROOM, "look")
+    node_data = graph._graph.nodes[graph._current]
+    assert "can_heal" in node_data.get("affordances", [])
+
+
+def test_affordance_can_rest_inferred_from_description(graph: RoomGraph):
+    graph.observe(LOOK_TEMPLE_ROOM, "look")
+    node_data = graph._graph.nodes[graph._current]
+    assert "can_rest" in node_data.get("affordances", [])
+
+
+def test_no_affordance_on_plain_room(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")
+    node_data = graph._graph.nodes[graph._current]
+    assert node_data.get("affordances", []) == []
+
+
+def test_rooms_with_affordance_returns_matching_keys(graph: RoomGraph):
+    graph.observe(LOOK_FOUNTAIN_ROOM, "look")
+    fountain_key = graph._current
+    graph.observe(LOOK_PLAIN_ROOM, "north")
+    results = graph.rooms_with_affordance("can_drink")
+    assert fountain_key in results
+    assert graph._current not in results
+
+
+def test_confirm_affordance_adds_to_confirmed(graph: RoomGraph):
+    graph.observe(LOOK_FOUNTAIN_ROOM, "look")
+    key = graph._current
+    graph.confirm_affordance(key, "can_drink")
+    node_data = graph._graph.nodes[key]
+    assert "can_drink" in node_data.get("affordances_confirmed", [])
+
+
+def test_confirm_affordance_also_ensures_inferred(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")
+    key = graph._current
+    graph.confirm_affordance(key, "can_drink")
+    node_data = graph._graph.nodes[key]
+    assert "can_drink" in node_data.get("affordances", [])
+
+
+def test_affordances_survive_round_trip(tmp_save: Path):
+    g1 = RoomGraph(tmp_save)
+    g1.observe(LOOK_FOUNTAIN_ROOM, "look")
+    g2 = RoomGraph(tmp_save)
+    node_data = g2._graph.nodes[g2._current]
+    assert "can_drink" in node_data.get("affordances", [])
