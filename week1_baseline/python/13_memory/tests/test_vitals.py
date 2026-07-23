@@ -1,6 +1,5 @@
 """Tests for VitalsTracker."""
 from __future__ import annotations
-import pytest
 from boukensha.tools.vitals import PlayerVitals, VitalsTracker
 
 

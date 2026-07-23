@@ -4,6 +4,7 @@ done or an iteration/token ceiling is reached.
 
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any
 
 import boukensha
@@ -223,6 +224,7 @@ class Agent:
 
         self._context.add_message("assistant", content)
 
+        tool_results: list[str] = []
         for block in tool_calls:
             name = block["name"]
             args = block["input"]
@@ -244,20 +246,16 @@ class Agent:
                 print(f"  tool result -> {str(result)[:61]}")
 
             self._context.add_message("tool_result", str(result), tool_use_id=use_id)
+            tool_results.append(str(result))
 
-        # Vitals hint injection — append as a synthetic tool result so the model sees it
+        # Vitals hint injection — injected as a user message so it has no tool_use_id
+        # requirement; the model receives it as a side-channel observation.
         if self._vitals is not None:
-            # Update tracker with all tool results just processed
-            for block in tool_calls:
-                for msg in reversed(self._context.messages):
-                    if getattr(msg, "tool_use_id", None) == block["id"]:
-                        self._vitals.update(str(getattr(msg, "content", "")))
-                        break
+            for r in tool_results:
+                self._vitals.update(r)
             hint = self._vitals.hint
             if hint:
-                import uuid
-                synthetic_id = f"vitals_{uuid.uuid4().hex[:8]}"
-                self._context.add_message("tool_result", hint, tool_use_id=synthetic_id)
+                self._context.add_message("user", f"[vitals_hint:{uuid.uuid4().hex[:8]}] {hint}")
 
 
 def _normalized_usage(response: Any) -> dict[str, Any] | None:

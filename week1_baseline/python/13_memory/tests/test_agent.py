@@ -757,7 +757,7 @@ def test_agent_injects_vitals_hint_after_tool_call():
 
     hint_results = [
         m for m in ctx.messages
-        if m.role == "tool_result" and "can_drink" in str(m.content)
+        if m.role == "user" and "can_drink" in str(m.content)
     ]
     assert len(hint_results) == 1
 
@@ -792,7 +792,7 @@ def test_agent_no_hint_when_vitals_healthy():
 
     hint_results = [
         m for m in ctx.messages
-        if m.role == "tool_result" and "[vitals]" in str(m.content)
+        if m.role == "user" and "[vitals]" in str(m.content)
     ]
     assert len(hint_results) == 0
 

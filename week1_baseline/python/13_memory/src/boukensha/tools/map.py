@@ -1,10 +1,11 @@
 """Persistent room-graph for MUD navigation memory.
 
 Intercepts look/move responses and builds a directed graph of visited rooms.
-The graph lives outside the LLM context and is queried via three tools:
-  map_here()         — current room + explored/unexplored exits
-  map_path_to(dest)  — shortest-path direction sequence to a named room
-  map_summary()      — compact dump of the known world
+The graph lives outside the LLM context and is queried via four tools:
+  map_here()                  — current room + explored/unexplored exits + loop warning
+  map_path_to(dest)           — shortest-path direction sequence to a named room
+  map_summary()               — compact dump of the known world
+  map_find_capability(cap)    — nearest room where you can drink/eat/rest/heal
 
 Graph is persisted as JSON at ~/.boukensha/maps/<character>.json and survives
 process restarts. Uses networkx.DiGraph for BFS/shortest-path.
@@ -338,7 +339,7 @@ class RoomGraph:
 
 
 class Map:
-    """Registers the three map query tools against a registry."""
+    """Registers the four map query tools against a registry."""
 
     @classmethod
     def register(cls, registry: "Registry", *, save_path: Path) -> RoomGraph:
