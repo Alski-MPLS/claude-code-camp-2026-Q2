@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections import deque
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -114,6 +115,7 @@ class RoomGraph:
         self._graph: nx.DiGraph = nx.DiGraph()
         self._current: str | None = None  # node key of current room
         self._load()
+        self._visit_history: deque[str] = deque(maxlen=6)
 
     # ------------------------------------------------------------------
     # Public observation API (called by mud.py tool wrappers)
@@ -146,6 +148,7 @@ class RoomGraph:
 
         prev = self._current
         self._current = key
+        self._visit_history.append(key)
 
         # Record the traversal edge if we just moved here via a direction
         if (
@@ -168,12 +171,14 @@ class RoomGraph:
         data = self._graph.nodes[self._current]
         title = data.get("title", self._current)
         all_exits = data.get("exits", [])
-        # Which exits have a recorded onward edge?
         mapped = {
             d["direction"]
             for _, _, d in self._graph.out_edges(self._current, data=True)
         }
+        affordances = data.get("affordances", []) + data.get("affordances_confirmed", [])
         lines = [f"You are in: {title}"]
+        if affordances:
+            lines.append("Capabilities: " + ", ".join(dict.fromkeys(affordances)))
         if all_exits:
             exit_parts = []
             for e in all_exits:
@@ -183,20 +188,35 @@ class RoomGraph:
         else:
             lines.append("No obvious exits.")
         lines.append(f"Known rooms: {self._graph.number_of_nodes()}")
+        # Loop detection: warn if current room appeared 3+ times in last 6 visits
+        if self._visit_history.count(self._current) >= 3:
+            lines.append(
+                "[navigation warning] Possible loop detected — you have visited this room "
+                f"{self._visit_history.count(self._current)} times recently."
+            )
         return "\n".join(lines)
 
     def map_path_to(self, destination: str) -> str:
         if self._current is None:
             return "Current location unknown — try 'look' first."
         dest_lower = destination.lower()
-        # Find all nodes whose title matches (case-insensitive substring)
-        candidates = [
+        # Title match: exact first, then substring
+        exact = [
+            n for n, d in self._graph.nodes(data=True)
+            if dest_lower == d.get("title", "").lower()
+        ]
+        substring = [
             n for n, d in self._graph.nodes(data=True)
             if dest_lower in d.get("title", "").lower()
         ]
+        candidates = exact or substring
+        # Capability fallback: if no title match, check if destination is a capability keyword
         if not candidates:
+            # Check all affordance keyword lists for a match
+            for tag, keywords in _AFFORDANCE_KEYWORDS.items():
+                if dest_lower in keywords or dest_lower == tag:
+                    return self.map_find_capability(tag)
             return f"No room matching '{destination}' in the map."
-        # Try each candidate, take the shortest path
         best_directions: list[str] | None = None
         best_title = ""
         for target in candidates:
@@ -206,10 +226,10 @@ class RoomGraph:
                 path = nx.shortest_path(self._graph, self._current, target)
             except nx.NetworkXNoPath:
                 continue
-            directions = []
-            for a, b in zip(path, path[1:]):
-                edge_data = self._graph.edges[a, b]
-                directions.append(edge_data.get("direction", "?"))
+            directions = [
+                self._graph.edges[a, b].get("direction", "?")
+                for a, b in zip(path, path[1:])
+            ]
             if best_directions is None or len(directions) < len(best_directions):
                 best_directions = directions
                 best_title = self._graph.nodes[target].get("title", target)
@@ -227,6 +247,38 @@ class RoomGraph:
             marker = " ← you are here" if node == self._current else ""
             lines.append(f"  • {data.get('title', node)}{marker}")
         return "\n".join(lines)
+
+    def map_find_capability(self, capability: str) -> str:
+        """Return shortest path to nearest room tagged with capability."""
+        if self._current is None:
+            return "Current location unknown — try 'look' first."
+        candidates = self.rooms_with_affordance(capability)
+        if not candidates:
+            return f"No known rooms with '{capability}' capability in the map."
+        best_directions: list[str] | None = None
+        best_title = ""
+        for target in candidates:
+            if target == self._current:
+                data = self._graph.nodes[target]
+                return f"You are already in a room with {capability}: '{data.get('title', target)}'."
+            try:
+                path = nx.shortest_path(self._graph, self._current, target)
+            except nx.NetworkXNoPath:
+                continue
+            directions = [
+                self._graph.edges[a, b].get("direction", "?")
+                for a, b in zip(path, path[1:])
+            ]
+            if best_directions is None or len(directions) < len(best_directions):
+                best_directions = directions
+                best_title = self._graph.nodes[target].get("title", target)
+        if best_directions is None:
+            return f"No navigable path to any {capability} room from current location."
+        hops = len(best_directions)
+        return (
+            f"Nearest {capability} room: '{best_title}' — "
+            f"{' → '.join(best_directions)} ({hops} hop{'s' if hops != 1 else ''})"
+        )
 
     def rooms_with_affordance(self, tag: str) -> list[str]:
         """Return node keys for all rooms tagged with the given affordance."""
@@ -325,6 +377,23 @@ class Map:
             ),
             parameters={},
             block=lambda **_: graph.map_summary(),
+        )
+
+        registry.tool(
+            "map_find_capability",
+            description=(
+                "Find the nearest room where you can perform a specific action. "
+                "Use capability='can_drink' when thirsty, 'can_eat' when hungry, "
+                "'can_rest' to recover HP/mana, 'can_heal' for a healer. "
+                "Returns the direction sequence to get there."
+            ),
+            parameters={
+                "capability": {
+                    "type": "string",
+                    "description": "can_drink | can_eat | can_rest | can_heal",
+                },
+            },
+            block=lambda capability, **_: graph.map_find_capability(capability),
         )
 
         return graph

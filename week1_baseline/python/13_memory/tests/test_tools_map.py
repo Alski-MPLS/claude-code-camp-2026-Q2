@@ -287,12 +287,12 @@ def test_map_register_returns_room_graph(tmp_save: Path):
     assert isinstance(result, RoomGraph)
 
 
-def test_map_register_registers_three_tools(tmp_save: Path):
+def test_map_register_registers_four_tools_complete(tmp_save: Path):
     registry = MagicMock()
     Map.register(registry, save_path=tmp_save)
-    assert registry.tool.call_count == 3
+    assert registry.tool.call_count == 4
     names = {call.args[0] for call in registry.tool.call_args_list}
-    assert names == {"map_here", "map_path_to", "map_summary"}
+    assert names == {"map_here", "map_path_to", "map_summary", "map_find_capability"}
 
 
 # ---------------------------------------------------------------------------
@@ -385,3 +385,90 @@ def test_affordances_survive_round_trip(tmp_save: Path):
     g2 = RoomGraph(tmp_save)
     node_data = g2._graph.nodes[g2._current]
     assert "can_drink" in node_data.get("affordances", [])
+
+
+# ---------------------------------------------------------------------------
+# map_find_capability
+# ---------------------------------------------------------------------------
+
+def test_map_find_capability_no_current(graph: RoomGraph):
+    result = graph.map_find_capability("can_drink")
+    assert "unknown" in result.lower()
+
+
+def test_map_find_capability_no_matching_rooms(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")
+    result = graph.map_find_capability("can_drink")
+    assert "no known" in result.lower()
+
+
+def test_map_find_capability_already_here(graph: RoomGraph):
+    graph.observe(LOOK_FOUNTAIN_ROOM, "look")
+    result = graph.map_find_capability("can_drink")
+    assert "already" in result.lower()
+
+
+def test_map_find_capability_finds_nearest(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")          # start: plain
+    graph.observe(LOOK_FOUNTAIN_ROOM, "north")      # north → fountain
+    graph.observe(LOOK_PLAIN_ROOM, "south")         # back to plain
+    result = graph.map_find_capability("can_drink")
+    assert "north" in result
+    assert "can_drink" in result or "fountain" in result.lower()
+
+
+def test_map_find_capability_unreachable(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")
+    key_plain = graph._current
+    graph._current = None
+    graph.observe(LOOK_FOUNTAIN_ROOM, "look")   # island node
+    graph._current = key_plain
+    result = graph.map_find_capability("can_drink")
+    assert "no navigable" in result.lower() or "no known" in result.lower()
+
+
+# ---------------------------------------------------------------------------
+# map_path_to — capability fallback
+# ---------------------------------------------------------------------------
+
+def test_map_path_to_falls_back_to_capability(graph: RoomGraph):
+    graph.observe(LOOK_PLAIN_ROOM, "look")
+    graph.observe(LOOK_FOUNTAIN_ROOM, "north")
+    graph.observe(LOOK_PLAIN_ROOM, "south")
+    # "fountain" matches no room title but IS a can_drink keyword
+    result = graph.map_path_to("fountain")
+    assert "north" in result
+
+
+# ---------------------------------------------------------------------------
+# Loop detection in map_here
+# ---------------------------------------------------------------------------
+
+def test_map_here_no_loop_warning_normally(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.observe(LOOK_ROOM_B, "north")
+    result = graph.map_here()
+    assert "loop" not in result.lower()
+
+
+def test_map_here_warns_on_loop(graph: RoomGraph):
+    # Visit same room 3 times in last 6 moves
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.observe(LOOK_ROOM_B, "north")
+    graph.observe(LOOK_ROOM_A, "south")
+    graph.observe(LOOK_ROOM_B, "north")
+    graph.observe(LOOK_ROOM_A, "south")
+    result = graph.map_here()
+    assert "loop" in result.lower()
+
+
+# ---------------------------------------------------------------------------
+# Map.register — now 4 tools
+# ---------------------------------------------------------------------------
+
+def test_map_register_registers_four_tools(tmp_save: Path):
+    registry = MagicMock()
+    Map.register(registry, save_path=tmp_save)
+    assert registry.tool.call_count == 4
+    names = {call.args[0] for call in registry.tool.call_args_list}
+    assert "map_find_capability" in names
