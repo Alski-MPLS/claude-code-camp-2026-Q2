@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from boukensha.tools.map import Map, RoomGraph, _node_key, _parse_room
+from boukensha.tools.map import Map, RoomGraph, _node_key, _parse_exits_detail, _parse_room
 
 
 # ---------------------------------------------------------------------------
@@ -472,3 +472,146 @@ def test_map_register_registers_four_tools(tmp_save: Path):
     assert registry.tool.call_count == 4
     names = {call.args[0] for call in registry.tool.call_args_list}
     assert "map_find_capability" in names
+
+
+# ---------------------------------------------------------------------------
+# _parse_exits_detail
+# ---------------------------------------------------------------------------
+
+EXITS_VERBOSE = """\
+North - The Town Square
+East  - [CLOSED] The Iron Gate
+South - A Dark Alley
+"""
+
+EXITS_LOCKED = """\
+West - [LOCKED] The Vault Door
+Up   - The Watchtower
+"""
+
+EXITS_NO_MATCH = "You see nothing here."
+
+
+def test_parse_exits_detail_extracts_directions():
+    result = _parse_exits_detail(EXITS_VERBOSE)
+    assert result is not None
+    assert set(result.keys()) == {"north", "east", "south"}
+
+
+def test_parse_exits_detail_captures_room_names():
+    result = _parse_exits_detail(EXITS_VERBOSE)
+    assert result["north"]["room_name"] == "The Town Square"
+    assert result["south"]["room_name"] == "A Dark Alley"
+
+
+def test_parse_exits_detail_open_door_state():
+    result = _parse_exits_detail(EXITS_VERBOSE)
+    assert result["north"]["door_state"] == "open"
+
+
+def test_parse_exits_detail_closed_door_state():
+    result = _parse_exits_detail(EXITS_VERBOSE)
+    assert result["east"]["door_state"] == "closed"
+    assert result["east"]["room_name"] == "The Iron Gate"
+
+
+def test_parse_exits_detail_locked_door_state():
+    result = _parse_exits_detail(EXITS_LOCKED)
+    assert result["west"]["door_state"] == "locked"
+
+
+def test_parse_exits_detail_up_direction():
+    result = _parse_exits_detail(EXITS_LOCKED)
+    assert "up" in result
+    assert result["up"]["room_name"] == "The Watchtower"
+
+
+def test_parse_exits_detail_returns_none_on_no_match():
+    assert _parse_exits_detail(EXITS_NO_MATCH) is None
+
+
+def test_parse_exits_detail_strips_ansi():
+    ansi = "\x1b[1mNorth\x1b[0m - Town Square\n"
+    result = _parse_exits_detail(ansi)
+    assert result is not None
+    assert "north" in result
+
+
+# ---------------------------------------------------------------------------
+# RoomGraph.update_exits_detail
+# ---------------------------------------------------------------------------
+
+def test_update_exits_detail_stores_detail(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, EXITS_VERBOSE)
+    node = graph._graph.nodes[graph._current]
+    assert "north" in node["exits_detail"]
+    assert node["exits_detail"]["north"]["room_name"] == "The Town Square"
+
+
+def test_update_exits_detail_marks_scanned(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    assert graph._graph.nodes[graph._current]["exits_scanned"] is False
+    graph.update_exits_detail(graph._current, EXITS_VERBOSE)
+    assert graph._graph.nodes[graph._current]["exits_scanned"] is True
+
+
+def test_update_exits_detail_marks_scanned_even_on_no_parse(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, EXITS_NO_MATCH)
+    assert graph._graph.nodes[graph._current]["exits_scanned"] is True
+
+
+def test_update_exits_detail_persists(tmp_save: Path):
+    g1 = RoomGraph(tmp_save)
+    g1.observe(LOOK_ROOM_A, "look")
+    g1.update_exits_detail(g1._current, EXITS_VERBOSE)
+    g2 = RoomGraph(tmp_save)
+    node = g2._graph.nodes[g2._current]
+    assert node.get("exits_scanned") is True
+    assert "north" in node.get("exits_detail", {})
+
+
+def test_update_exits_detail_merges_with_existing(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, "North - The Town Square\n")
+    graph.update_exits_detail(graph._current, "South - The Alley\n")
+    node = graph._graph.nodes[graph._current]
+    assert "north" in node["exits_detail"]
+    assert "south" in node["exits_detail"]
+
+
+def test_update_exits_detail_no_current_room(graph: RoomGraph):
+    result = graph.update_exits_detail("nonexistent_key", EXITS_VERBOSE)
+    assert "error" in result.lower()
+
+
+# ---------------------------------------------------------------------------
+# map_here — exits_scanned hint and richer exit display
+# ---------------------------------------------------------------------------
+
+def test_map_here_shows_scan_hint_when_unscanned(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    result = graph.map_here()
+    assert "exits not scanned" in result.lower()
+
+
+def test_map_here_no_scan_hint_after_scan(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, EXITS_VERBOSE)
+    result = graph.map_here()
+    assert "exits not scanned" not in result.lower()
+
+
+def test_map_here_shows_room_name_from_exits_detail(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, EXITS_VERBOSE)
+    result = graph.map_here()
+    assert "Town Square" in result
+
+
+def test_map_here_shows_door_state_for_closed_exit(graph: RoomGraph):
+    graph.observe(LOOK_ROOM_A, "look")
+    graph.update_exits_detail(graph._current, EXITS_VERBOSE)
+    result = graph.map_here()
+    assert "CLOSED" in result

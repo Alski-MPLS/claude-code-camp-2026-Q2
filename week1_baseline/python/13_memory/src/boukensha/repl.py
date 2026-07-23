@@ -36,6 +36,7 @@ _MUD_TOOL_NAMES: frozenset[str] = frozenset({
     "say", "tell", "channel_say",
     "get_item", "drop_item", "put_item", "equip_item", "consume_item",
     "cast_spell", "use_magic_item",
+    "map_here", "map_path_to", "map_summary", "map_find_capability", "map_scan_exits",
     "shop", "practice", "save_character", "send_raw",
 })
 

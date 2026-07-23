@@ -387,6 +387,19 @@ class Mud:
             block=lambda kind, **_: _check_info(session, kind),
         )
 
+        if graph is not None:
+            registry.tool(
+                "map_scan_exits",
+                description=(
+                    "Run the 'exits' command and store the verbose exit detail "
+                    "(adjacent room names and door states) for the current room. "
+                    "Call this whenever map_here shows '[exits not scanned]'. "
+                    "Only needs to be called once per room — results are persisted."
+                ),
+                parameters={},
+                block=lambda **_: _map_scan_exits(session, graph),
+            )
+
         # ── Movement ──────────────────────────────────────────────────────────
 
         registry.tool(
@@ -931,6 +944,16 @@ def _use_magic_item(session: MudSession, item: str, mode: str, target_args: str 
     if target_args:
         cmd += f" {target_args}"
     return _send(session, cmd)
+
+
+def _map_scan_exits(session: MudSession, graph: "RoomGraph") -> str:
+    err = _guard(session)
+    if err:
+        return err
+    if graph._current is None:
+        return "error: current room unknown — call 'look' first"
+    raw = _send(session, "exits")
+    return graph.update_exits_detail(graph._current, raw)
 
 
 def _shop(session: MudSession, action: str, args: str | None) -> str:

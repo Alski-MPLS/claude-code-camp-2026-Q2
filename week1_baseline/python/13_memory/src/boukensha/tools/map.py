@@ -32,6 +32,19 @@ _DIR_ABBREV = {"n": "north", "e": "east", "s": "south", "w": "west", "u": "up", 
 _EXITS_RE = re.compile(r"exits\s*[:\-]\s*([^\]\r\n]+)", re.IGNORECASE)
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
+# Matches a verbose exits line: "North - Town Square" or "East - [CLOSED] A Dark Alley".
+# Separator is one of: " - ", ": ", " to ", or bare whitespace between the
+# direction word and the rest — written as alternation to avoid a character
+# class that would accidentally consume leading letters of the room name.
+_EXIT_LINE_RE = re.compile(
+    r"^\s*(north|south|east|west|up|down)"
+    r"\s*(?:-+|:|(?=\s))\s*"          # separator: dash(es), colon, or whitespace
+    r"((?:\[[^\]]*\]\s*)*)"           # optional door flags: [CLOSED], [LOCKED], etc.
+    r"(.*?)\s*$",
+    re.IGNORECASE,
+)
+_DOOR_FLAGS_RE = re.compile(r"\[([^\]]+)\]", re.IGNORECASE)
+
 # Affordance keyword sets — matched against title + description (case-insensitive)
 _AFFORDANCE_KEYWORDS: dict[str, list[str]] = {
     "can_drink": [
@@ -63,6 +76,48 @@ def _infer_affordances(title: str, description: str) -> list[str]:
 
 def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text)
+
+
+def _parse_exits_detail(response: str) -> dict[str, dict[str, str]] | None:
+    """Parse a verbose 'exits' command response into per-direction detail.
+
+    Handles CircleMUD verbose format::
+
+        North - Town Square
+        East  - [CLOSED] The Iron Gate
+        South - The Dark Alley
+
+    Returns a dict mapping direction → {room_name, door_state, raw} for each
+    matched line, or None if no direction lines were found at all.  When a room
+    name cannot be parsed the entry still carries the raw text so the caller
+    can persist it without losing data.
+
+    door_state is one of: "open", "closed", "locked", or "" (unknown/open).
+    """
+    lines = _strip_ansi(response).splitlines()
+    result: dict[str, dict[str, str]] = {}
+    for line in lines:
+        m = _EXIT_LINE_RE.match(line)
+        if not m:
+            continue
+        direction = m.group(1).lower()
+        flags_raw = m.group(2)
+        room_raw = m.group(3).strip()
+        flags = [f.lower() for f in _DOOR_FLAGS_RE.findall(flags_raw)]
+        if "locked" in flags:
+            door_state = "locked"
+        elif "closed" in flags:
+            door_state = "closed"
+        elif flags:
+            door_state = flags[0]
+        else:
+            door_state = "open"
+        result[direction] = {
+            "room_name": room_raw,
+            "door_state": door_state,
+            "raw": line.strip(),
+        }
+    return result if result else None
 
 
 def _parse_room(response: str) -> tuple[str, str, list[str]] | None:
@@ -139,6 +194,8 @@ class RoomGraph:
                 exits=exits,
                 affordances=affordances,
                 affordances_confirmed=[],
+                exits_detail={},
+                exits_scanned=False,
             )
         else:
             self._graph.nodes[key]["exits"] = exits
@@ -177,17 +234,31 @@ class RoomGraph:
             for _, _, d in self._graph.out_edges(self._current, data=True)
         }
         affordances = data.get("affordances", []) + data.get("affordances_confirmed", [])
+        exits_detail = data.get("exits_detail", {})
+        exits_scanned = data.get("exits_scanned", False)
         lines = [f"You are in: {title}"]
         if affordances:
             lines.append("Capabilities: " + ", ".join(dict.fromkeys(affordances)))
         if all_exits:
-            exit_parts = []
+            lines.append("Exits:")
             for e in all_exits:
-                tag = " [mapped]" if e in mapped else " [unexplored]"
-                exit_parts.append(e + tag)
-            lines.append("Exits: " + ", ".join(exit_parts))
+                nav_tag = " [mapped]" if e in mapped else " [unexplored]"
+                if e in exits_detail:
+                    detail = exits_detail[e]
+                    room_name = detail.get("room_name", "")
+                    door_state = detail.get("door_state", "")
+                    door_tag = f" [{door_state.upper()}]" if door_state and door_state != "open" else ""
+                    name_part = f" → {room_name}" if room_name else ""
+                    lines.append(f"  {e}{name_part}{door_tag}{nav_tag}")
+                else:
+                    lines.append(f"  {e}{nav_tag}")
         else:
             lines.append("No obvious exits.")
+        if not exits_scanned:
+            lines.append(
+                "[exits not scanned] Run map_scan_exits to record room names "
+                "and door states for each exit."
+            )
         lines.append(f"Known rooms: {self._graph.number_of_nodes()}")
         # Loop detection: warn if current room appeared 3+ times in last 6 visits
         if self._visit_history.count(self._current) >= 3:
@@ -301,6 +372,42 @@ class RoomGraph:
         if tag not in confirmed:
             node["affordances_confirmed"] = confirmed + [tag]
         self._save()
+
+    def update_exits_detail(self, node_key: str, response: str) -> str:
+        """Parse an 'exits' command response and persist it on the node.
+
+        Always marks the room as scanned (exits_scanned=True) so the
+        map_here hint disappears, even when parsing finds no structured
+        detail — this prevents pointless retries on rooms that genuinely
+        return nothing useful.
+
+        Returns a human-readable summary of what was stored.
+        """
+        if not self._graph.has_node(node_key):
+            return "error: current room not in map — try 'look' first"
+        detail = _parse_exits_detail(response)
+        node = self._graph.nodes[node_key]
+        if detail:
+            # Merge: preserve any previously stored detail for directions not
+            # present in this response (e.g. a partial exits listing).
+            existing = node.get("exits_detail", {})
+            existing.update(detail)
+            node["exits_detail"] = existing
+        node["exits_scanned"] = True
+        self._save()
+
+        if not detail:
+            return (
+                "Exits scanned — no structured detail found in response "
+                "(room marked as scanned so this won't be retried).\n"
+                f"Raw response stored:\n{response.strip()}"
+            )
+        lines = ["Exits detail recorded:"]
+        for direction, d in sorted(detail.items()):
+            door = f" [{d['door_state'].upper()}]" if d["door_state"] and d["door_state"] != "open" else ""
+            name = d["room_name"] or "(unknown)"
+            lines.append(f"  {direction} → {name}{door}")
+        return "\n".join(lines)
 
     # ------------------------------------------------------------------
     # Persistence
