@@ -12,6 +12,7 @@ from .errors import ApiError
 
 if TYPE_CHECKING:
     from .logger import Logger
+    from .tools.vitals import VitalsTracker
 
 MAX_ITERATIONS = 25
 WRAP_UP_OUTPUT_TOKENS = 400
@@ -35,6 +36,7 @@ class Agent:
         max_iterations: int | None = None,
         max_turn_tokens: int | None = None,
         max_output_tokens: int | None = None,
+        vitals: "VitalsTracker | None" = None,
     ) -> None:
         self._context = context
         self._registry = registry
@@ -48,6 +50,7 @@ class Agent:
         self._max_turn_tokens = int(max_turn_tokens or 0)
         self._max_output_tokens = self._resolve_max_output_tokens(task_settings, max_output_tokens)
         self._iteration = 0
+        self._vitals = vitals
 
     def run(self) -> str:
         self._context.reset_turn_tokens()
@@ -241,6 +244,20 @@ class Agent:
                 print(f"  tool result -> {str(result)[:61]}")
 
             self._context.add_message("tool_result", str(result), tool_use_id=use_id)
+
+        # Vitals hint injection — append as a synthetic tool result so the model sees it
+        if self._vitals is not None:
+            # Update tracker with all tool results just processed
+            for block in tool_calls:
+                for msg in reversed(self._context.messages):
+                    if getattr(msg, "tool_use_id", None) == block["id"]:
+                        self._vitals.update(str(getattr(msg, "content", "")))
+                        break
+            hint = self._vitals.hint
+            if hint:
+                import uuid
+                synthetic_id = f"vitals_{uuid.uuid4().hex[:8]}"
+                self._context.add_message("tool_result", hint, tool_use_id=synthetic_id)
 
 
 def _normalized_usage(response: Any) -> dict[str, Any] | None:

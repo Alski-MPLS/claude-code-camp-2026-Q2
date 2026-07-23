@@ -722,6 +722,106 @@ def test_agent_compact_if_needed_runs_before_loop():
     assert len(ctx.messages) < msg_count_before
 
 
+# ---------------------------------------------------------------------------
+# Vitals hint injection
+# ---------------------------------------------------------------------------
+
+def test_agent_injects_vitals_hint_after_tool_call():
+    from boukensha.tools.vitals import VitalsTracker
+
+    vt = VitalsTracker()
+    # Pre-load thirsty state
+    vt.update("You are thirsty.\n> ")
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("look", description="look", parameters={}, block=lambda: "You are in the square.")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "t1", "name": "look", "input": {}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "done"}]},
+    ]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client, vitals=vt)
+    agent.run()
+
+    hint_results = [
+        m for m in ctx.messages
+        if m.role == "tool_result" and "can_drink" in str(m.content)
+    ]
+    assert len(hint_results) == 1
+
+
+def test_agent_no_hint_when_vitals_healthy():
+    from boukensha.tools.vitals import VitalsTracker
+
+    vt = VitalsTracker()
+    # No thirst, no hunger, no HP data → no hint
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("look", description="look", parameters={}, block=lambda: "You see nothing special.")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "t2", "name": "look", "input": {}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "done"}]},
+    ]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client, vitals=vt)
+    agent.run()
+
+    hint_results = [
+        m for m in ctx.messages
+        if m.role == "tool_result" and "[vitals]" in str(m.content)
+    ]
+    assert len(hint_results) == 0
+
+
+def test_agent_no_vitals_tracker_is_noop():
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("look", description="look", parameters={}, block=lambda: "ok")
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "t3", "name": "look", "input": {}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "done"}]},
+    ]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+    assert result == "done"
+
+
 def test_agent_reasoning_blocks_logged():
     """Reasoning blocks in the response content are forwarded to logger.reasoning()."""
     import tempfile
