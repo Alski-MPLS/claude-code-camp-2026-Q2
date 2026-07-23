@@ -105,11 +105,14 @@ cd week1_baseline/python/13_memory
 uv sync
 
 # TUI (default):
-uv run python examples/example.py
+uv run bin/boukensha
 
 # Plain REPL:
-uv run python examples/example.py --no-tui
+uv run bin/boukensha --no-tui
 ```
+
+`bin/boukensha` is the conventional entry point (mirrors `ruby/12_context/bin/boukensha`).
+`examples/example.py` still works unchanged for direct invocation.
 
 ## Tests
 

@@ -34,6 +34,7 @@ the user.
 | **`tools/vitals.py`** (`VitalsTracker`) | New in this folder. Passively scans every MUD response for thirst/hunger phrases and for HP values from `score` output. Exposes a `hint` property (`str | None`) that returns a one-line directive when HP is low or the character is thirsty or hungry. Stateless between sessions — tracks only the most recent response; no persistence needed since MUD state is always re-observed. |
 | **`tasks/base.py` / `tasks/player.py`** | Task contract (`provider()`, `model()`, `system_prompt()`, `max_iterations()`, `max_output_tokens()`) and the concrete `Player` task. Unchanged. |
 | **`__init__.py` (`boukensha.run()` / `boukensha.repl()`)** | Top-level entry points; both gained `context_window: int = 200_000` and `max_turn_tokens: int | None = None` parameters, threaded straight into `Context(...)` and `Agent(...)`/`Repl(...)` respectively. |
+| **`bin/boukensha`** | Executable entry point mirroring `ruby/12_context/bin/boukensha`. Prepends this step's `src/` onto `sys.path`, sets `BOUKENSHA_DIR` to the repo-root `.boukensha` config directory (if not already set), then delegates to `boukensha_loader.load_and_start_repl()`. All env-var overrides (`MUD_NAME`/`MUD_PASSWORD`, `BOUKENSHA_PATH`, `BOUKENSHA_DEBUG`) and the `--no-tui` flag work automatically. Run with `uv run bin/boukensha` or `./bin/boukensha` after activating the venv. |
 
 Design note: token accounting lives entirely on `Context` (the data owner);
 `Agent` only orchestrates *when* to ask `Context` to update or compact itself,
