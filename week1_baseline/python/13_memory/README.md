@@ -71,6 +71,33 @@ Emitted whenever auto- or manual compaction runs. The TUI subscribes to this eve
 boukensha.repl(context_window=128_000)  # for a smaller model
 ```
 
+## Smart navigation and vitals
+
+### Affordance tags
+
+Each room carries a set of capability tags that describe what the agent can do there: `can_drink`, `can_eat`, `can_rest`, and `can_heal`. Tags are inferred automatically from the room description when it is first observed — keywords like "fountain", "well", or "stream" imply `can_drink`; "bakery", "inn", or "tavern" imply `can_eat`; and so on. When the agent successfully drinks or eats in a room, the relevant tag is confirmed and persisted to the map file so that future sessions start with it already set.
+
+### `map_find_capability` tool
+
+A new navigation tool finds the nearest room matching a capability keyword:
+
+```
+map_find_capability("drink")   # => "Go north, then west to reach the Fountain Plaza"
+map_find_capability("eat")     # => "You are already in a room where you can eat"
+```
+
+`map_path_to` also falls back to capability matching when no room name exactly matches the requested destination — so `map_path_to("fountain")` will route to the nearest `can_drink` room if no room is literally named "fountain".
+
+### Loop detection
+
+`map_here` tracks the last several rooms visited. If the agent revisits the same room too many times in a short window, the output includes a `⚠ loop warning` notice so the agent knows to try a different route.
+
+### VitalsTracker and hint injection
+
+`VitalsTracker` (in `src/boukensha/tools/vitals.py`) passively monitors every MUD response for thirst/hunger phrases and for HP values from `score` output. When HP is low or the character is thirsty or hungry, it returns a one-line hint string.
+
+The `Agent` injects this hint as a synthetic `tool_result` message immediately after each tool batch, before the next model call. The system prompt instructs the agent to treat `[vitals]` hints as highest-priority directives: call `map_find_capability` with the suggested capability, navigate there, and address the need before resuming other activity.
+
 ## Run the demo
 
 ```sh
