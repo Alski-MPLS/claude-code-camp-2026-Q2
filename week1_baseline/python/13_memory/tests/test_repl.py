@@ -343,3 +343,47 @@ def test_repl_compact_via_start(capsys):
         logger.close()
     captured = capsys.readouterr()
     assert "compacted" in captured.out
+
+
+def test_run_turn_writes_new_goal(tmp_path):
+    goal_path = tmp_path / "goals" / "hero.md"
+    ctx = Context(task=Player, system="sys", goal_path=goal_path)
+    registry = Registry(ctx)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.return_value = {
+        "stop_reason": "end_turn",
+        "content": [{"type": "text", "text": "ok"}],
+    }
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    _tmp = tempfile.mkdtemp()
+    logger = Logger(dir=_tmp)
+    repl = Repl(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        logger=logger,
+        task_settings={},
+        max_iterations=25,
+        max_turn_tokens=None,
+        max_output_tokens=None,
+        config_dir=None,
+        provider="anthropic",
+        model="claude-haiku-4-5",
+        version="0.1.0",
+        api_key="test-key",
+    )
+    try:
+        repl.run_turn("go find the bakery")
+        assert "go find the bakery" in goal_path.read_text()
+
+        repl.run_turn("go drink water instead")
+        assert "go drink water instead" in goal_path.read_text()
+        assert "go find the bakery" not in goal_path.read_text()
+    finally:
+        logger.close()

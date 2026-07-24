@@ -1,5 +1,5 @@
 {
-  "current": "0bc9cb2b032f",
+  "current": "998e4fbbcad6",
   "nodes": [
     {
       "id": "3b215c6d3a12",
@@ -7,6 +7,9 @@
       "description": "You are standing inside the small bakery.  A sweet scent of danish and fine bread fills the room.  The bread and Danish are arranged in fine order on the shelves, and seem to be of the finest quality. A small sign is on the counter.",
       "exits": [
         "south"
+      ],
+      "affordances": [
+        "can_eat"
       ]
     },
     {
@@ -18,6 +21,9 @@
         "east",
         "south",
         "west"
+      ],
+      "affordances": [
+        "can_eat"
       ]
     },
     {
@@ -29,6 +35,11 @@
         "east",
         "south",
         "west"
+      ],
+      "affordances": [
+        "can_eat",
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -40,6 +51,11 @@
         "east",
         "south",
         "west"
+      ],
+      "affordances": [
+        "can_eat",
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -52,6 +68,10 @@
         "south",
         "west",
         "down"
+      ],
+      "affordances": [
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -61,6 +81,10 @@
       "exits": [
         "north",
         "south"
+      ],
+      "affordances": [
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -70,6 +94,10 @@
       "exits": [
         "north",
         "south"
+      ],
+      "affordances": [
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -79,6 +107,9 @@
       "exits": [
         "north",
         "south"
+      ],
+      "affordances": [
+        "can_rest"
       ]
     },
     {
@@ -107,6 +138,9 @@
         "east",
         "south",
         "west"
+      ],
+      "affordances": [
+        "can_rest"
       ]
     },
     {
@@ -199,6 +233,10 @@
         "east",
         "west",
         "up"
+      ],
+      "affordances": [
+        "can_eat",
+        "can_rest"
       ]
     },
     {
@@ -207,7 +245,8 @@
       "description": "You are in the central post office for Midgaard.  Piles of assorted mail lay untouched in the corners, collecting cobwebs.  Several large crates have been pried open by curious customs agents, and are now stacked along the west wall, hiding plenty of 'WANTED' posters. There is a sign posted on the wall here.",
       "exits": [
         "south"
-      ]
+      ],
+      "affordances": []
     },
     {
       "id": "0bc9cb2b032f",
@@ -215,7 +254,35 @@
       "description": "You are standing in the bar.  The bar is set against the northern wall, old archaic writing, carvings and symbols cover its top.  A fireplace is built into the western wall, and through the southeastern windows you can see the temple square.  This place makes you feel like home. A small sign with big letters is fastened to the bar.",
       "exits": [
         "west"
-      ]
+      ],
+      "exits_detail": {
+        "north": {
+          "room_name": "By The Temple Altar",
+          "door_state": "open",
+          "raw": "north - By The Temple Altar"
+        },
+        "east": {
+          "room_name": "The Midgaard Donation Room",
+          "door_state": "open",
+          "raw": "east  - The Midgaard Donation Room"
+        },
+        "south": {
+          "room_name": "The Temple Square",
+          "door_state": "open",
+          "raw": "south - The Temple Square"
+        },
+        "west": {
+          "room_name": "The Reading Room",
+          "door_state": "open",
+          "raw": "west  - The Reading Room"
+        },
+        "down": {
+          "room_name": "The Temple Square",
+          "door_state": "open",
+          "raw": "down  - The Temple Square"
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "ee4d23d4c30b",
@@ -225,6 +292,126 @@
         "north",
         "down"
       ]
+    },
+    {
+      "id": "75130ad43086",
+      "title": "The Common Square",
+      "description": "The common square, people pass you, talking to each other.  To the west is the poor alley and to the east is the dark alley.  To the north, this square is connected to the market square.  From the south you notice a nasty smell.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ],
+      "affordances": [
+        "can_eat"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "3ec3342d4490",
+      "title": "Main Street",
+      "description": "You are on the main street crossing through town.  To the north is the general store, and the main street continues east.  To the west you see and hear the market place, to the south a small door leads into the Pet Shop.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ],
+      "affordances": [
+        "can_eat"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "d7aedf09256c",
+      "title": "The General Store",
+      "description": "You are inside the general store.  All sorts of items are stacked on shelves behind the counter, safely out of your reach. A small note hangs on the wall.",
+      "exits": [
+        "south"
+      ],
+      "affordances": [
+        "can_rest"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "17a4bdb97e3b",
+      "title": "Main Street",
+      "description": "The main street, to the north is the weapon shop and to the south is the Guild of Swordsmen.  To the east you leave town and to the west the street leads to the market square.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ],
+      "affordances": [
+        "can_eat"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "bdd6a3e7ad1e",
+      "title": "Main Street",
+      "description": "You are at the end of the main street of Midgaard.  South of here is the entrance to the Guild of Magic Users.  The street continues east towards the market square.  The magic shop is to the north and to the west is the city gate.",
+      "exits": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ],
+      "affordances": [
+        "can_eat"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "4f0a623efa29",
+      "title": "The Armory",
+      "description": "The armory has a wide assortment of armor displayed on the walls and in the windows. Helmets, shields, and suits of armor are for sale. To the north is the main street. On the wall is a small note.",
+      "exits": [
+        "north"
+      ],
+      "affordances": [],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "53eaee6943f0",
+      "title": "The Weapon Shop",
+      "description": "The smell of worked metals and various quenching oils fills the room.  Every available space in the room including the ceiling is loaded with various equipment and weaponry.  There is a small note on the counter.",
+      "exits": [
+        "south"
+      ],
+      "affordances": [],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
+    },
+    {
+      "id": "410745d497a9",
+      "title": "The Great Field Of Midgaard",
+      "description": "You are walking on a wide dirt path through the lush, green, fresh Midgaard countryside.  You can see to the horizon to the north, east, and west; the busy city of Midgaard lies to the south.  All around you is healthy green grass and an occasional large oak tree.  The sun feels wonderful on your face and a pleasant wind blows through your hair.  Birds chirp quietly to themselves and you can smell the faint scent of flowers and freshly cut grass.  You feel like you could lie down in the grass and stay here forever, surrounded by powerful beauty in all directions. The way north appears to be blocked by a large plot device and you cannot see any way around it.",
+      "exits": [
+        "south"
+      ],
+      "affordances": [
+        "can_rest"
+      ],
+      "affordances_confirmed": [],
+      "exits_detail": {},
+      "exits_scanned": false
     }
   ],
   "edges": [
@@ -239,9 +426,39 @@
       "direction": "east"
     },
     {
+      "source": "ce735bd797e9",
+      "target": "3b215c6d3a12",
+      "direction": "north"
+    },
+    {
+      "source": "ce735bd797e9",
+      "target": "bdd6a3e7ad1e",
+      "direction": "west"
+    },
+    {
+      "source": "ce735bd797e9",
+      "target": "4f0a623efa29",
+      "direction": "south"
+    },
+    {
       "source": "e937ade35217",
       "target": "a4d1e20fdc21",
       "direction": "north"
+    },
+    {
+      "source": "e937ade35217",
+      "target": "75130ad43086",
+      "direction": "south"
+    },
+    {
+      "source": "e937ade35217",
+      "target": "3ec3342d4490",
+      "direction": "east"
+    },
+    {
+      "source": "e937ade35217",
+      "target": "ce735bd797e9",
+      "direction": "west"
     },
     {
       "source": "a4d1e20fdc21",
@@ -271,7 +488,7 @@
     {
       "source": "e8cfa390133b",
       "target": "a4d1e20fdc21",
-      "direction": "south"
+      "direction": "down"
     },
     {
       "source": "e8cfa390133b",
@@ -327,6 +544,11 @@
       "source": "998e4fbbcad6",
       "target": "d7765249ac0e",
       "direction": "south"
+    },
+    {
+      "source": "998e4fbbcad6",
+      "target": "410745d497a9",
+      "direction": "north"
     },
     {
       "source": "6cac442ab831",
@@ -394,6 +616,11 @@
       "direction": "up"
     },
     {
+      "source": "862196265119",
+      "target": "a4d1e20fdc21",
+      "direction": "west"
+    },
+    {
       "source": "acf2284bc70f",
       "target": "862196265119",
       "direction": "south"
@@ -407,6 +634,61 @@
       "source": "ee4d23d4c30b",
       "target": "862196265119",
       "direction": "down"
+    },
+    {
+      "source": "75130ad43086",
+      "target": "e937ade35217",
+      "direction": "north"
+    },
+    {
+      "source": "3ec3342d4490",
+      "target": "d7aedf09256c",
+      "direction": "north"
+    },
+    {
+      "source": "3ec3342d4490",
+      "target": "17a4bdb97e3b",
+      "direction": "east"
+    },
+    {
+      "source": "3ec3342d4490",
+      "target": "e937ade35217",
+      "direction": "west"
+    },
+    {
+      "source": "d7aedf09256c",
+      "target": "3ec3342d4490",
+      "direction": "south"
+    },
+    {
+      "source": "17a4bdb97e3b",
+      "target": "3ec3342d4490",
+      "direction": "west"
+    },
+    {
+      "source": "17a4bdb97e3b",
+      "target": "53eaee6943f0",
+      "direction": "north"
+    },
+    {
+      "source": "bdd6a3e7ad1e",
+      "target": "ce735bd797e9",
+      "direction": "east"
+    },
+    {
+      "source": "4f0a623efa29",
+      "target": "ce735bd797e9",
+      "direction": "north"
+    },
+    {
+      "source": "53eaee6943f0",
+      "target": "17a4bdb97e3b",
+      "direction": "south"
+    },
+    {
+      "source": "410745d497a9",
+      "target": "998e4fbbcad6",
+      "direction": "south"
     }
   ]
 }

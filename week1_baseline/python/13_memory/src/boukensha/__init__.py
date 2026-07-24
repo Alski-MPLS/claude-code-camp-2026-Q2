@@ -167,7 +167,16 @@ def run(
     else:
         resolved_wd = str(working_dir)
 
-    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
+    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    _goal_path = Path(cfg.dir) / "goals" / f"{resolved_mud['name']}.md" if resolved_mud else None
+
+    ctx = Context(
+        task=task_class,
+        system=resolved_system,
+        working_dir=resolved_wd,
+        context_window=context_window,
+        goal_path=_goal_path,
+    )
     registry = Registry(ctx)
 
     if resolved_wd:
@@ -179,7 +188,6 @@ def run(
             allowed_commands=allowed_commands,
         )
 
-    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
         _map_path = Path(cfg.dir) / "maps" / f"{resolved_mud['name']}.json"
         _map_path.parent.mkdir(parents=True, exist_ok=True)
@@ -234,6 +242,7 @@ def run(
         max_output_tokens=effective_max_output_tokens,
     )
 
+    ctx.set_goal(task)
     ctx.add_message("user", task)
     try:
         return agent.run()
@@ -296,7 +305,16 @@ def repl(
     else:
         resolved_wd = str(working_dir)
 
-    ctx = Context(task=task_class, system=resolved_system, working_dir=resolved_wd, context_window=context_window)
+    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    _goal_path = Path(cfg.dir) / "goals" / f"{resolved_mud['name']}.md" if resolved_mud else None
+
+    ctx = Context(
+        task=task_class,
+        system=resolved_system,
+        working_dir=resolved_wd,
+        context_window=context_window,
+        goal_path=_goal_path,
+    )
     registry = Registry(ctx)
 
     if resolved_wd:
@@ -308,7 +326,6 @@ def repl(
             allowed_commands=allowed_commands,
         )
 
-    resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
     if resolved_mud:
         _map_path = Path(cfg.dir) / "maps" / f"{resolved_mud['name']}.json"
         _map_path.parent.mkdir(parents=True, exist_ok=True)

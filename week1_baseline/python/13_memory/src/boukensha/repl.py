@@ -158,6 +158,7 @@ class Repl:
         if self._logger:
             self._logger.turn(n=self._turn)
 
+        self._context.set_goal(user_input)
         self._context.add_message("user", user_input)
 
         agent = Agent(

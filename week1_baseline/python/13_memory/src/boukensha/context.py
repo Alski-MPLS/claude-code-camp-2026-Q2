@@ -19,16 +19,49 @@ class Context:
         working_dir: str | None = None,
         context_window: int = 200_000,
         compaction_threshold: float = 0.85,
+        goal_path: str | Path | None = None,
     ) -> None:
         self.task = task
-        self.system = system
+        self._base_system = system
         self.working_dir = str(Path(working_dir).expanduser().resolve()) if working_dir else None
         self.context_window = context_window
         self.compaction_threshold = compaction_threshold
+        self.goal_path = Path(goal_path) if goal_path else None
         self.messages: list[Message] = []
         self.tools: dict[str, Tool] = {}
         self.current_tokens: int = 0
         self.turn_tokens: int = 0
+
+    @property
+    def system(self) -> str | None:
+        """Static system prompt plus the current goal, re-read from disk on
+        every access so a mid-session goal change is picked up immediately —
+        not just at the start of a turn."""
+        if self._base_system is None:
+            return None
+        goal_text = self._read_goal()
+        if not goal_text:
+            return self._base_system
+        return f"{self._base_system}\n\n## Current Goal\n{goal_text}"
+
+    def set_goal(self, text: str) -> None:
+        """Persist *text* as the active goal, superseding whatever came before.
+
+        No-op if this context wasn't given a goal_path (e.g. no MUD session),
+        since there's nowhere durable to put it.
+        """
+        if self.goal_path is None:
+            return
+        self.goal_path.parent.mkdir(parents=True, exist_ok=True)
+        self.goal_path.write_text(text.strip() + "\n")
+
+    def _read_goal(self) -> str | None:
+        if self.goal_path is None or not self.goal_path.exists():
+            return None
+        try:
+            return self.goal_path.read_text().strip() or None
+        except OSError:
+            return None
 
     def register_tool(self, tool: Tool) -> None:
         self.tools[tool.name] = tool

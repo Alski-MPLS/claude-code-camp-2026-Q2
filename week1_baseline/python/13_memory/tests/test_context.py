@@ -198,3 +198,43 @@ def test_context_clear_messages_resets_current_tokens():
     ctx.clear_messages()
     assert ctx.current_tokens == 0
     assert ctx.messages == []
+
+
+# ── goal tracking tests ──────────────────────────────────────────────────────
+
+def test_system_unchanged_without_goal_path():
+    ctx = _make_ctx()
+    assert ctx.system == "sys"
+
+
+def test_set_goal_is_noop_without_goal_path():
+    ctx = _make_ctx()
+    ctx.set_goal("find the bakery")
+    assert ctx.system == "sys"
+
+
+def test_set_goal_persists_and_appears_in_system(tmp_path):
+    goal_path = tmp_path / "goals" / "hero.md"
+    ctx = _make_ctx(goal_path=goal_path)
+    ctx.set_goal("find the bakery")
+    assert goal_path.exists()
+    assert "find the bakery" in goal_path.read_text()
+    assert "## Current Goal" in ctx.system
+    assert "find the bakery" in ctx.system
+
+
+def test_set_goal_overwrites_previous_goal(tmp_path):
+    goal_path = tmp_path / "goals" / "hero.md"
+    ctx = _make_ctx(goal_path=goal_path)
+    ctx.set_goal("find the bakery")
+    ctx.set_goal("go drink water")
+    assert "go drink water" in ctx.system
+    assert "find the bakery" not in ctx.system
+
+
+def test_system_reflects_goal_file_edited_out_of_band(tmp_path):
+    goal_path = tmp_path / "goals" / "hero.md"
+    ctx = _make_ctx(goal_path=goal_path)
+    ctx.set_goal("find the bakery")
+    goal_path.write_text("rest to heal\n")
+    assert "rest to heal" in ctx.system
