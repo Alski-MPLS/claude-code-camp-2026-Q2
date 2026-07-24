@@ -1,5 +1,5 @@
 {
-  "current": "998e4fbbcad6",
+  "current": "e937ade35217",
   "nodes": [
     {
       "id": "3b215c6d3a12",
@@ -119,6 +119,10 @@
       "exits": [
         "north",
         "east"
+      ],
+      "affordances": [
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -127,6 +131,10 @@
       "description": "You are in a small, simple room which is mostly empty, save a few wooden desks and benches.  To the east you hear the bustle of the Temple of Midgaard, a sharp contrast to the relative quiet of this peaceful room.",
       "exits": [
         "east"
+      ],
+      "affordances": [
+        "can_rest",
+        "can_heal"
       ]
     },
     {
@@ -141,7 +149,35 @@
       ],
       "affordances": [
         "can_rest"
-      ]
+      ],
+      "exits_detail": {
+        "north": {
+          "room_name": "By The Temple Altar",
+          "door_state": "open",
+          "raw": "north - By The Temple Altar"
+        },
+        "east": {
+          "room_name": "The Midgaard Donation Room",
+          "door_state": "open",
+          "raw": "east  - The Midgaard Donation Room"
+        },
+        "south": {
+          "room_name": "The Temple Square",
+          "door_state": "open",
+          "raw": "south - The Temple Square"
+        },
+        "west": {
+          "room_name": "The Reading Room",
+          "door_state": "open",
+          "raw": "west  - The Reading Room"
+        },
+        "down": {
+          "room_name": "The Temple Square",
+          "door_state": "open",
+          "raw": "down  - The Temple Square"
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "6cac442ab831",
@@ -488,7 +524,7 @@
     {
       "source": "e8cfa390133b",
       "target": "a4d1e20fdc21",
-      "direction": "down"
+      "direction": "south"
     },
     {
       "source": "e8cfa390133b",
@@ -548,6 +584,11 @@
     {
       "source": "998e4fbbcad6",
       "target": "410745d497a9",
+      "direction": "north"
+    },
+    {
+      "source": "998e4fbbcad6",
+      "target": "276137cff2fc",
       "direction": "north"
     },
     {
