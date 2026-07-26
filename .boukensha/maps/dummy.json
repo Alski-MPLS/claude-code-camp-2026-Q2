@@ -1,5 +1,5 @@
 {
-  "current": "e937ade35217",
+  "current": "7796e133b585",
   "nodes": [
     {
       "id": "3b215c6d3a12",
@@ -40,7 +40,20 @@
         "can_eat",
         "can_rest",
         "can_heal"
-      ]
+      ],
+      "exits_detail": {
+        "north": {
+          "room_name": "The Great Field Of Midgaard",
+          "door_state": "open",
+          "raw": "north - The Great Field Of Midgaard"
+        },
+        "south": {
+          "room_name": "Behind The Temple Altar",
+          "door_state": "open",
+          "raw": "south - Behind The Temple Altar"
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "a4d1e20fdc21",
@@ -186,6 +199,9 @@
       "exits": [
         "north",
         "west"
+      ],
+      "affordances": [
+        "can_drink"
       ]
     },
     {
@@ -195,6 +211,10 @@
       "exits": [
         "east",
         "south"
+      ],
+      "affordances": [
+        "can_eat",
+        "can_rest"
       ]
     },
     {
@@ -204,7 +224,28 @@
       "exits": [
         "east",
         "west"
-      ]
+      ],
+      "affordances": [
+        "can_drink"
+      ],
+      "exits_detail": {
+        "east": {
+          "room_name": "A Nexus",
+          "door_state": "open",
+          "raw": "east  - A Nexus"
+        },
+        "south": {
+          "room_name": "The door is closed.",
+          "door_state": "open",
+          "raw": "south - The door is closed."
+        },
+        "west": {
+          "room_name": "The Beginning Of The Passage",
+          "door_state": "open",
+          "raw": "west  - The Beginning Of The Passage"
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "129b0241bb3a",
@@ -213,6 +254,9 @@
       "exits": [
         "south",
         "west"
+      ],
+      "affordances": [
+        "can_drink"
       ]
     },
     {
@@ -222,7 +266,26 @@
       "exits": [
         "north",
         "south"
-      ]
+      ],
+      "affordances": [],
+      "exits_detail": {
+        "north": {
+          "room_name": "A Nexus",
+          "door_state": "open",
+          "raw": "north - A Nexus"
+        },
+        "south": {
+          "room_name": "Another Corner",
+          "door_state": "open",
+          "raw": "south - Another Corner"
+        },
+        "west": {
+          "room_name": "The door is closed.",
+          "door_state": "open",
+          "raw": "west  - The door is closed."
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "59854a041a8d",
@@ -231,7 +294,26 @@
       "exits": [
         "north",
         "west"
-      ]
+      ],
+      "affordances": [],
+      "exits_detail": {
+        "north": {
+          "room_name": "More Of The Hallway",
+          "door_state": "open",
+          "raw": "north - More Of The Hallway"
+        },
+        "east": {
+          "room_name": "The door is closed.",
+          "door_state": "open",
+          "raw": "east  - The door is closed."
+        },
+        "west": {
+          "room_name": "A Brighter Hallway",
+          "door_state": "open",
+          "raw": "west  - A Brighter Hallway"
+        }
+      },
+      "exits_scanned": true
     },
     {
       "id": "7796e133b585",
@@ -240,7 +322,8 @@
       "exits": [
         "east",
         "west"
-      ]
+      ],
+      "affordances": []
     },
     {
       "id": "42b28f3174ec",
@@ -497,6 +580,11 @@
       "direction": "west"
     },
     {
+      "source": "e937ade35217",
+      "target": "8a8ec6817f3f",
+      "direction": "south"
+    },
+    {
       "source": "a4d1e20fdc21",
       "target": "e8cfa390133b",
       "direction": "north"
@@ -617,14 +705,29 @@
       "direction": "south"
     },
     {
+      "source": "129b0241bb3a",
+      "target": "300c57a8d7ce",
+      "direction": "west"
+    },
+    {
       "source": "606c883e8b31",
       "target": "59854a041a8d",
       "direction": "south"
     },
     {
+      "source": "606c883e8b31",
+      "target": "129b0241bb3a",
+      "direction": "north"
+    },
+    {
       "source": "59854a041a8d",
       "target": "7796e133b585",
       "direction": "west"
+    },
+    {
+      "source": "59854a041a8d",
+      "target": "606c883e8b31",
+      "direction": "north"
     },
     {
       "source": "7796e133b585",
