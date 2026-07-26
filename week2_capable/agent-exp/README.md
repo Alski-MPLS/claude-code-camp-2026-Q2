@@ -1,4 +1,4 @@
-# Step 12 — Context Management
+# Week 2 -- Agent Experience Build
 
 When you call an LLM directly you are responsible for the context window. There is no auto-compacting. This step adds proper token tracking, visual warnings, and automatic compaction so the agent never silently blows past the limit.
 
