@@ -242,6 +242,8 @@ def run(
 def repl(
     *,
     tui: bool = True,
+    web: bool = False,
+    web_port: int = 4568,
     system: str | None = None,
     model: str | None = None,
     backend: str | None = None,
@@ -362,6 +364,17 @@ def repl(
         api_key=resolved_api_key,
     )
     try:
+        if web:
+            from pathlib import Path as _Path
+            from .dashboard.app import create_dashboard_app, run_dashboard, get_bus
+            _dash_app = create_dashboard_app(
+                config_dir=str(cfg.dir),
+                sessions_dir=str(_Path(cfg.dir) / "sessions"),
+            )
+            _bus = get_bus()
+            logger.subscribe(_bus.publish)
+            run_dashboard(_dash_app, port=web_port)
+            print(f"[dashboard] http://localhost:{web_port}")
         if tui:
             Tui(repl_instance).run()
         else:
