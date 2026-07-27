@@ -179,8 +179,25 @@ def run(
         )
 
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    _mud_session = None
     if resolved_mud:
-        tools.Mud.register(registry, **resolved_mud)
+        from pathlib import Path as _Path
+        from .tools.mud import MudSession
+        _mud_session = MudSession(
+            host=resolved_mud.get("host", "localhost"),
+            port=resolved_mud.get("port", 4000),
+        )
+        tools.Mud._register_with_session(
+            registry,
+            _mud_session,
+            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
+        )
+        # Register token-saving tools that share the same session
+        _memory_dir = str(_Path(cfg.dir) / "memory")
+        _goals_dir = str(cfg.dir)
+        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -307,8 +324,25 @@ def repl(
         )
 
     resolved_mud = None if mud is False else (mud or _mud_opts_from_config(cfg))
+    _mud_session = None
     if resolved_mud:
-        tools.Mud.register(registry, **resolved_mud)
+        from pathlib import Path as _Path
+        from .tools.mud import MudSession
+        _mud_session = MudSession(
+            host=resolved_mud.get("host", "localhost"),
+            port=resolved_mud.get("port", 4000),
+        )
+        tools.Mud._register_with_session(
+            registry,
+            _mud_session,
+            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
+        )
+        # Register token-saving tools that share the same session
+        _memory_dir = str(_Path(cfg.dir) / "memory")
+        _goals_dir = str(cfg.dir)
+        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
