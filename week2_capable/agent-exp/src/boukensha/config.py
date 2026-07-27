@@ -12,9 +12,23 @@ import yaml
 from dotenv import load_dotenv
 
 
+def _find_git_root(start: Path) -> Path | None:
+    """Walk upward from ``start`` looking for a ``.git`` directory."""
+    for candidate in (start, *start.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return None
+
+
 class Config:
-    # The repo root, i.e. the parent of the ``src`` directory this file lives under.
-    REPO_ROOT = Path(__file__).parent.parent.parent
+    # The package root, i.e. the parent of the ``src`` directory this file lives under.
+    # Used for locating library assets (prompts) shipped alongside the code.
+    PACKAGE_ROOT = Path(__file__).parent.parent.parent
+
+    # The monorepo root (nearest ancestor containing .git), so a single shared
+    # .boukensha config directory can serve every step/week folder underneath it.
+    # Falls back to PACKAGE_ROOT if no .git is found (e.g. running outside a clone).
+    REPO_ROOT = _find_git_root(PACKAGE_ROOT) or PACKAGE_ROOT
 
     # The .boukensha config directory is resolved in this order:
     #   1. BOUKENSHA_DIR environment variable (set before loading .env)
@@ -22,7 +36,7 @@ class Config:
     DEFAULT_DIR = str(REPO_ROOT / ".boukensha")
 
     # Default prompts shipped alongside the library code.
-    PROMPTS_DIR = str((REPO_ROOT / "prompts").resolve())
+    PROMPTS_DIR = str((PACKAGE_ROOT / "prompts").resolve())
 
     def __init__(self) -> None:
         self.dir = self._resolve_dir()

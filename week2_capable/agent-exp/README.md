@@ -50,8 +50,19 @@ mud:
   username: yourcharacter
   password: yourpassword
 
-model: claude-opus-4-5
-provider: anthropic
+tasks:
+  player:
+    provider: anthropic
+    model: claude-opus-4-5
+```
+
+To use a local model via [Ollama](https://ollama.com) instead (no API key needed, just `ollama serve` running):
+
+```yaml
+tasks:
+  player:
+    provider: ollama
+    model: qwen2.5-coder:14b   # any model you've pulled with `ollama pull`
 ```
 
 Create `.boukensha/.env` (or export these in your shell):
@@ -68,14 +79,16 @@ MUD_PASSWORD=yourpassword
 
 ### settings.yaml
 
+The config directory defaults to `.boukensha/` inside the repo (override with `BOUKENSHA_DIR`).
+
 | Key | Default | Description |
 |---|---|---|
 | `mud.host` | `localhost` | CircleMUD hostname |
 | `mud.port` | `4000` | CircleMUD telnet port |
 | `mud.username` | — | Character name |
 | `mud.password` | — | Character password |
-| `model` | see task defaults | LLM model name |
-| `provider` | `anthropic` | Backend: `anthropic`, `openai`, `gemini`, `ollama` |
+| `tasks.player.model` | — (required) | LLM model name for the player task |
+| `tasks.player.provider` | — (required) | Backend: `anthropic`, `openai`, `gemini`, `ollama`, `ollama_cloud` |
 
 ### Environment variables
 
@@ -103,16 +116,16 @@ notes: ""
 
 ```sh
 # Web dashboard + TUI (recommended)
-python bin/boukensha --web
+uv run python bin/boukensha --web
 
 # TUI only (no browser needed)
-python bin/boukensha --no-web
+uv run python bin/boukensha --no-web
 
 # Headless / plain REPL (scriptable)
-python bin/boukensha --no-web --no-tui
+uv run python bin/boukensha --no-web --no-tui
 
 # Custom dashboard port
-python bin/boukensha --web --port 4569
+uv run python bin/boukensha --web --port 4569
 ```
 
 Once started with `--web`, open your browser to:
@@ -158,8 +171,9 @@ Three tools reduce LLM token usage on every turn:
 | Problem | Fix |
 |---|---|
 | `ConnectionRefusedError` on start | CircleMUD server is not running on the configured host/port |
+| `tasks.player.model is required in settings.yaml` | Add `tasks.player.model` / `tasks.player.provider` to `.boukensha/settings.yaml` (nested under `tasks.player`, not top-level) |
 | `ANTHROPIC_API_KEY not set` | Export the variable or add it to `.boukensha/.env` |
-| `Address already in use` (port 4568) | Use `python bin/boukensha --web --port 4569` |
+| `Address already in use` (port 4568) | Use `uv run python bin/boukensha --web --port 4569` |
 | Map tab shows empty graph | Agent has not visited any rooms yet; play a turn first |
 | Goals tab shows defaults | Create `.boukensha/goals/current.yaml` or let the agent write it |
 </content>
