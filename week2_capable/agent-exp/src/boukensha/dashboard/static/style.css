@@ -10,8 +10,47 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
 #live-log .phase-tool_result { color: #8f8; }
 #live-log .phase-response { color: #fff; }
 #live-log .phase-compaction { color: #fa4; font-style: italic; }
-#map-svg { width: 100%; height: 70vh; background: #181818; border-radius: 6px; }
-#room-detail { padding: 10px; background: #1a1a1a; border-radius: 6px; margin-top: 8px; min-height: 80px; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
+#map-status { padding: 6px 2px; font-size: 12px; color: #888; min-height: 18px; }
+#map-container { position: relative; flex: 1; }
+#map-svg { width: 100%; height: 70vh; background: #181818; border-radius: 6px; display: block; }
+
+#room-popup {
+  position: absolute;
+  z-index: 10;
+  width: 260px;
+  max-width: 80vw;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  pointer-events: auto;
+}
+#room-popup[hidden] { display: none; }
+#room-popup-body { max-height: 260px; overflow-y: auto; }
+#room-popup-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  transform: rotate(45deg);
+}
+/* arrow on the bottom edge, pointing down at the room (popup sits above it) */
+#room-popup.arrow-bottom #room-popup-arrow {
+  bottom: -7px; left: 50%; margin-left: -6px;
+  border-top: none; border-left: none;
+}
+/* arrow on the top edge, pointing up at the room (popup sits below it) */
+#room-popup.arrow-top #room-popup-arrow {
+  top: -7px; left: 50%; margin-left: -6px;
+  border-bottom: none; border-right: none;
+}
+.room-popup-title { color: #4af; font-weight: bold; margin-bottom: 4px; }
+.room-popup-section { color: #888; margin-top: 6px; }
 #waterfall-container { width: 100%; overflow-x: auto; }
 #goals-content { background: #1a1a1a; padding: 12px; border-radius: 6px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 #sessions-list table { width: 100%; border-collapse: collapse; font-size: 13px; }

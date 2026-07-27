@@ -21,8 +21,14 @@
   </section>
 
   <section id="tab-map" class="tab-pane">
-    <svg id="map-svg"></svg>
-    <div id="room-detail"></div>
+    <div id="map-status"></div>
+    <div id="map-container">
+      <svg id="map-svg"></svg>
+      <div id="room-popup" hidden>
+        <div id="room-popup-arrow"></div>
+        <div id="room-popup-body"></div>
+      </div>
+    </div>
   </section>
 
   <section id="tab-waterfall" class="tab-pane">
