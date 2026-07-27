@@ -23,6 +23,7 @@ class RoomProcessor:
         memory_dir: str | Path,
         prev_hash_ref: list[str | None] | None = None,
         world_graph: WorldGraph | None = None,
+        last_direction_ref: list[str | None] | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
@@ -44,9 +45,11 @@ class RoomProcessor:
             h, diff = mem.record(room)
             graph.add_room(h, room["title"])
 
-            # Link from previous room if we know it
-            if _prev[0] and _prev[0] != h:
-                pass  # direction is unknown here; WorldGraph edges added by navigate_to
+            # Link from previous room if the 'move' tool recorded which direction got us here.
+            if _prev[0] and _prev[0] != h and last_direction_ref is not None and last_direction_ref[0]:
+                graph.add_edge(_prev[0], h, last_direction_ref[0])
+            if last_direction_ref is not None:
+                last_direction_ref[0] = None
 
             _prev[0] = h
             graph.save()

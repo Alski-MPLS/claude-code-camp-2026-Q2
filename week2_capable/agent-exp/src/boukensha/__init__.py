@@ -187,9 +187,11 @@ def run(
             host=resolved_mud.get("host", "localhost"),
             port=resolved_mud.get("port", 4000),
         )
+        _last_direction_ref: list[str | None] = [None]
         tools.Mud._register_with_session(
             registry,
             _mud_session,
+            last_direction_ref=_last_direction_ref,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session
@@ -199,7 +201,13 @@ def run(
         _shared_graph = _WorldGraph(_memory_dir)
         _shared_graph.load()
         tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
-        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.RoomProcessor.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            last_direction_ref=_last_direction_ref,
+        )
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:
@@ -335,9 +343,11 @@ def repl(
             host=resolved_mud.get("host", "localhost"),
             port=resolved_mud.get("port", 4000),
         )
+        _last_direction_ref: list[str | None] = [None]
         tools.Mud._register_with_session(
             registry,
             _mud_session,
+            last_direction_ref=_last_direction_ref,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session
@@ -347,7 +357,13 @@ def repl(
         _shared_graph = _WorldGraph(_memory_dir)
         _shared_graph.load()
         tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
-        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.RoomProcessor.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            last_direction_ref=_last_direction_ref,
+        )
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:
@@ -402,6 +418,7 @@ def repl(
         model=resolved_model,
         version=__version__,
         api_key=resolved_api_key,
+        goals_dir=str(cfg.dir),
     )
     try:
         if web:

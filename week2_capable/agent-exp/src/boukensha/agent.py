@@ -48,6 +48,7 @@ class Agent:
         self._max_turn_tokens = int(max_turn_tokens or 0)
         self._max_output_tokens = self._resolve_max_output_tokens(task_settings, max_output_tokens)
         self._iteration = 0
+        self.last_stop_reason = "completed"
 
     def run(self) -> str:
         self._context.reset_turn_tokens()
@@ -59,6 +60,7 @@ class Agent:
                     self._logger.limit_reached(
                         kind="max_iterations", n=self._iteration, max=self._max_iterations
                     )
+                self.last_stop_reason = "max_iterations"
                 return self._wrap_up("max_iterations")
 
             if self._token_limit_reached():
@@ -68,6 +70,7 @@ class Agent:
                         n=self._context.turn_tokens,
                         max=self._max_turn_tokens,
                     )
+                self.last_stop_reason = "max_tokens"
                 return self._wrap_up("max_tokens")
 
             self._iteration += 1

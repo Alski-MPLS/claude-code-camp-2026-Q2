@@ -37,6 +37,16 @@ es.onmessage = e => {
 
   // Forward to waterfall
   window.addWaterfallEvent && window.addWaterfallEvent(event);
+
+  // Refresh the map live while a move/navigation/room-lookup tool resolves,
+  // but only if the Map tab is the one currently on screen.
+  const MAP_REFRESH_TOOLS = new Set(['move', 'navigate_to', 'process_room']);
+  if (event.phase === 'tool_result' && MAP_REFRESH_TOOLS.has(event.name)) {
+    const mapTab = document.getElementById('tab-map');
+    if (mapTab && mapTab.classList.contains('active')) {
+      window.loadMap && window.loadMap();
+    }
+  }
 };
 
 // Goals tab

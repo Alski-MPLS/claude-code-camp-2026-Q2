@@ -14,6 +14,7 @@ class Base:
     TASK_NAME: str | None = None
     DEFAULT_MAX_ITERATIONS: int = 25
     DEFAULT_MAX_OUTPUT_TOKENS: int = 1024
+    DEFAULT_MAX_AUTO_CONTINUES: int = 3
 
     @classmethod
     def task_name(cls) -> str:
@@ -78,6 +79,13 @@ class Base:
     @classmethod
     def max_output_tokens(cls, settings: dict[str, Any]) -> int:
         return cls._integer_setting(settings, "max_output_tokens", cls.DEFAULT_MAX_OUTPUT_TOKENS)
+
+    @classmethod
+    def max_auto_continues(cls, settings: dict[str, Any]) -> int:
+        """How many times the REPL may automatically resume a turn that hit its
+        iteration limit, without new user input, before giving up and waiting
+        for the user. 0 disables auto-continuation entirely."""
+        return cls._integer_setting(settings, "max_auto_continues", cls.DEFAULT_MAX_AUTO_CONTINUES)
 
     # ---------- private -----------------------------------------------------
 

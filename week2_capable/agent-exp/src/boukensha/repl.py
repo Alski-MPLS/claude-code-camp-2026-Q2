@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 PROMPT = "boukensha> "
 
+AUTO_CONTINUE_DIRECTIVE = "continue toward the current goal"
+
 HELP = """\
 Commands:
   /quiet   suppress logging output
@@ -58,6 +60,8 @@ class Repl:
         model: str | None,
         version: str | None,
         api_key: str | None,
+        goals_dir: str | None = None,
+        max_auto_continues: int | None = None,
     ) -> None:
         self._context = context
         self._registry = registry
@@ -73,6 +77,8 @@ class Repl:
         self._model = model
         self._version = version
         self._api_key = api_key
+        self._goals_dir = goals_dir
+        self._max_auto_continues = self._resolve_max_auto_continues(max_auto_continues)
         self._turn = 0
         self._output_cb: Callable[[str], None] | None = None
 
@@ -151,8 +157,15 @@ class Repl:
             return "command"
         return None
 
-    def run_turn(self, user_input: str) -> None:
-        """Run one agent turn; output goes through on_output callback (or print)."""
+    def run_turn(self, user_input: str, *, _auto_continue_count: int = 0) -> None:
+        """Run one agent turn; output goes through on_output callback (or print).
+
+        If the turn stops because it hit its iteration limit (not because the
+        model finished naturally), automatically resumes with a "continue"
+        turn — up to max_auto_continues times, and only while the goal is
+        still marked active — so the agent keeps working toward its goal
+        instead of going idle mid-task.
+        """
         self._turn += 1
         if self._logger:
             self._logger.turn(n=self._turn)
@@ -176,6 +189,17 @@ class Repl:
             self._output(result)
         except ApiError as e:
             self._output(f"\n[error] API call failed: {e}")
+            return
+
+        if (
+            agent.last_stop_reason == "max_iterations"
+            and _auto_continue_count < self._max_auto_continues
+            and self._goal_is_active()
+        ):
+            self._output(
+                f"\n[auto-continuing — {_auto_continue_count + 1}/{self._max_auto_continues}]"
+            )
+            self.run_turn(AUTO_CONTINUE_DIRECTIVE, _auto_continue_count=_auto_continue_count + 1)
 
     # ── plain REPL entry point ─────────────────────────────────────────────
 
@@ -201,6 +225,22 @@ class Repl:
             self.run_turn(text)
 
     # ── private ────────────────────────────────────────────────────────────
+
+    def _resolve_max_auto_continues(self, explicit: int | None) -> int:
+        if explicit is not None:
+            return int(explicit)
+        task = getattr(self._context, "task", None)
+        if self._task_settings is not None and task is not None and hasattr(task, "max_auto_continues"):
+            return task.max_auto_continues(self._task_settings)
+        from .tasks.base import Base as _Base
+        return _Base.DEFAULT_MAX_AUTO_CONTINUES
+
+    def _goal_is_active(self) -> bool:
+        if not self._goals_dir:
+            return True
+        from .goals.goal_manager import GoalManager
+        status = GoalManager(self._goals_dir).read().get("status")
+        return status not in ("completed", "paused")
 
     def _output(self, text: str) -> None:
         if self._output_cb:

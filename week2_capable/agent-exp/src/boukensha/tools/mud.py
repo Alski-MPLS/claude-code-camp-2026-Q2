@@ -286,6 +286,7 @@ class Mud:
         *,
         name: str,
         password: str,
+        last_direction_ref: list[str | None] | None = None,
     ) -> None:
         # ── Connection ────────────────────────────────────────────────────────
 
@@ -364,13 +365,18 @@ class Mud:
 
         # ── Movement ──────────────────────────────────────────────────────────
 
+        def _move_and_record(direction: str) -> str:
+            if last_direction_ref is not None:
+                last_direction_ref[0] = direction
+            return _move(session, direction)
+
         registry.tool(
             "move",
             description="Move in a compass direction or up/down.",
             parameters={
                 "direction": {"type": "string", "description": "north | east | south | west | up | down"},
             },
-            block=lambda direction, **_: _move(session, direction),
+            block=lambda direction, **_: _move_and_record(direction),
         )
 
         registry.tool(
