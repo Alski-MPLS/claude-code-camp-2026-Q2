@@ -1,3 +1,11 @@
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // Tab routing
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -46,7 +54,7 @@ async function loadSessions() {
   const container = document.getElementById('sessions-list');
   container.innerHTML = '<table><thead><tr><th>Session</th><th>Started</th><th>Model</th><th>Input tokens</th><th>Output tokens</th></tr></thead><tbody>' +
     sessions.map(s =>
-      `<tr data-id="${s.id}"><td>${s.id}</td><td>${s.started_at || ''}</td><td>${s.model || ''}</td><td>${s.total_input_tokens}</td><td>${s.total_output_tokens}</td></tr>`
+      `<tr data-id="${escapeHtml(s.id)}"><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.started_at || '')}</td><td>${escapeHtml(s.model || '')}</td><td>${s.total_input_tokens}</td><td>${s.total_output_tokens}</td></tr>`
     ).join('') + '</tbody></table>';
   container.querySelectorAll('tr[data-id]').forEach(row => {
     row.addEventListener('click', () => loadSessionDetail(row.dataset.id));
@@ -58,12 +66,12 @@ async function loadSessionDetail(id) {
   const entries = await r.json();
   const container = document.getElementById('session-transcript');
   container.innerHTML = entries.map(e => {
-    if (e.phase === 'response') return `<div class="entry-assistant"><strong>Assistant:</strong> ${e.text || ''}</div>`;
-    if (e.phase === 'tool_call') return `<div class="entry-tool">→ ${e.name}(${JSON.stringify(e.args || {})})</div>`;
-    if (e.phase === 'tool_result') return `<div class="entry-tool">← ${(e.result || '').slice(0, 300)}</div>`;
+    if (e.phase === 'response') return `<div class="entry-assistant"><strong>Assistant:</strong> ${escapeHtml(e.text)}</div>`;
+    if (e.phase === 'tool_call') return `<div class="entry-tool">→ ${escapeHtml(e.name)}(${escapeHtml(JSON.stringify(e.args || {}))})</div>`;
+    if (e.phase === 'tool_result') return `<div class="entry-tool">← ${escapeHtml((e.result || '').slice(0, 300))}</div>`;
     if (e.phase === 'prompt') {
       const last = (e.messages || []).at(-1);
-      if (last && last.role === 'user') return `<div class="entry-user"><strong>User:</strong> ${last.content}</div>`;
+      if (last && last.role === 'user') return `<div class="entry-user"><strong>User:</strong> ${escapeHtml(last.content)}</div>`;
     }
     return '';
   }).join('');

@@ -22,11 +22,13 @@ class RoomProcessor:
         session: Any,
         memory_dir: str | Path,
         prev_hash_ref: list[str | None] | None = None,
+        world_graph: WorldGraph | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
-        graph = WorldGraph(memory_dir)
-        graph.load()
+        graph = world_graph if world_graph is not None else WorldGraph(memory_dir)
+        if world_graph is None:
+            graph.load()
         _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
 
         def _process_room(**_: Any) -> str:

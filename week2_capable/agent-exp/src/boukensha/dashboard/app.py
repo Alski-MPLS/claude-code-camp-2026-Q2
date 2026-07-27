@@ -23,12 +23,10 @@ def create_dashboard_app(
     config_dir: str,
     sessions_dir: str,
     memory_subdir: str = "memory",
-    goals_subdir: str = "goals",
 ) -> Flask:
     config_path = Path(config_dir)
     sessions_path = Path(sessions_dir)
     memory_path = config_path / memory_subdir
-    goals_path = config_path / goals_subdir
 
     template_folder = str(Path(__file__).parent / "templates")
     static_folder = str(Path(__file__).parent / "static")

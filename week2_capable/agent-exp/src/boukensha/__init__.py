@@ -195,8 +195,11 @@ def run(
         # Register token-saving tools that share the same session
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
-        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir)
-        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        from boukensha.memory.world_graph import WorldGraph as _WorldGraph
+        _shared_graph = _WorldGraph(_memory_dir)
+        _shared_graph.load()
+        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:
@@ -340,8 +343,11 @@ def repl(
         # Register token-saving tools that share the same session
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
-        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir)
-        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir)
+        from boukensha.memory.world_graph import WorldGraph as _WorldGraph
+        _shared_graph = _WorldGraph(_memory_dir)
+        _shared_graph.load()
+        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.RoomProcessor.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
     if tool_registrar is not None:

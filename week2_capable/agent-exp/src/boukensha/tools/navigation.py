@@ -22,11 +22,13 @@ class Navigation:
         *,
         session: Any,
         memory_dir: str | Path,
+        world_graph: WorldGraph | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
-        graph = WorldGraph(memory_dir)
-        graph.load()
+        graph = world_graph if world_graph is not None else WorldGraph(memory_dir)
+        if world_graph is None:
+            graph.load()
 
         def _current_room_hash() -> str | None:
             """Send 'look' and return the hash of the current room."""
@@ -53,10 +55,15 @@ class Navigation:
                 return f"No known path to '{destination}'. Explore more of the area first."
             if not path:
                 return f"Already at '{destination}'."
+            current_hash = start_hash
             for direction in path:
                 session.drain()
                 session.send_command(direction)
                 session.read_until_prompt()
+                new_hash = _current_room_hash()
+                if new_hash and new_hash != current_hash:
+                    graph.add_edge(current_hash, new_hash, direction)
+                    current_hash = new_hash
             graph.save()
             return f"Arrived at destination after {len(path)} moves: {' → '.join(path)}"
 

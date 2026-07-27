@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from boukensha.registry import Registry
 
 _HP_RE = re.compile(r"(\d+)/(\d+)H", re.IGNORECASE)
-_DEAD_PATTERNS = [b"is dead!", b"You receive", b"experience points"]
+_DEAD_PATTERNS = ["is dead!", "you receive", "experience points"]
 
 
 class Combat:
@@ -55,7 +55,7 @@ class Combat:
                 response_lower = response.lower()
 
                 # Check if target is dead
-                if any(p.decode().lower() in response_lower for p in _DEAD_PATTERNS):
+                if any(p in response_lower for p in _DEAD_PATTERNS):
                     return f"Combat complete: {target} defeated after {rounds} round(s)."
 
                 # Check HP from prompt if present

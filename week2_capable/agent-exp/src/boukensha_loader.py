@@ -111,6 +111,17 @@ def load_and_start_repl() -> None:
     if "tui" in repl_sig.parameters:
         repl_kwargs["tui"] = sys.stdin.isatty()
 
+    import argparse
+    parser = argparse.ArgumentParser(prog="boukensha", add_help=False)
+    parser.add_argument("--web", action="store_true", default=False)
+    parser.add_argument("--no-web", action="store_true", default=False)
+    parser.add_argument("--port", type=int, default=4568)
+    known, _ = parser.parse_known_args()
+
+    if "web" in repl_sig.parameters:
+        repl_kwargs["web"] = known.web and not known.no_web
+        repl_kwargs["web_port"] = known.port
+
     boukensha.repl(**repl_kwargs)
 
 
