@@ -30,6 +30,14 @@
     {
       "title": "The Dark Alley",
       "id": "ee20fa4b7a57"
+    },
+    {
+      "title": "The General Store",
+      "id": "659f54a883af"
+    },
+    {
+      "title": "The Post Office",
+      "id": "c1199c4383b5"
     }
   ],
   "edges": [
@@ -42,6 +50,16 @@
       "direction": "north",
       "source": "cbb23bdcb615",
       "target": "d24cefa7a84d"
+    },
+    {
+      "direction": "north",
+      "source": "cbb23bdcb615",
+      "target": "c1199c4383b5"
+    },
+    {
+      "direction": "west",
+      "source": "cbb23bdcb615",
+      "target": "45991aa22d38"
     },
     {
       "direction": "south",
@@ -59,9 +77,24 @@
       "target": "2a260396b811"
     },
     {
+      "direction": "south",
+      "source": "b4a4177eb725",
+      "target": "cbb23bdcb615"
+    },
+    {
       "direction": "north",
       "source": "2a260396b811",
       "target": "bdf5cb167134"
+    },
+    {
+      "direction": "south",
+      "source": "659f54a883af",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "south",
+      "source": "c1199c4383b5",
+      "target": "cbb23bdcb615"
     }
   ]
 }

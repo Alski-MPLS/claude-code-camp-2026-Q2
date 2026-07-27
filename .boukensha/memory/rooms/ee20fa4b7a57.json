@@ -6,8 +6,12 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
+  "npcs": [
+    "A cityguard stands here."
+  ],
   "items": [
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
+    "A mercenary is waiting for a job here.",
     "A mercenary is waiting for a job here.",
     "A mercenary is waiting for a job here."
   ]

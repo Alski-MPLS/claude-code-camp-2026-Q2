@@ -7,10 +7,10 @@
     "south": null,
     "west": null
   },
-  "npcs": [
-    "A cityguard stands here."
-  ],
+  "npcs": [],
   "items": [
-    "A large fountain carved from blue-streaked marble is here, bubbling merrily."
+    "A large fountain carved from blue-streaked marble is here, bubbling merrily.",
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
+    "An oozing green gelatinous blob is here, sucking in bits of debris."
   ]
 }
