@@ -189,6 +189,7 @@ def run(
         )
         _last_direction_ref: list[str | None] = [None]
         _prev_hash_ref: list[str | None] = [None]
+        _current_npcs_ref: list[list[str]] = [[]]
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
         from boukensha.memory.world_graph import WorldGraph as _WorldGraph
@@ -201,6 +202,7 @@ def run(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             prev_hash_ref=_prev_hash_ref,
+            current_npcs_ref=_current_npcs_ref,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session
@@ -221,7 +223,9 @@ def run(
             prev_hash_ref=_prev_hash_ref,
             character_name=_character_name,
         )
-        tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
+        tools.Combat.register(
+            registry, session=_mud_session, goals_dir=_goals_dir, current_npcs_ref=_current_npcs_ref
+        )
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -358,6 +362,7 @@ def repl(
         )
         _last_direction_ref: list[str | None] = [None]
         _prev_hash_ref: list[str | None] = [None]
+        _current_npcs_ref: list[list[str]] = [[]]
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
         from boukensha.memory.world_graph import WorldGraph as _WorldGraph
@@ -370,6 +375,7 @@ def repl(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             prev_hash_ref=_prev_hash_ref,
+            current_npcs_ref=_current_npcs_ref,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session
@@ -390,7 +396,9 @@ def repl(
             prev_hash_ref=_prev_hash_ref,
             character_name=_character_name,
         )
-        tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
+        tools.Combat.register(
+            registry, session=_mud_session, goals_dir=_goals_dir, current_npcs_ref=_current_npcs_ref
+        )
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)

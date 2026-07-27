@@ -9,12 +9,35 @@ from typing import TYPE_CHECKING, Any
 
 from boukensha.goals.goal_manager import GoalManager
 from boukensha.goals.combat_monitor import CombatMonitor
+from boukensha.tools.mud import _match_npc, _no_living_target_message
 
 if TYPE_CHECKING:
     from boukensha.registry import Registry
 
 _HP_RE = re.compile(r"(\d+)/(\d+)H", re.IGNORECASE)
 _DEAD_PATTERNS = ["is dead!", "you receive", "experience points"]
+
+# CircleMUD/tbaMUD-family 'consider' responses for a wildly outmatched
+# opponent. Wording varies per server, so this is a heuristic substring
+# match, not an exhaustive list — extend it if a server uses other phrasing.
+_DANGER_PATTERNS = [
+    "do you feel lucky",
+    "miracle to win",
+    "miracle to survive",
+    "certain death",
+    "would be suicide",
+    "no chance",
+    "hopelessly outmatched",
+    "far superior",
+]
+
+
+def _too_dangerous(consider_text: str) -> str | None:
+    low = consider_text.lower()
+    for phrase in _DANGER_PATTERNS:
+        if phrase in low:
+            return phrase
+    return None
 
 
 class Combat:
@@ -25,9 +48,11 @@ class Combat:
         *,
         session: Any,
         goals_dir: str | Path,
+        current_npcs_ref: list[list[str]] | None = None,
     ) -> None:
         goals_dir = Path(goals_dir)
         gm = GoalManager(goals_dir)
+        _npcs: list[list[str]] = current_npcs_ref if current_npcs_ref is not None else [[]]
 
         def _parse_hp(text: str) -> int | None:
             m = _HP_RE.search(text)
@@ -35,11 +60,35 @@ class Combat:
                 return int(m.group(1))
             return None
 
-        def _combat_loop(target: str, flee_hp: int = 5, **_: Any) -> str:
+        def _combat_loop(target: str, flee_hp: int = 5, force: bool = False, **_: Any) -> str:
             if not session.is_open:
                 return "error: not connected"
 
             gm.update(hp_flee_threshold=flee_hp)
+
+            if not force and not _match_npc(target, _npcs[0]):
+                return _no_living_target_message(target, _npcs[0])
+
+            # Hard safety gate: always consider the target ourselves before
+            # ever attacking, regardless of whether the caller already did.
+            # An LLM told to "find easy monsters" can still misjudge or just
+            # push through a dangerous consider result — this can't be
+            # skipped or argued past unless force=True is passed explicitly.
+            if not force:
+                session.drain()
+                session.send_command(f"consider {target}")
+                consider_resp = session.read_until_prompt()
+                danger = _too_dangerous(consider_resp)
+                if danger:
+                    gm.update(status="flee", notes=f"Refused fight vs '{target}': {danger!r}")
+                    return (
+                        f"Refused to attack '{target}' — consider warned: "
+                        f"{consider_resp.strip()!r} (matched danger phrase: {danger!r}). "
+                        "This target is far too strong. Flee this area or find a weaker "
+                        "target instead. Pass force=true only if you deliberately want to "
+                        "fight anyway."
+                    )
+
             goal = gm.read()
 
             # Initiate attack
@@ -81,13 +130,16 @@ class Combat:
             "combat_loop",
             description=(
                 "Fight a target in a Python loop, checking HP each round. "
-                "Automatically flees if HP drops to or below flee_hp. "
+                "Always considers the target first and refuses to attack if it looks far "
+                "too dangerous (e.g. \"Do you feel lucky, punk?\") — pass force=true to "
+                "attack anyway. Otherwise automatically flees if HP drops to or below flee_hp. "
                 "Returns when target dies, you flee, or the round limit is reached. "
                 "No LLM call per round — only use this for straightforward fights."
             ),
             parameters={
                 "target": {"type": "string", "description": "Name of the mob to attack"},
                 "flee_hp": {"type": "integer", "description": "Flee if HP drops to this value or below (default: 5)"},
+                "force": {"type": "boolean", "description": "Skip the pre-fight danger check and attack even if consider looks dangerous (default: false)"},
             },
             block=_combat_loop,
         )

@@ -118,6 +118,156 @@ def test_look_sends_look_command_when_connected():
     assert "room" in result
 
 
+# ---------------------------------------------------------------------------
+# Combat tools must refuse targets that aren't a known living NPC in the
+# room — real-world bug: an LLM attacked a mob whose corpse (not the mob
+# itself) was lying in the room, and got a confusing MUD bounce-back instead
+# of a clear refusal.
+# ---------------------------------------------------------------------------
+
+def test_attack_refuses_when_target_not_present():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("attack", {"target": "dragon"})
+    assert "No living 'dragon'" in result
+    mock_session.send_command.assert_not_called()
+
+
+def test_attack_succeeds_when_target_matches_known_npc():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You hit the creepy crawler. > "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret",
+        current_npcs_ref=[["a creepy crawler"]],
+    )
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    mock_session.send_command.assert_called_once_with("kill creepy crawler")
+    assert "hit" in result.lower()
+
+
+def test_move_refreshes_known_npcs_for_combat_tools():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "The Dirty Hallway\n   A grimy hall.\n[ Exits: n ]\nA creepy crawler is here.\n",
+        "You hit the creepy crawler. > ",
+    ]
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    registry.dispatch("move", {"direction": "north"})
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "hit" in result.lower()
+
+
+def test_move_into_room_with_only_a_corpse_refuses_the_old_npc():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "The Dirty Hallway\n   A grimy hall.\n[ Exits: n ]\n"
+        "The corpse of the creepy crawler is lying here.\n"
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    registry.dispatch("move", {"direction": "north"})
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "No living 'creepy crawler'" in result
+
+
+def test_look_refreshes_known_npcs_for_combat_tools():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "The Dirty Hallway\n   A grimy hall.\n[ Exits: n ]\nA creepy crawler is here.\n",
+        "You hit the creepy crawler. > ",
+    ]
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    registry.dispatch("look", {})
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "hit" in result.lower()
+
+
+def test_look_at_target_does_not_refresh_known_npcs():
+    # "look at X" describes X, not the room — must not overwrite room state.
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "It's a sword.\n"
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret",
+        current_npcs_ref=[["a creepy crawler"]],
+    )
+    registry.dispatch("look", {"target": "sword", "preposition": "at"})
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "No living" not in result
+
+
+def test_consider_refuses_unknown_target():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("consider", {"target": "newbie monster"})
+    assert "No living 'newbie monster'" in result
+    mock_session.send_command.assert_not_called()
+
+
+def test_skill_strike_rescue_is_not_gated_by_npc_list():
+    # rescue/assist target a fellow player, not an npc — must never be gated.
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You rescue Bob! > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("skill_strike", {"skill": "rescue", "target": "Bob"})
+    mock_session.send_command.assert_called_once_with("rescue Bob")
+    assert "rescue" in result.lower()
+
+
+def test_skill_strike_backstab_is_gated_by_npc_list():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("skill_strike", {"skill": "backstab", "target": "dragon"})
+    assert "No living 'dragon'" in result
+    mock_session.send_command.assert_not_called()
+
+
+def test_send_recovers_from_main_menu_and_resends_command():
+    """If a command lands on the post-login main menu (e.g. after a death
+    dropped the connection back to it), the tool must re-enter the game and
+    resend the original command instead of surfacing menu text forever."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "Welcome to tbaMUD!\n0) Exit\n1) Enter the game.\n\n   Make your choice: > ",
+        "You are standing in the Temple of Midgaard. > ",  # after sending "1"
+        "34H 100M 87V > ",  # actual score result after resending the original command
+    ]
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("check", {"kind": "score"})
+
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert sent == ["score", "1", "score"]
+    assert "Make your choice" not in result
+
+
 def test_move_sends_direction():
     registry = _make_registry()
     mock_session = MagicMock()

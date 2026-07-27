@@ -19,7 +19,10 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - It's now saying that it can't find a specific room (the market Square) when it clearly is shown on the map. Asking claude to check the logic with the navigation.py file.
 - It was an error in the code and it's updated now. Before I test, I've asked it to add in some kind of graphic to show exactly where the character is located on the map and it will move it as the character moves. 
 - The live tab shows the details for each move. No need to refresh the map now
-
+- Found some rooms that had no titles. Even though I told it could happen, it didn't understand and built multiple entries for the same room.
+- It also got thrown into the main menu. I think the character died so I need to add that logic to the code. 
+- It did die. It didn't show on the live feed but it tried to fight a larger monster and got thrown out of the game. Updated that code.
+- It also tried to fight a newbie corpse. Had to fix that also...... It's not really learning at this point..... 
 
 ## Technical Conclusions
 [todo]

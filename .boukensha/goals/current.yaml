@@ -1,6 +1,6 @@
 current_goal: Find the bakery
-hp_flee_threshold: 30
-last_updated: '2026-07-27T21:01:24.270325+00:00'
+hp_flee_threshold: 1
+last_updated: '2026-07-27T22:03:53.351593+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room

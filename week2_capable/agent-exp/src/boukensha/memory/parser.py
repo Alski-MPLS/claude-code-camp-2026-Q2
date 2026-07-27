@@ -30,7 +30,16 @@ class RoomParser:
             }
         """
         lines = raw.splitlines()
-        title = lines[0].strip() if lines else ""
+
+        # Real room titles are short and don't end in sentence punctuation
+        # ("Main Street", "The Dirt Path"). Zone banners ("This zone is above
+        # the level of most zones. Here be dragons.") and command failures
+        # ("Alas, you cannot go that way...") always do — skip past any such
+        # leading lines (and blank ones) to find the actual title, if any.
+        idx = 0
+        while idx < len(lines) and (not lines[idx].strip() or lines[idx].strip().endswith((".", "!", "?"))):
+            idx += 1
+        title = lines[idx].strip() if idx < len(lines) else ""
 
         exits: dict[str, None] = {}
         npcs: list[str] = []
@@ -38,7 +47,7 @@ class RoomParser:
         desc_lines: list[str] = []
         in_desc = True
 
-        for line in lines[1:]:
+        for line in lines[idx + 1:]:
             stripped = line.strip()
             if not stripped or _STATUS_RE.match(stripped):
                 continue
@@ -63,8 +72,16 @@ class RoomParser:
             if low.endswith("is here.") or low.endswith("lies here.") or low.endswith("here.") or low.endswith("."):
                 if "lies here" in low or "is lying here" in low:
                     items.append(stripped)
+                elif low.endswith("is here.") and re.match(r"^[A-Z]", stripped):
+                    # CircleMUD's auto-generated mob line is always exactly
+                    # "<name> is here." — trust it regardless of name length
+                    # (a combat-safety consumer of npcs[] must not miss a
+                    # real, longer-named mob just because it has more words).
+                    npcs.append(stripped)
                 elif re.match(r"^[A-Z]", stripped):
-                    # Simple heuristic: short lines are likely NPCs/items
+                    # Custom mob long-descriptions and item lines both just
+                    # end in "...here." with no reliable marker; short lines
+                    # are more likely a plain mob name than item flavor text.
                     if len(stripped.split()) <= 4:
                         npcs.append(stripped)
                     else:

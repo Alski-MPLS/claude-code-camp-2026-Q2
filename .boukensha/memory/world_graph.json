@@ -58,6 +58,62 @@
     {
       "title": "The Bakery",
       "id": "0765e3b81db2"
+    },
+    {
+      "title": "Main Street",
+      "id": "6e1a810416c6"
+    },
+    {
+      "title": "By The Temple Altar",
+      "id": "dac20e1bcea5"
+    },
+    {
+      "title": "Behind The Temple Altar",
+      "id": "b3f2b90ff8b6"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "5df2d717dab7"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "2e16758d7041"
+    },
+    {
+      "title": "The Dirt Path",
+      "id": "8a4ba9f8e7b2"
+    },
+    {
+      "title": "A White Square",
+      "id": "2d26f2fc5f86"
+    },
+    {
+      "title": "A Black Square",
+      "id": "c9ecd92569db"
+    },
+    {
+      "title": "The Entrance To The Newbie Zone",
+      "id": "23a3a86f6fed"
+    },
+    {
+      "title": "The Beginning Of The Passage",
+      "id": "2dd01a6ff88e"
+    },
+    {
+      "title": "The Dirty Hallway",
+      "id": "113bd65b27a4"
+    },
+    {
+      "title": "A Nexus",
+      "id": "57d37dcd93ba"
+    },
+    {
+      "title": "More Of The Hallway",
+      "id": "d875e614ed9a"
+    },
+    {
+      "title": "The Midgaard Donation Room",
+      "id": "c70a48f67c1f"
     }
   ],
   "edges": [
@@ -65,6 +121,11 @@
       "direction": "east",
       "source": "45991aa22d38",
       "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "north",
+      "source": "45991aa22d38",
+      "target": "bad80c25f808"
     },
     {
       "direction": "west",
@@ -95,6 +156,11 @@
       "direction": "west",
       "source": "bdf5cb167134",
       "target": "b5b42aee5e9c"
+    },
+    {
+      "direction": "north",
+      "source": "bdf5cb167134",
+      "target": "45991aa22d38"
     },
     {
       "direction": "south",
@@ -147,7 +213,17 @@
       "target": "a26bc7ad8e48"
     },
     {
-      "direction": "west",
+      "direction": "north",
+      "source": "bad80c25f808",
+      "target": "dac20e1bcea5"
+    },
+    {
+      "direction": "down",
+      "source": "bad80c25f808",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "east",
       "source": "76986e54a80b",
       "target": "bad80c25f808"
     },
@@ -165,6 +241,81 @@
       "direction": "north",
       "source": "b5b42aee5e9c",
       "target": "0765e3b81db2"
+    },
+    {
+      "direction": "east",
+      "source": "6e1a810416c6",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "north",
+      "source": "dac20e1bcea5",
+      "target": "b3f2b90ff8b6"
+    },
+    {
+      "direction": "north",
+      "source": "b3f2b90ff8b6",
+      "target": "5df2d717dab7"
+    },
+    {
+      "direction": "south",
+      "source": "b3f2b90ff8b6",
+      "target": "dac20e1bcea5"
+    },
+    {
+      "direction": "north",
+      "source": "5df2d717dab7",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "west",
+      "source": "2e16758d7041",
+      "target": "8a4ba9f8e7b2"
+    },
+    {
+      "direction": "east",
+      "source": "2e16758d7041",
+      "target": "23a3a86f6fed"
+    },
+    {
+      "direction": "north",
+      "source": "23a3a86f6fed",
+      "target": "2dd01a6ff88e"
+    },
+    {
+      "direction": "east",
+      "source": "2dd01a6ff88e",
+      "target": "113bd65b27a4"
+    },
+    {
+      "direction": "east",
+      "source": "113bd65b27a4",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "east",
+      "source": "113bd65b27a4",
+      "target": "c70a48f67c1f"
+    },
+    {
+      "direction": "south",
+      "source": "57d37dcd93ba",
+      "target": "d875e614ed9a"
+    },
+    {
+      "direction": "west",
+      "source": "57d37dcd93ba",
+      "target": "113bd65b27a4"
+    },
+    {
+      "direction": "north",
+      "source": "d875e614ed9a",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "west",
+      "source": "c70a48f67c1f",
+      "target": "bad80c25f808"
     }
   ]
 }

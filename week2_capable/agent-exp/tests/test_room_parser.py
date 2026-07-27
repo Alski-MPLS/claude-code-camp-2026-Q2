@@ -75,3 +75,57 @@ def test_parse_empty_string():
     r = RoomParser.parse("")
     assert r["title"] == ""
     assert r["exits"] == {}
+
+
+# --- non-room text must not be mistaken for a room title (real-world bug:
+# these were showing up as garbage nodes on the map) ---
+
+def test_parse_move_failure_yields_empty_title():
+    r = RoomParser.parse("Alas, you cannot go that way...\n")
+    assert r["title"] == ""
+
+
+def test_parse_generic_failure_sentence_yields_empty_title():
+    r = RoomParser.parse("That's not a menu choice!\n")
+    assert r["title"] == ""
+
+
+def test_parse_classifies_longer_named_npc_correctly():
+    # A real-world regression: "A creepy crawler is here." (5 words) used to
+    # be misfiled as an item by a word-count heuristic, which would make a
+    # combat-safety consumer of npcs[] wrongly think nothing living is here.
+    raw = (
+        "The Dirty Hallway\n"
+        "   A grimy hallway.\n"
+        "[ Exits: n ]\n"
+        "A creepy crawler is here.\n"
+    )
+    r = RoomParser.parse(raw)
+    assert r["npcs"] == ["A creepy crawler is here."]
+    assert r["items"] == []
+
+
+def test_parse_corpse_stays_an_item_even_with_a_short_name():
+    raw = (
+        "The Dirty Hallway\n"
+        "   A grimy hallway.\n"
+        "[ Exits: n ]\n"
+        "The corpse of the creepy crawler is lying here.\n"
+    )
+    r = RoomParser.parse(raw)
+    assert r["npcs"] == []
+    assert r["items"] == ["The corpse of the creepy crawler is lying here."]
+
+
+def test_parse_skips_zone_banner_to_find_real_title():
+    raw = (
+        "This zone is above the level of most zones. Here be dragons.\n"
+        "\n"
+        "The Dirt Path\n"
+        "   You are on a dirt path.\n"
+        "[ Exits: n w ]\n"
+    )
+    r = RoomParser.parse(raw)
+    assert r["title"] == "The Dirt Path"
+    assert r["description"] == "You are on a dirt path."
+    assert set(r["exits"].keys()) == {"north", "west"}

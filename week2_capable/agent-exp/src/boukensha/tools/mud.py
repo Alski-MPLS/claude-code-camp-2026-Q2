@@ -263,10 +263,25 @@ def _guard(session: MudSession) -> str | None:
     return None
 
 
+_MAIN_MENU_SIGNATURE = "Make your choice"
+
+
 def _send(session: MudSession, cmd: str) -> str:
     session.drain()
     session.send_command(cmd)
-    return _strip_vitals_prompt(session.read_until_prompt())
+    text = _strip_vitals_prompt(session.read_until_prompt())
+    if _MAIN_MENU_SIGNATURE in text:
+        # The server sometimes drops the connection back to the post-login
+        # main menu mid-session (e.g. after a death or a connection hiccup).
+        # `cmd` above landed on the menu, not in the game, so it was never
+        # actually acted on — re-enter the game and resend it for real
+        # instead of leaving every future tool call getting
+        # "That's not a menu choice!" forever.
+        session.send_command("1")  # enter the game
+        session.read_until_prompt()
+        session.send_command(cmd)
+        text = _strip_vitals_prompt(session.read_until_prompt())
+    return text
 
 
 def _check_enum(value: str, allowed: set[str], name: str) -> str | None:
@@ -275,6 +290,30 @@ def _check_enum(value: str, allowed: set[str], name: str) -> str | None:
     if v not in allowed:
         return f"error: invalid {name}: {value!r} (expected one of {', '.join(sorted(allowed))})"
     return None
+
+
+def _match_npc(target: str, npcs: list[str]) -> str | None:
+    """Fuzzy, case-insensitive match of a combat target against the NPCs
+    RoomParser saw in the last room look (e.g. target='crawler' should match
+    'a creepy crawler'). Corpses are filed under items, not npcs, so a room
+    with only a corpse correctly has no match here."""
+    t = target.strip().lower()
+    if not t:
+        return None
+    for npc in npcs:
+        n = npc.strip().lower()
+        if t in n or n in t:
+            return npc
+    return None
+
+
+def _no_living_target_message(target: str, npcs: list[str]) -> str:
+    here = ", ".join(npcs) if npcs else "nothing living — only items (possibly a corpse) or nothing at all"
+    return (
+        f"No living '{target}' is known to be here right now. What's actually in this room: {here}. "
+        "If you're seeing a corpse, that creature is already dead — don't attack it, loot it with "
+        "get_item instead. Call look with no arguments to refresh if this seems stale."
+    )
 
 
 class Mud:
@@ -305,6 +344,7 @@ class Mud:
         memory_dir: str | Path | None = None,
         world_graph: "WorldGraph | None" = None,
         prev_hash_ref: list[str | None] | None = None,
+        current_npcs_ref: list[list[str]] | None = None,
     ) -> None:
         # Recording the world graph here — not just in process_room/navigate_to —
         # means every raw 'move' updates the map immediately, so navigate_to can
@@ -314,6 +354,10 @@ class Mud:
         graph = world_graph if (memory_dir is not None and world_graph is not None) else None
         tracker = PlayerTracker(memory_dir) if memory_dir is not None else None
         _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
+        # Wrapped in a single-slot list (like _prev above) so process_room —
+        # a different registrar entirely — can share and update the same
+        # "who's actually alive here right now" state that combat tools read.
+        _npcs: list[list[str]] = current_npcs_ref if current_npcs_ref is not None else [[]]
 
         # ── Connection ────────────────────────────────────────────────────────
 
@@ -341,6 +385,16 @@ class Mud:
             block=lambda **_: _mud_status(session),
         )
 
+        def _look_and_record(target: str | None, preposition: str | None) -> str:
+            raw = _look(session, target, preposition)
+            # Only a bare "look" (the room itself) tells us who's here right
+            # now — "look at X" / "look in X" describe something else.
+            if not target and not preposition:
+                room = RoomParser.parse(raw)
+                if room["title"]:
+                    _npcs[0] = room.get("npcs", [])
+            return raw
+
         # ── Perception ────────────────────────────────────────────────────────
 
         registry.tool(
@@ -356,7 +410,7 @@ class Mud:
                 "target":      {"type": "string", "description": "Item, mob, or player to inspect (optional)"},
                 "preposition": {"type": "string", "description": "in | at | north | east | south | west | up | down (optional)"},
             },
-            block=lambda target=None, preposition=None, **_: _look(session, target, preposition),
+            block=lambda target=None, preposition=None, **_: _look_and_record(target, preposition),
         )
 
         registry.tool(
@@ -396,9 +450,12 @@ class Mud:
             if last_direction_ref is not None:
                 last_direction_ref[0] = direction
             raw = _move(session, direction)
-            if mem is not None and graph is not None:
-                room = RoomParser.parse(raw)
-                if room["title"]:
+            room = RoomParser.parse(raw)
+            if room["title"]:
+                # Independent of map memory — combat tools need this even
+                # when memory_dir/world_graph aren't configured.
+                _npcs[0] = room.get("npcs", [])
+                if mem is not None and graph is not None:
                     h, _diff = mem.record(room)
                     graph.add_room(h, room["title"])
                     if _prev[0] and _prev[0] != h:
@@ -490,7 +547,7 @@ class Mud:
                 "target": {"type": "string", "description": "Name of the mob or player to attack"},
                 "style":  {"type": "string", "description": "kill | hit | murder (default: kill)"},
             },
-            block=lambda target, style="kill", **_: _attack(session, target, style),
+            block=lambda target, style="kill", **_: _attack(session, target, style, _npcs[0]),
         )
 
         registry.tool(
@@ -500,7 +557,7 @@ class Mud:
                 "skill":  {"type": "string", "description": "bash | kick | backstab | rescue | assist"},
                 "target": {"type": "string", "description": "Name of the mob or player"},
             },
-            block=lambda skill, target, **_: _skill_strike(session, skill, target),
+            block=lambda skill, target, **_: _skill_strike(session, skill, target, _npcs[0]),
         )
 
         registry.tool(
@@ -512,7 +569,7 @@ class Mud:
             parameters={
                 "target": {"type": "string", "description": "Name of the mob to consider"},
             },
-            block=lambda target, **_: _guard(session) or _send(session, f"consider {target}"),
+            block=lambda target, **_: _consider(session, target, _npcs[0]),
         )
 
         # ── Communication ─────────────────────────────────────────────────────
@@ -806,23 +863,39 @@ def _portal(session: MudSession, action: str, target: str | None) -> str:
     return _send(session, "leave")
 
 
-def _attack(session: MudSession, target: str, style: str) -> str:
+_HOSTILE_STRIKE_SKILLS = {"bash", "kick", "backstab"}  # not rescue/assist — those target a player, not an npc
+
+
+def _consider(session: MudSession, target: str, npcs: list[str]) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    if not _match_npc(target, npcs):
+        return _no_living_target_message(target, npcs)
+    return _send(session, f"consider {target}")
+
+
+def _attack(session: MudSession, target: str, style: str, npcs: list[str]) -> str:
     err = _guard(session)
     if err:
         return err
     err = _check_enum(style, _ATTACK_STYLES, "style")
     if err:
         return err
+    if not _match_npc(target, npcs):
+        return _no_living_target_message(target, npcs)
     return _send(session, f"{style.strip().lower()} {target}")
 
 
-def _skill_strike(session: MudSession, skill: str, target: str) -> str:
+def _skill_strike(session: MudSession, skill: str, target: str, npcs: list[str]) -> str:
     err = _guard(session)
     if err:
         return err
     err = _check_enum(skill, _STRIKE_SKILLS, "skill")
     if err:
         return err
+    if skill.strip().lower() in _HOSTILE_STRIKE_SKILLS and not _match_npc(target, npcs):
+        return _no_living_target_message(target, npcs)
     return _send(session, f"{skill.strip().lower()} {target}")
 
 
