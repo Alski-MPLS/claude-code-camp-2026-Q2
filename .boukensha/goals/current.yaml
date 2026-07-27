@@ -1,0 +1,5 @@
+current_goal: Explore the city
+priority: normal         # low / normal / high
+status: active           # active / completed / paused
+hp_flee_threshold: 30    # flee combat when HP drops to this value
+notes: ""
