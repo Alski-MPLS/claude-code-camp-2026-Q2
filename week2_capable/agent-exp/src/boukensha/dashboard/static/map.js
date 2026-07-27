@@ -1,3 +1,31 @@
+async function showRoomDetail(d) {
+  const el = document.getElementById('room-detail');
+  el.textContent = 'Room: ' + d.title + '\nHash: ' + d.id + '\n\nLoading…';
+  try {
+    const r = await fetch('/api/room/' + encodeURIComponent(d.id));
+    if (!r.ok) throw new Error('not found');
+    const room = await r.json();
+    const exits = Object.keys(room.exits || {});
+    const lines = [
+      'Room: ' + room.title,
+      'Hash: ' + d.id,
+      '',
+      room.description || '(no description recorded)',
+      '',
+      'Exits: ' + (exits.length ? exits.join(', ') : '(none known)'),
+    ];
+    if (room.npcs && room.npcs.length) {
+      lines.push('', 'NPCs:', ...room.npcs.map(n => '  ' + n));
+    }
+    if (room.items && room.items.length) {
+      lines.push('', 'Items:', ...room.items.map(i => '  ' + i));
+    }
+    el.textContent = lines.join('\n');
+  } catch (err) {
+    el.textContent = 'Room: ' + d.title + '\nHash: ' + d.id + '\n\n(no stored details for this room)';
+  }
+}
+
 window.loadMap = async function loadMap() {
   const r = await fetch('/api/map');
   const { nodes, links } = await r.json();
@@ -29,10 +57,7 @@ window.loadMap = async function loadMap() {
   const node = g.append('g').selectAll('circle').data(nodes).join('circle')
     .attr('r', 8).attr('fill', '#4af').attr('stroke', '#222').attr('stroke-width', 1.5)
     .style('cursor', 'pointer')
-    .on('click', (_, d) => {
-      document.getElementById('room-detail').textContent =
-        'Room: ' + d.title + '\nHash: ' + d.id;
-    })
+    .on('click', (_, d) => showRoomDetail(d))
     .call(d3.drag()
       .on('start', (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
       .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })

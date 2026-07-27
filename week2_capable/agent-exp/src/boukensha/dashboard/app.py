@@ -65,6 +65,15 @@ def create_dashboard_app(
         ]
         return jsonify({"nodes": nodes, "links": links})
 
+    @app.route("/api/room/<room_hash>")
+    def api_room(room_hash: str):
+        from boukensha.memory.room_memory import RoomMemory
+        mem = RoomMemory(memory_path)
+        room = mem.get(room_hash)
+        if room is None:
+            return jsonify({"error": "not found"}), 404
+        return jsonify(room)
+
     @app.route("/api/goal")
     def api_goal():
         from boukensha.goals.goal_manager import GoalManager

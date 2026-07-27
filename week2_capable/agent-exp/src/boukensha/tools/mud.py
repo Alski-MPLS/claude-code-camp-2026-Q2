@@ -76,6 +76,15 @@ _IAC_RE = re.compile(
 _ANSI_RE = re.compile(rb"\x1b\[[0-9;]*[a-zA-Z]")
 _PROMPT = "> "
 
+# CircleMUD appends a vitals/status line before its "> " prompt after every
+# command, e.g. "34H 100M 87V (news) (motd) >" — noise for tool results and
+# the LLM's context, not information about the game world.
+_VITALS_PROMPT_RE = re.compile(r"\r?\n?\s*\d+H\s+\d+M\s+\d+V\b[^\r\n]*>\s*$")
+
+
+def _strip_vitals_prompt(text: str) -> str:
+    return _VITALS_PROMPT_RE.sub("", text).rstrip()
+
 _DIRECTIONS    = {"north", "east", "south", "west", "up", "down"}
 _POSITIONS     = {"stand", "sit", "rest", "sleep", "wake"}
 _ATTACK_STYLES = {"kill", "hit", "murder"}
@@ -251,7 +260,7 @@ def _guard(session: MudSession) -> str | None:
 def _send(session: MudSession, cmd: str) -> str:
     session.drain()
     session.send_command(cmd)
-    return session.read_until_prompt()
+    return _strip_vitals_prompt(session.read_until_prompt())
 
 
 def _check_enum(value: str, allowed: set[str], name: str) -> str | None:

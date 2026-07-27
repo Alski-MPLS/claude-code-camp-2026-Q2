@@ -1,0 +1,67 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "title": "The Temple Square",
+      "id": "45991aa22d38"
+    },
+    {
+      "title": "The Entrance Hall Of The Grunting Boar Inn",
+      "id": "cbb23bdcb615"
+    },
+    {
+      "title": "The Entrance To The Clerics' Guild",
+      "id": "d24cefa7a84d"
+    },
+    {
+      "title": "Market Square",
+      "id": "bdf5cb167134"
+    },
+    {
+      "title": "Main Street",
+      "id": "b4a4177eb725"
+    },
+    {
+      "title": "The Pet Shop",
+      "id": "2a260396b811"
+    },
+    {
+      "title": "The Dark Alley",
+      "id": "ee20fa4b7a57"
+    }
+  ],
+  "edges": [
+    {
+      "direction": "east",
+      "source": "45991aa22d38",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "north",
+      "source": "cbb23bdcb615",
+      "target": "d24cefa7a84d"
+    },
+    {
+      "direction": "south",
+      "source": "d24cefa7a84d",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "east",
+      "source": "bdf5cb167134",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "south",
+      "source": "b4a4177eb725",
+      "target": "2a260396b811"
+    },
+    {
+      "direction": "north",
+      "source": "2a260396b811",
+      "target": "bdf5cb167134"
+    }
+  ]
+}

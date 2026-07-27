@@ -1,0 +1,12 @@
+{
+  "title": "The Entrance Hall Of The Grunting Boar Inn",
+  "description": "You are standing in the entrance hall of the Grunting Boar Inn.  The hall has been wisely decorated with simple, functional furniture.  The heavy smell of dust and aging paper drifts in from the Post Office to the north.  A small staircase leads up to the reception and the bar is to the east.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "west": null,
+    "up": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -28,7 +28,7 @@ es.onmessage = e => {
   div.className = 'phase-' + event.phase;
   if (event.phase === 'response') div.textContent = '[response] ' + event.text;
   else if (event.phase === 'tool_call') div.textContent = '[tool] → ' + event.name + '(' + JSON.stringify(event.args || {}) + ')';
-  else if (event.phase === 'tool_result') div.textContent = '[result] ' + (event.result || '').slice(0, 200);
+  else if (event.phase === 'tool_result') div.textContent = '[result] ' + (event.result || '');
   else if (event.phase === 'compaction') div.textContent = '[compacted — ' + event.dropped + ' messages dropped]';
   else if (event.phase === 'iteration') div.textContent = '[iter ' + event.n + '/' + event.max + ']';
   else return;
