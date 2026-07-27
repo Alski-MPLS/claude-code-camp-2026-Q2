@@ -8,7 +8,7 @@ An autonomous AI agent that plays CircleMUD. It keeps room memory, plans routes,
 |---|---|
 | Room memory | Hashes every room by content; stores exits, NPCs, and items to disk |
 | World map | Builds a graph of visited rooms; uses Dijkstra pathfinding for `navigate_to` |
-| Goal tracking | Reads/writes `~/.boukensha/goals/current.yaml`; agent calls `goal_read`/`goal_update` |
+| Goal tracking | Reads/writes `.boukensha/goals/current.yaml`; agent calls `goal_read`/`goal_update` |
 | Combat automation | `combat_loop` runs a Python fight loop with automatic HP-flee threshold |
 | Token minimization | `process_room` diffs against stored memory and returns nothing when unchanged |
 | Web dashboard | Five-tab Flask app with live SSE stream, map, waterfall, goals, and session history |
@@ -38,10 +38,10 @@ uv sync
 ### 3. Create the config directory
 
 ```sh
-mkdir -p ~/.boukensha/goals ~/.boukensha/memory
+mkdir -p .boukensha/goals .boukensha/memory
 ```
 
-Create `~/.boukensha/settings.yaml`:
+Create `.boukensha/settings.yaml`:
 
 ```yaml
 mud:
@@ -54,7 +54,7 @@ model: claude-opus-4-5
 provider: anthropic
 ```
 
-Create `~/.boukensha/.env` (or export these in your shell):
+Create `.boukensha/.env` (or export these in your shell):
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
@@ -89,7 +89,7 @@ MUD_PASSWORD=yourpassword
 | `MUD_NAME` | Overrides `mud.username` |
 | `MUD_PASSWORD` | Overrides `mud.password` |
 
-### Goal file: `~/.boukensha/goals/current.yaml`
+### Goal file: `.boukensha/goals/current.yaml`
 
 ```yaml
 current_goal: Explore the city
@@ -135,9 +135,9 @@ http://localhost:4568
 
 | Path | Contents |
 |---|---|
-| `~/.boukensha/memory/` | Room JSON files, world graph (`world_graph.json`) |
-| `~/.boukensha/goals/current.yaml` | Active goal |
-| `~/.boukensha/sessions/` | JSONL log files, one per session |
+| `.boukensha/memory/` | Room JSON files, world graph (`world_graph.json`) |
+| `.boukensha/goals/current.yaml` | Active goal |
+| `.boukensha/sessions/` | JSONL log files, one per session |
 
 ## Running tests
 
@@ -158,9 +158,9 @@ Three tools reduce LLM token usage on every turn:
 | Problem | Fix |
 |---|---|
 | `ConnectionRefusedError` on start | CircleMUD server is not running on the configured host/port |
-| `ANTHROPIC_API_KEY not set` | Export the variable or add it to `~/.boukensha/.env` |
+| `ANTHROPIC_API_KEY not set` | Export the variable or add it to `.boukensha/.env` |
 | `Address already in use` (port 4568) | Use `python bin/boukensha --web --port 4569` |
 | Map tab shows empty graph | Agent has not visited any rooms yet; play a turn first |
-| Goals tab shows defaults | Create `~/.boukensha/goals/current.yaml` or let the agent write it |
+| Goals tab shows defaults | Create `.boukensha/goals/current.yaml` or let the agent write it |
 </content>
 </invoke>

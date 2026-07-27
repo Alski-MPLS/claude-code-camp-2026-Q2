@@ -6,12 +6,14 @@ import os
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).parent.parent
+
 # Allow running from repo root without install
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
 os.environ.setdefault(
     "BOUKENSHA_DIR",
-    str(Path.home() / ".boukensha"),
+    str(REPO_ROOT / ".boukensha"),
 )
 
 import boukensha

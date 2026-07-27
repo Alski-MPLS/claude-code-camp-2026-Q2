@@ -38,7 +38,7 @@ Real-time event stream delivered via Server-Sent Events (SSE). Each event is app
 
 ### Map
 
-Force-directed graph of every room the agent has visited, built from `~/.boukensha/memory/world_graph.json`. Nodes are room IDs; edges are directional connections (north/south/etc). Click a node to see its title.
+Force-directed graph of every room the agent has visited, built from `.boukensha/memory/world_graph.json`. Nodes are room IDs; edges are directional connections (north/south/etc). Click a node to see its title.
 
 Data endpoint: `GET /api/map`
 
@@ -55,7 +55,7 @@ Timeline of each agent turn broken into phases. Events are forwarded from the Li
 
 ### Goals
 
-Displays the content of `~/.boukensha/goals/current.yaml` as key-value pairs. Refreshes when you click the tab.
+Displays the content of `.boukensha/goals/current.yaml` as key-value pairs. Refreshes when you click the tab.
 
 Data endpoint: `GET /api/goal`
 
@@ -71,7 +71,7 @@ Data endpoint: `GET /api/goal`
 
 ### Sessions
 
-Table of all past sessions found in `~/.boukensha/sessions/`. Shows session ID, start time, model, and total input/output token counts. Click a row to expand the full transcript.
+Table of all past sessions found in `.boukensha/sessions/`. Shows session ID, start time, model, and total input/output token counts. Click a row to expand the full transcript.
 
 Data endpoints:
 
@@ -137,7 +137,7 @@ All events are JSON objects with a `phase` field. The Logger emits these phases:
 | `Address already in use` (port 4568) | Use `--port 4569` (or any free port) |
 | Map tab shows blank | Agent has not visited any rooms yet; complete at least one turn |
 | Live tab shows nothing | Check that `--web` was passed; reload the page |
-| Goals tab shows empty | Create `~/.boukensha/goals/current.yaml` manually or let the agent create it |
+| Goals tab shows empty | Create `.boukensha/goals/current.yaml` manually or let the agent create it |
 | Dashboard does not start | Ensure Flask is installed: `uv sync` from `week2_capable/agent-exp/` |
 </content>
 </invoke>

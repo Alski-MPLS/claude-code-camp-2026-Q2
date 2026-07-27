@@ -13,13 +13,16 @@ from dotenv import load_dotenv
 
 
 class Config:
+    # The repo root, i.e. the parent of the ``src`` directory this file lives under.
+    REPO_ROOT = Path(__file__).parent.parent.parent
+
     # The .boukensha config directory is resolved in this order:
     #   1. BOUKENSHA_DIR environment variable (set before loading .env)
-    #   2. ~/.boukensha (default)
-    DEFAULT_DIR = str(Path.home() / ".boukensha")
+    #   2. <repo_root>/.boukensha (default)
+    DEFAULT_DIR = str(REPO_ROOT / ".boukensha")
 
     # Default prompts shipped alongside the library code.
-    PROMPTS_DIR = str((Path(__file__).parent.parent.parent / "prompts").resolve())
+    PROMPTS_DIR = str((REPO_ROOT / "prompts").resolve())
 
     def __init__(self) -> None:
         self.dir = self._resolve_dir()

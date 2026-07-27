@@ -1,0 +1,14 @@
+{"phase": "session_start", "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227056+00:00"}
+{"phase": "iteration", "n": 1, "max": 2, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227078+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "go"}], "tool_count": 1, "tools": ["noop"], "context_window": 200000, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227085+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227126+00:00"}
+{"phase": "tool_call", "name": "noop", "args": {}, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227133+00:00"}
+{"phase": "tool_result", "name": "noop", "result": "ok", "ok": true, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227144+00:00"}
+{"phase": "iteration", "n": 2, "max": 2, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227154+00:00"}
+{"phase": "prompt", "message_count": 3, "messages": [{"role": "user", "content": "go"}, {"role": "assistant", "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}]}, {"role": "tool_result", "content": "ok"}], "tool_count": 1, "tools": ["noop"], "context_window": 200000, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227160+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227186+00:00"}
+{"phase": "tool_call", "name": "noop", "args": {}, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227192+00:00"}
+{"phase": "tool_result", "name": "noop", "result": "ok", "ok": true, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227201+00:00"}
+{"phase": "limit_reached", "kind": "max_iterations", "n": 2, "max": 2, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227211+00:00"}
+{"phase": "response", "text": "Wrapping up", "task": "player", "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227230+00:00"}
+{"phase": "turn_end", "reason": "max_iterations", "iterations": 2, "tokens": 0, "session_id": "20260727T184151Z-c872d971", "at": "2026-07-27T18:41:51.227236+00:00"}

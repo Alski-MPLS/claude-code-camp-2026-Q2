@@ -19,15 +19,15 @@ uv sync
 
 This installs everything listed in `pyproject.toml` into an isolated virtual environment. No system-wide pip changes.
 
-### 2. Configure `~/.boukensha/`
+### 2. Configure `.boukensha/`
 
 Create the directories:
 
 ```sh
-mkdir -p ~/.boukensha/goals ~/.boukensha/memory
+mkdir -p .boukensha/goals .boukensha/memory
 ```
 
-Create `~/.boukensha/settings.yaml`:
+Create `.boukensha/settings.yaml`:
 
 ```yaml
 mud:
@@ -40,7 +40,7 @@ model: claude-opus-4-5
 provider: anthropic
 ```
 
-Create `~/.boukensha/.env` with your API key and MUD credentials:
+Create `.boukensha/.env` with your API key and MUD credentials:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
@@ -79,7 +79,7 @@ All tests should pass. The test suite uses mock sessions so no live MUD connecti
 
 ## Next steps
 
-- Edit `~/.boukensha/goals/current.yaml` to set an initial goal before starting the agent
+- Edit `.boukensha/goals/current.yaml` to set an initial goal before starting the agent
 - Use `--no-web` if you only want the TUI and no browser
 - Use `--no-web --no-tui` for a plain line-based REPL (useful in scripts)
 - See `README.md` for the full configuration reference and troubleshooting guide

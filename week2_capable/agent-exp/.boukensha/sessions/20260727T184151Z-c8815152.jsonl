@@ -1,0 +1,9 @@
+{"phase": "session_start", "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.244823+00:00"}
+{"phase": "iteration", "n": 1, "max": 1, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.244972+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "go"}], "tool_count": 1, "tools": ["noop"], "context_window": 200000, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.244988+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245043+00:00"}
+{"phase": "tool_call", "name": "noop", "args": {}, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245055+00:00"}
+{"phase": "tool_result", "name": "noop", "result": "ok", "ok": true, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245068+00:00"}
+{"phase": "limit_reached", "kind": "max_iterations", "n": 1, "max": 1, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245079+00:00"}
+{"phase": "response", "text": "Wrapping up", "task": "player", "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245241+00:00"}
+{"phase": "turn_end", "reason": "max_iterations", "iterations": 1, "tokens": 0, "session_id": "20260727T184151Z-c8815152", "at": "2026-07-27T18:41:51.245251+00:00"}
