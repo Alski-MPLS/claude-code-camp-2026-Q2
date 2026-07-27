@@ -38,7 +38,7 @@ Real-time event stream delivered via Server-Sent Events (SSE). Each event is app
 
 ### Map
 
-Force-directed graph of every room the agent has visited, built from `.boukensha/memory/world_graph.json`. Nodes are room IDs; edges are directional connections (north/south/etc). Click a node to see its title.
+Compass-anchored layout of every room the agent has visited, built from `.boukensha/memory/world_graph.json`. Nodes are room IDs; edges are directional connections (north/south/etc). Click a node to see its title and details. Each character's current room is marked with a colored star that moves as they do, polled from `.boukensha/memory/players.json`.
 
 Data endpoint: `GET /api/map`
 
@@ -47,6 +47,15 @@ Data endpoint: `GET /api/map`
   "nodes": [{"id": "abc123", "title": "Temple Square"}, ...],
   "links": [{"source": "abc123", "target": "def456", "direction": "north"}, ...]
 }
+```
+
+Data endpoint: `GET /api/players`
+
+```json
+[
+  {"name": "Hero", "room_hash": "abc123", "title": "Temple Square", "updated_at": "2026-07-27T22:10:00+00:00"},
+  ...
+]
 ```
 
 ### Waterfall

@@ -188,25 +188,38 @@ def run(
             port=resolved_mud.get("port", 4000),
         )
         _last_direction_ref: list[str | None] = [None]
-        tools.Mud._register_with_session(
-            registry,
-            _mud_session,
-            last_direction_ref=_last_direction_ref,
-            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
-        )
-        # Register token-saving tools that share the same session
+        _prev_hash_ref: list[str | None] = [None]
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
         from boukensha.memory.world_graph import WorldGraph as _WorldGraph
         _shared_graph = _WorldGraph(_memory_dir)
         _shared_graph.load()
-        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.Mud._register_with_session(
+            registry,
+            _mud_session,
+            last_direction_ref=_last_direction_ref,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            prev_hash_ref=_prev_hash_ref,
+            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
+        )
+        # Register token-saving tools that share the same session
+        _character_name = resolved_mud.get("name")
+        tools.Navigation.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            character_name=_character_name,
+        )
         tools.RoomProcessor.register(
             registry,
             session=_mud_session,
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             last_direction_ref=_last_direction_ref,
+            prev_hash_ref=_prev_hash_ref,
+            character_name=_character_name,
         )
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 
@@ -344,25 +357,38 @@ def repl(
             port=resolved_mud.get("port", 4000),
         )
         _last_direction_ref: list[str | None] = [None]
-        tools.Mud._register_with_session(
-            registry,
-            _mud_session,
-            last_direction_ref=_last_direction_ref,
-            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
-        )
-        # Register token-saving tools that share the same session
+        _prev_hash_ref: list[str | None] = [None]
         _memory_dir = str(_Path(cfg.dir) / "memory")
         _goals_dir = str(cfg.dir)
         from boukensha.memory.world_graph import WorldGraph as _WorldGraph
         _shared_graph = _WorldGraph(_memory_dir)
         _shared_graph.load()
-        tools.Navigation.register(registry, session=_mud_session, memory_dir=_memory_dir, world_graph=_shared_graph)
+        tools.Mud._register_with_session(
+            registry,
+            _mud_session,
+            last_direction_ref=_last_direction_ref,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            prev_hash_ref=_prev_hash_ref,
+            **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
+        )
+        # Register token-saving tools that share the same session
+        _character_name = resolved_mud.get("name")
+        tools.Navigation.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            character_name=_character_name,
+        )
         tools.RoomProcessor.register(
             registry,
             session=_mud_session,
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             last_direction_ref=_last_direction_ref,
+            prev_hash_ref=_prev_hash_ref,
+            character_name=_character_name,
         )
         tools.Combat.register(registry, session=_mud_session, goals_dir=_goals_dir)
 

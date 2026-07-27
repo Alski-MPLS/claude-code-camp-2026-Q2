@@ -3,7 +3,12 @@
 // There is no free axis left for up/down (vertical MUD levels), so those
 // connections are drawn as short dashed diagonals instead of moving the
 // room to a new grid cell.
-const GRID = 130;
+const GRID = 220;
+const LABEL_MAX_CHARS = 20;
+
+function shortLabel(title) {
+  return title.length > LABEL_MAX_CHARS ? title.slice(0, LABEL_MAX_CHARS - 1) + '…' : title;
+}
 
 const DIR_OFFSET = {
   north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0],
@@ -20,9 +25,38 @@ const OPPOSITE = {
 
 const VERTICAL = new Set(["up", "down"]);
 
+// Ring of cells to try, nearest first, when a compass-computed cell is
+// already taken by an unrelated room (real MUDs are frequently
+// non-Euclidean: two different rooms can legitimately compute to the same
+// offset from unrelated starting points).
+const SEARCH_DIRS = [
+  [1, 0], [0, 1], [-1, 0], [0, -1],
+  [1, 1], [1, -1], [-1, 1], [-1, -1],
+];
+
+function cellKey(p) {
+  // Round to a tenth of a grid unit so the small fractional up/down
+  // offsets don't collide with integer cardinal cells but near-identical
+  // floats still collapse to the same key.
+  return Math.round(p.x * 10) + ',' + Math.round(p.y * 10);
+}
+
+function findFreeCell(desired, occupied) {
+  if (!occupied.has(cellKey(desired))) return desired;
+  for (let radius = 1; radius < 25; radius++) {
+    for (const [dx, dy] of SEARCH_DIRS) {
+      const candidate = { x: desired.x + dx * radius, y: desired.y + dy * radius };
+      if (!occupied.has(cellKey(candidate))) return candidate;
+    }
+  }
+  return desired; // give up rather than loop forever; a rare overlap beats an infinite loop
+}
+
 // Lays rooms out on a fixed grid using BFS from each connected component's
 // first-seen room, walking compass exits to place neighbors. Disconnected
-// components are placed side by side so they don't overlap.
+// components are placed side by side so they don't overlap. When a
+// non-Euclidean layout would put two different rooms in the same cell, the
+// later one is nudged to the nearest open cell instead of stacking.
 function layoutNodes(nodes, links) {
   const adj = new Map(nodes.map(n => [n.id, []]));
   for (const l of links) {
@@ -36,12 +70,15 @@ function layoutNodes(nodes, links) {
   const grid = new Map();
   const visited = new Set();
   let nextComponentX = 0;
+  let hadCollision = false;
 
   for (const start of nodes) {
     if (visited.has(start.id)) continue;
 
     const local = new Map();
+    const occupied = new Set();
     local.set(start.id, { x: 0, y: 0 });
+    occupied.add(cellKey({ x: 0, y: 0 }));
     visited.add(start.id);
     const queue = [start.id];
     let minX = 0, maxX = 0;
@@ -51,8 +88,11 @@ function layoutNodes(nodes, links) {
       for (const { to, dir } of adj.get(cur) || []) {
         if (local.has(to)) continue;
         const offset = DIR_OFFSET[dir] || [1.5, ((local.size * 37) % 5) - 2];
-        const next = { x: curPos.x + offset[0], y: curPos.y + offset[1] };
+        const desired = { x: curPos.x + offset[0], y: curPos.y + offset[1] };
+        const next = findFreeCell(desired, occupied);
+        if (next.x !== desired.x || next.y !== desired.y) hadCollision = true;
         local.set(to, next);
+        occupied.add(cellKey(next));
         visited.add(to);
         minX = Math.min(minX, next.x);
         maxX = Math.max(maxX, next.x);
@@ -67,6 +107,7 @@ function layoutNodes(nodes, links) {
     nextComponentX += (maxX - minX) + 2.5; // gap between components
   }
 
+  grid.hadCollision = hadCollision;
   return grid;
 }
 
@@ -97,6 +138,89 @@ function escapeHtml(s) {
 }
 
 let currentZoomTransform = d3.zoomIdentity;
+
+// Live player markers: state kept across refreshes so a lightweight poll can
+// move stars without redoing the whole compass layout (which would reset
+// zoom/pan and close any open popup) unless the room count actually changed.
+let nodeById = new Map();
+let playersLayer = null;
+let lastNodeCount = 0;
+let lastLinkCount = 0;
+let refreshTimer = null;
+const playerColorMap = new Map();
+const PLAYER_COLORS = ['#ffd23f', '#ff6b6b', '#6bcbff', '#a56bff', '#6bffb8', '#ff9f6b', '#ff6bcb', '#c9ff6b'];
+
+function colorForPlayer(name) {
+  if (!playerColorMap.has(name)) {
+    playerColorMap.set(name, PLAYER_COLORS[playerColorMap.size % PLAYER_COLORS.length]);
+  }
+  return playerColorMap.get(name);
+}
+
+function renderPlayers(players) {
+  if (!playersLayer) return;
+  playersLayer.selectAll('*').remove();
+  if (!players || !players.length) return;
+
+  // Group by room so multiple characters standing in the same room fan out
+  // side by side instead of drawing one star on top of another.
+  const byRoom = new Map();
+  for (const p of players) {
+    const node = nodeById.get(p.room_hash);
+    if (!node) continue; // character is somewhere not on this rendered map
+    if (!byRoom.has(p.room_hash)) byRoom.set(p.room_hash, []);
+    byRoom.get(p.room_hash).push(p);
+  }
+
+  for (const group of byRoom.values()) {
+    const node = nodeById.get(group[0].room_hash);
+    group.forEach((p, i) => {
+      const color = colorForPlayer(p.name);
+      const starX = node.x + (i - (group.length - 1) / 2) * 28;
+      const starY = node.y - 22;
+      // Stagger name labels between two rows so 2+ characters in the same
+      // room don't render their names on top of each other.
+      const nameY = starY - 12 - (i % 2) * 12;
+
+      const star = playersLayer.append('text')
+        .attr('class', 'player-star')
+        .attr('x', starX).attr('y', starY)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 20)
+        .attr('fill', color)
+        .attr('stroke', '#181818').attr('stroke-width', 3).attr('paint-order', 'stroke fill')
+        .text('★');
+      star.append('title').text(p.name);
+
+      playersLayer.append('text')
+        .attr('class', 'player-name')
+        .attr('x', starX).attr('y', nameY)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 10).attr('font-weight', 'bold')
+        .attr('fill', color)
+        .attr('stroke', '#181818').attr('stroke-width', 3).attr('paint-order', 'stroke fill')
+        .text(p.name);
+    });
+  }
+}
+
+async function refreshTick() {
+  const mapTab = document.getElementById('tab-map');
+  if (!mapTab || !mapTab.classList.contains('active')) return;
+  try {
+    const [mapRes, playersRes] = await Promise.all([fetch('/api/map'), fetch('/api/players')]);
+    const { nodes, links } = await mapRes.json();
+    const players = await playersRes.json();
+    if (nodes.length !== lastNodeCount || links.length !== lastLinkCount) {
+      // New rooms were discovered since the last full render — relayout.
+      await window.loadMap();
+      return;
+    }
+    renderPlayers(players);
+  } catch (err) {
+    // transient fetch failure — next tick will retry
+  }
+}
 
 async function showRoomPopup(d, screenX, screenY, container) {
   const popup = document.getElementById('room-popup');
@@ -165,15 +289,25 @@ window.loadMap = async function loadMap() {
   const container = document.getElementById('map-container');
   hidePopup();
 
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(refreshTick, 3000);
+
   if (!nodes.length) {
     status.textContent = 'No rooms mapped yet. Explore the MUD first.';
     d3.select('#map-svg').selectAll('*').remove();
+    nodeById = new Map();
+    playersLayer = null;
+    lastNodeCount = 0;
+    lastLinkCount = 0;
     return;
   }
-  status.textContent = 'Rooms are placed by compass direction — north is up, east is right. ' +
-    'Up/down exits are shown as dashed diagonal lines since there is no vertical axis on a flat map.';
-
   const grid = layoutNodes(nodes, links);
+  status.textContent = 'Rooms are placed by compass direction — north is up, east is right. ' +
+    'Up/down exits are shown as dashed diagonal lines since there is no vertical axis on a flat map.' +
+    (grid.hadCollision
+      ? ' Some rooms were nudged off their exact compass cell to avoid overlapping another room — this map isn’t a perfect grid.'
+      : '');
+
   for (const n of nodes) {
     const p = grid.get(n.id) || { x: 0, y: 0 };
     n.x = p.x;
@@ -186,13 +320,25 @@ window.loadMap = async function loadMap() {
   const height = svg.node().clientHeight || 500;
 
   const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
-  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-  const panX = width / 2 - cx;
-  const panY = height / 2 - cy;
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
 
-  const g = svg.append('g').attr('transform', `translate(${panX},${panY})`);
-  currentZoomTransform = d3.zoomIdentity.translate(panX, panY);
+  // Scale down (never up) so the whole map — including label width, not
+  // just node dots — fits in view on first load. Room names extend past
+  // their node, so pad generously.
+  const labelPad = 240;
+  const graphW = (maxX - minX) + labelPad;
+  const graphH = (maxY - minY) + labelPad;
+  const scale = Math.min(1, width / graphW, height / graphH);
+
+  const panX = width / 2 - cx * scale;
+  const panY = height / 2 - cy * scale;
+
+  const g = svg.append('g');
+  currentZoomTransform = d3.zoomIdentity.translate(panX, panY).scale(scale);
+  g.attr('transform', currentZoomTransform);
 
   const zoom = d3.zoom().on('zoom', e => {
     currentZoomTransform = e.transform;
@@ -203,9 +349,18 @@ window.loadMap = async function loadMap() {
   svg.call(zoom.transform, currentZoomTransform);
 
   const byId = new Map(nodes.map(n => [n.id, n]));
+  // Many rooms record exits both ways (A north-of B and B south-of A); draw
+  // that pair once instead of stacking two identical lines/labels.
+  const seenPairs = new Set();
   const drawLinks = links
-    .map(l => ({ ...l, source: byId.get(l.source), target: byId.get(l.target) }))
-    .filter(l => l.source && l.target);
+    .filter(l => byId.has(l.source) && byId.has(l.target))
+    .filter(l => {
+      const key = [l.source, l.target].sort().join('|');
+      if (seenPairs.has(key)) return false;
+      seenPairs.add(key);
+      return true;
+    })
+    .map(l => ({ ...l, source: byId.get(l.source), target: byId.get(l.target) }));
 
   g.append('g').selectAll('line').data(drawLinks).join('line')
     .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -218,8 +373,12 @@ window.loadMap = async function loadMap() {
     .attr('class', 'link-label')
     .attr('fill', d => VERTICAL.has((d.direction || '').toLowerCase()) ? '#c96' : '#666')
     .attr('font-size', 10).attr('text-anchor', 'middle')
+    // Halo + a small upward nudge so the label doesn't sit exactly on the
+    // node-label baseline for horizontal (east/west) edges between
+    // immediate neighbors.
+    .attr('stroke', '#181818').attr('stroke-width', 3).attr('paint-order', 'stroke fill')
     .attr('x', d => (d.source.x + d.target.x) / 2)
-    .attr('y', d => (d.source.y + d.target.y) / 2)
+    .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
 
   const node = g.append('g').selectAll('circle').data(nodes).join('circle')
@@ -235,10 +394,26 @@ window.loadMap = async function loadMap() {
       showRoomPopup(d, screenX, screenY, container);
     });
 
-  g.append('g').selectAll('text.node-label').data(nodes).join('text')
+  const label = g.append('g').selectAll('text.node-label').data(nodes).join('text')
     .attr('class', 'node-label').attr('fill', '#aaa').attr('font-size', 11)
+    // Halo behind the text (same color as the map background) so labels
+    // stay legible where they cross lines or sit near another label.
+    .attr('stroke', '#181818').attr('stroke-width', 3).attr('paint-order', 'stroke fill')
     .attr('x', d => d.x).attr('y', d => d.y)
-    .attr('dx', 11).attr('dy', 4).text(d => d.title);
+    .attr('dx', 11).attr('dy', 4).text(d => shortLabel(d.title));
+  label.append('title').text(d => d.title);
+
+  nodeById = byId;
+  lastNodeCount = nodes.length;
+  lastLinkCount = links.length;
+  playersLayer = g.append('g');
+
+  try {
+    const playersRes = await fetch('/api/players');
+    renderPlayers(await playersRes.json());
+  } catch (err) {
+    // no players.json yet, or the fetch failed — map still renders without markers
+  }
 };
 
 // Click anywhere outside the popup (room nodes stop propagation themselves)

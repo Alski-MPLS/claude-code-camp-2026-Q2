@@ -9,6 +9,7 @@ from boukensha.memory.parser import RoomParser
 from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.world_graph import WorldGraph
 from boukensha.memory.pathfinder import Pathfinder
+from boukensha.memory.player_tracker import PlayerTracker
 
 if TYPE_CHECKING:
     from boukensha.registry import Registry
@@ -23,12 +24,14 @@ class Navigation:
         session: Any,
         memory_dir: str | Path,
         world_graph: WorldGraph | None = None,
+        character_name: str | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
         graph = world_graph if world_graph is not None else WorldGraph(memory_dir)
         if world_graph is None:
             graph.load()
+        tracker = PlayerTracker(memory_dir)
 
         def _current_room_hash() -> str | None:
             """Send 'look' and return the hash of the current room."""
@@ -40,6 +43,8 @@ class Navigation:
                 return None
             h, _ = mem.record(room)
             graph.add_room(h, room["title"])
+            if character_name:
+                tracker.update(character_name, h, room["title"])
             return h
 
         def _navigate_to(destination: str, **_: Any) -> str:

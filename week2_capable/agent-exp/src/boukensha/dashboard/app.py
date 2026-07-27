@@ -65,6 +65,16 @@ def create_dashboard_app(
         ]
         return jsonify({"nodes": nodes, "links": links})
 
+    @app.route("/api/players")
+    def api_players():
+        from boukensha.memory.player_tracker import PlayerTracker
+        tracker = PlayerTracker(memory_path)
+        players = [
+            {"name": name, **info}
+            for name, info in tracker.read_all().items()
+        ]
+        return jsonify(players)
+
     @app.route("/api/room/<room_hash>")
     def api_room(room_hash: str):
         from boukensha.memory.room_memory import RoomMemory

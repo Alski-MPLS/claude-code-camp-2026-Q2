@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.world_graph import WorldGraph
+from boukensha.memory.player_tracker import PlayerTracker
 
 if TYPE_CHECKING:
     from boukensha.registry import Registry
@@ -24,6 +25,7 @@ class RoomProcessor:
         prev_hash_ref: list[str | None] | None = None,
         world_graph: WorldGraph | None = None,
         last_direction_ref: list[str | None] | None = None,
+        character_name: str | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
@@ -31,6 +33,7 @@ class RoomProcessor:
         if world_graph is None:
             graph.load()
         _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
+        tracker = PlayerTracker(memory_dir)
 
         def _process_room(**_: Any) -> str:
             if not session.is_open:
@@ -53,6 +56,8 @@ class RoomProcessor:
 
             _prev[0] = h
             graph.save()
+            if character_name:
+                tracker.update(character_name, h, room["title"])
 
             if not diff:
                 return f"[known room: {room['title']}] Nothing new observed."

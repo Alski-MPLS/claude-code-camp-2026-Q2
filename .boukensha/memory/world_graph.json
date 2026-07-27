@@ -38,6 +38,26 @@
     {
       "title": "The Post Office",
       "id": "c1199c4383b5"
+    },
+    {
+      "title": "The Temple Of Midgaard",
+      "id": "bad80c25f808"
+    },
+    {
+      "title": "The Reading Room",
+      "id": "76986e54a80b"
+    },
+    {
+      "title": "The Common Square",
+      "id": "a26bc7ad8e48"
+    },
+    {
+      "title": "The Eastern End Of Poor Alley",
+      "id": "b5b42aee5e9c"
+    },
+    {
+      "title": "The Bakery",
+      "id": "0765e3b81db2"
     }
   ],
   "edges": [
@@ -47,7 +67,7 @@
       "target": "cbb23bdcb615"
     },
     {
-      "direction": "north",
+      "direction": "west",
       "source": "cbb23bdcb615",
       "target": "d24cefa7a84d"
     },
@@ -72,6 +92,11 @@
       "target": "b4a4177eb725"
     },
     {
+      "direction": "west",
+      "source": "bdf5cb167134",
+      "target": "b5b42aee5e9c"
+    },
+    {
       "direction": "south",
       "source": "b4a4177eb725",
       "target": "2a260396b811"
@@ -87,14 +112,59 @@
       "target": "bdf5cb167134"
     },
     {
+      "direction": "east",
+      "source": "2a260396b811",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "ee20fa4b7a57",
+      "target": "a26bc7ad8e48"
+    },
+    {
       "direction": "south",
       "source": "659f54a883af",
       "target": "b4a4177eb725"
     },
     {
       "direction": "south",
+      "source": "659f54a883af",
+      "target": "2a260396b811"
+    },
+    {
+      "direction": "south",
       "source": "c1199c4383b5",
       "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "bad80c25f808",
+      "target": "76986e54a80b"
+    },
+    {
+      "direction": "south",
+      "source": "bad80c25f808",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "west",
+      "source": "76986e54a80b",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "east",
+      "source": "a26bc7ad8e48",
+      "target": "ee20fa4b7a57"
+    },
+    {
+      "direction": "north",
+      "source": "a26bc7ad8e48",
+      "target": "659f54a883af"
+    },
+    {
+      "direction": "north",
+      "source": "b5b42aee5e9c",
+      "target": "0765e3b81db2"
     }
   ]
 }

@@ -61,9 +61,15 @@ import select
 import socket
 import threading
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+from boukensha.memory.parser import RoomParser
+from boukensha.memory.room_memory import RoomMemory
+from boukensha.memory.player_tracker import PlayerTracker
+
 if TYPE_CHECKING:
+    from boukensha.memory.world_graph import WorldGraph
     from boukensha.registry import Registry
 
 _IAC_RE = re.compile(
@@ -296,7 +302,19 @@ class Mud:
         name: str,
         password: str,
         last_direction_ref: list[str | None] | None = None,
+        memory_dir: str | Path | None = None,
+        world_graph: "WorldGraph | None" = None,
+        prev_hash_ref: list[str | None] | None = None,
     ) -> None:
+        # Recording the world graph here — not just in process_room/navigate_to —
+        # means every raw 'move' updates the map immediately, so navigate_to can
+        # route through ground the agent has just covered without a separate
+        # process_room call in between.
+        mem = RoomMemory(memory_dir) if memory_dir is not None else None
+        graph = world_graph if (memory_dir is not None and world_graph is not None) else None
+        tracker = PlayerTracker(memory_dir) if memory_dir is not None else None
+        _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
+
         # ── Connection ────────────────────────────────────────────────────────
 
         registry.tool(
@@ -377,7 +395,21 @@ class Mud:
         def _move_and_record(direction: str) -> str:
             if last_direction_ref is not None:
                 last_direction_ref[0] = direction
-            return _move(session, direction)
+            raw = _move(session, direction)
+            if mem is not None and graph is not None:
+                room = RoomParser.parse(raw)
+                if room["title"]:
+                    h, _diff = mem.record(room)
+                    graph.add_room(h, room["title"])
+                    if _prev[0] and _prev[0] != h:
+                        graph.add_edge(_prev[0], h, direction)
+                    _prev[0] = h
+                    graph.save()
+                    if last_direction_ref is not None:
+                        last_direction_ref[0] = None
+                    if tracker is not None:
+                        tracker.update(name, h, room["title"])
+            return raw
 
         registry.tool(
             "move",

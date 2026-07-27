@@ -318,6 +318,109 @@ def test_agent_wraps_up_at_max_iterations():
     assert wrap_up_call.kwargs.get("tools") == []
 
 
+def test_agent_stops_on_identical_repeated_action():
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "move", "input": {"direction": "north"}}],
+    }
+    wrap_up_response = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "I'm stuck"}]}
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool(
+        "move", description="move", parameters={"direction": {"type": "string"}},
+        block=lambda direction: "Alas, you cannot go that way...",
+    )
+
+    mock_builder = MagicMock()
+    # 3 identical calls should trip the stuck detector before hitting the 25-iteration ceiling
+    mock_builder.parse_response.side_effect = [tool_response, tool_response, tool_response, wrap_up_response]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "go")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+
+    assert result == "I'm stuck"
+    assert agent.last_stop_reason == "stuck_repetition"
+    assert agent._iteration == 3
+
+
+def test_agent_stops_on_same_result_with_different_args():
+    # Different directions, but the MUD returns the identical failure each time —
+    # this is the "wandering, not literally repeating" case from real logs.
+    def make_call(direction):
+        return {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": f"tu_{direction}", "name": "move", "input": {"direction": direction}}],
+        }
+
+    wrap_up_response = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "I'm stuck"}]}
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool(
+        "move", description="move", parameters={"direction": {"type": "string"}},
+        block=lambda direction: "Alas, you cannot go that way...",
+    )
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = [
+        make_call("north"), make_call("west"), make_call("south"), wrap_up_response,
+    ]
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "go")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+
+    assert result == "I'm stuck"
+    assert agent.last_stop_reason == "stuck_repetition"
+
+
+def test_agent_does_not_flag_stuck_on_varied_progress():
+    responses = [
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "tu_1", "name": "move", "input": {"direction": "north"}}],
+        },
+        {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": "tu_2", "name": "move", "input": {"direction": "east"}}],
+        },
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Arrived"}]},
+    ]
+
+    results = iter(["You move north.", "You move east."])
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool(
+        "move", description="move", parameters={"direction": {"type": "string"}},
+        block=lambda direction: next(results),
+    )
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.side_effect = responses
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "go")
+    agent = Agent(context=ctx, registry=registry, builder=mock_builder, client=mock_client)
+    result = agent.run()
+
+    assert result == "Arrived"
+    assert agent.last_stop_reason == "completed"
+
+
 def test_agent_exports_from_top_level():
     import boukensha
     assert hasattr(boukensha, "Agent")

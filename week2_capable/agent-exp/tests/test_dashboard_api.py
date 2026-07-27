@@ -32,6 +32,35 @@ def test_api_map_returns_json(tmp_path):
         assert "links" in data
 
 
+def test_api_players_returns_empty_list_when_none_tracked(tmp_path):
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/api/players")
+        assert r.status_code == 200
+        assert json.loads(r.data) == []
+
+
+def test_api_players_returns_tracked_positions(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    tracker = PlayerTracker(tmp_path / "memory")
+    tracker.update("Hero", "abc123", "Temple Square")
+
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/api/players")
+        assert r.status_code == 200
+        data = json.loads(r.data)
+        assert data == [
+            {
+                "name": "Hero",
+                "room_hash": "abc123",
+                "title": "Temple Square",
+                "updated_at": data[0]["updated_at"],
+            }
+        ]
+
+
 def test_api_goal_returns_json(tmp_path):
     app, _ = _make_app(tmp_path)
     with app.test_client() as c:

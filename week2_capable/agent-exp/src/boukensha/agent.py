@@ -4,6 +4,7 @@ done or an iteration/token ceiling is reached.
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 import boukensha
@@ -19,6 +20,17 @@ WRAP_UP_DIRECTIVE = (
     "You have reached your action limit for this turn. Do not call any more tools.\n"
     "Briefly summarize what you accomplished, what is still unfinished, and the\n"
     "single next action you would take."
+)
+
+# How many consecutive tool calls with the identical (name, args, result) — or
+# just the identical result, e.g. repeated "Alas, you cannot go that way..."
+# across different directions — before the loop is considered stuck.
+STUCK_REPEAT_THRESHOLD = 3
+STUCK_WRAP_UP_DIRECTIVE = (
+    "You have repeated the same failed action (or kept getting the same failure) several\n"
+    "times in a row without making progress. Do not call any more tools. Briefly explain\n"
+    "what you were trying to do, why it isn't working, and one concretely different next\n"
+    "step — or say that you need the user's help."
 )
 
 
@@ -49,6 +61,11 @@ class Agent:
         self._max_output_tokens = self._resolve_max_output_tokens(task_settings, max_output_tokens)
         self._iteration = 0
         self.last_stop_reason = "completed"
+        self._last_action_key: tuple[str, str, str] | None = None
+        self._same_action_streak = 0
+        self._last_result_key: str | None = None
+        self._same_result_streak = 0
+        self._stuck = False
 
     def run(self) -> str:
         self._context.reset_turn_tokens()
@@ -93,6 +110,15 @@ class Agent:
 
             if parsed["stop_reason"] == "tool_use":
                 self._handle_tool_calls(parsed["content"], response)
+                if self._stuck:
+                    if self._logger:
+                        self._logger.limit_reached(
+                            kind="stuck_repetition",
+                            n=self._iteration,
+                            max=STUCK_REPEAT_THRESHOLD,
+                        )
+                    self.last_stop_reason = "stuck_repetition"
+                    return self._wrap_up("stuck_repetition")
             else:
                 text = self._extract_text(parsed["content"])
                 self._log_response(text=text, response=response)
@@ -156,7 +182,8 @@ class Agent:
             )
 
     def _wrap_up(self, reason: str) -> str:
-        self._context.add_message("user", WRAP_UP_DIRECTIVE)
+        directive = STUCK_WRAP_UP_DIRECTIVE if reason == "stuck_repetition" else WRAP_UP_DIRECTIVE
+        self._context.add_message("user", directive)
         try:
             response = self._client.call(tools=[], max_output_tokens=WRAP_UP_OUTPUT_TOKENS)
             parsed = self._builder.parse_response(response)
@@ -184,6 +211,11 @@ class Agent:
             return msg
 
     def _fallback_message(self, reason: str) -> str:
+        if reason == "stuck_repetition":
+            return (
+                "I repeated the same failed action without making progress, so I stopped "
+                "instead of retrying it. Let me know how you'd like to proceed."
+            )
         return (
             f"I reached my {self._max_iterations}-action limit for this turn before finishing "
             f"({reason}). Ask me to continue and I'll pick up from here."
@@ -244,6 +276,35 @@ class Agent:
                 print(f"  tool result -> {str(result)[:61]}")
 
             self._context.add_message("tool_result", str(result), tool_use_id=use_id)
+            self._track_repetition(name, args, result)
+
+    def _track_repetition(self, name: str, args: Any, result: Any) -> None:
+        # Flags _stuck once the same call, or just the same result under
+        # different args, has repeated STUCK_REPEAT_THRESHOLD times running.
+        try:
+            args_key = json.dumps(args, sort_keys=True, default=str)
+        except TypeError:
+            args_key = str(args)
+        result_key = str(result)
+
+        action_key = (name, args_key, result_key)
+        if action_key == self._last_action_key:
+            self._same_action_streak += 1
+        else:
+            self._last_action_key = action_key
+            self._same_action_streak = 1
+
+        if result_key == self._last_result_key:
+            self._same_result_streak += 1
+        else:
+            self._last_result_key = result_key
+            self._same_result_streak = 1
+
+        if (
+            self._same_action_streak >= STUCK_REPEAT_THRESHOLD
+            or self._same_result_streak >= STUCK_REPEAT_THRESHOLD
+        ):
+            self._stuck = True
 
 
 def _normalized_usage(response: Any) -> dict[str, Any] | None:

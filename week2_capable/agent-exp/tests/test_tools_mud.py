@@ -138,6 +138,52 @@ def test_move_rejects_invalid_direction():
     assert result.startswith("error:")
 
 
+def test_move_records_room_and_edge_in_world_graph(tmp_path):
+    """A raw 'move' call — with no process_room in between — must still add
+    the new room and the edge from wherever the agent just left, so
+    navigate_to can route through ground covered by plain movement."""
+    from boukensha.memory.world_graph import WorldGraph
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "The Temple Square\n   A large open square.\nExits: north, east\n",
+        "Main Street\n   The main street of town.\nExits: south\n",
+    ]
+    prev_hash_ref: list[str | None] = [None]
+    Mud._register_with_session(
+        registry,
+        mock_session,
+        name="Tester",
+        password="secret",
+        memory_dir=str(memory_dir),
+        world_graph=graph,
+        prev_hash_ref=prev_hash_ref,
+    )
+
+    registry.dispatch("move", {"direction": "north"})
+    registry.dispatch("move", {"direction": "south"})
+
+    titles = {n: a.get("title") for n, a in graph.graph.nodes(data=True)}
+    assert set(titles.values()) == {"The Temple Square", "Main Street"}
+
+    square_hash = next(h for h, t in titles.items() if t == "The Temple Square")
+    street_hash = next(h for h, t in titles.items() if t == "Main Street")
+    # Second move ("south") is what carried us from the square to the street.
+    edge = graph.graph.get_edge_data(square_hash, street_hash)
+    assert edge == {"direction": "south"}
+
+    # Reloading from disk proves move() actually persisted it, not just kept it in memory.
+    reloaded = WorldGraph(memory_dir)
+    reloaded.load()
+    assert reloaded.graph.number_of_edges() == 1
+
+
 def test_send_raw_passes_command_through():
     registry = _make_registry()
     mock_session = MagicMock()

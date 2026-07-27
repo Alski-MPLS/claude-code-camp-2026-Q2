@@ -6,13 +6,9 @@
     "south": null,
     "west": null
   },
-  "npcs": [
-    "A cityguard stands here."
-  ],
+  "npcs": [],
   "items": [
-    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
-    "A mercenary is waiting for a job here.",
-    "A mercenary is waiting for a job here.",
+    "An odif yltsaeb is here, walking backwards.",
     "A mercenary is waiting for a job here."
   ]
 }

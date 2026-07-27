@@ -1,5 +1,19 @@
-current_goal: Explore the city
-priority: normal         # low / normal / high
-status: active           # active / completed / paused
-hp_flee_threshold: 30    # flee combat when HP drops to this value
-notes: ""
+current_goal: Find the bakery
+hp_flee_threshold: 30
+last_updated: '2026-07-27T21:01:24.270325+00:00'
+mud_basics: '- Use ''score'' to check HP/mana/moves
+
+  - Use ''look'' to describe current room
+
+  - Use ''exits'' to list available exits
+
+  - north/south/east/west/up/down to move
+
+  - ''kill <target>'' to attack
+
+  - ''flee'' to escape combat
+
+  '
+notes: Successfully located the target bakery in Midgaard.
+priority: completed
+status: completed
