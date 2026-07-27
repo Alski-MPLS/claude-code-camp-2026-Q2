@@ -48,7 +48,8 @@ class Navigation:
             start_hash = _current_room_hash()
             if start_hash is None:
                 return "error: could not determine current room"
-            graph.load()
+            if world_graph is None:
+                graph.load()
             pf = Pathfinder(graph)
             path = pf.find_path_by_title(start_hash, destination)
             if path is None:
