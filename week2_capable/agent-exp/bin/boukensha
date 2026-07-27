@@ -2,19 +2,17 @@
 """Boukensha MUD agent CLI."""
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).parent.parent
+PACKAGE_ROOT = Path(__file__).parent.parent
 
 # Allow running from repo root without install
-sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-os.environ.setdefault(
-    "BOUKENSHA_DIR",
-    str(REPO_ROOT / ".boukensha"),
-)
+# BOUKENSHA_DIR is left unset here so boukensha.config.Config resolves its own
+# default (the nearest ancestor .git directory's .boukensha/), unless the
+# caller has already set BOUKENSHA_DIR in the environment.
 
 import boukensha
 
