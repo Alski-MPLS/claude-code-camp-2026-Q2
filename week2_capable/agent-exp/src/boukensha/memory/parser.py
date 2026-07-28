@@ -37,7 +37,11 @@ class RoomParser:
         # ("Alas, you cannot go that way...") always do — skip past any such
         # leading lines (and blank ones) to find the actual title, if any.
         idx = 0
-        while idx < len(lines) and (not lines[idx].strip() or lines[idx].strip().endswith((".", "!", "?"))):
+        while idx < len(lines) and (
+            not lines[idx].strip()
+            or lines[idx].strip().endswith((".", "!", "?"))
+            or _STATUS_RE.match(lines[idx].strip())
+        ):
             idx += 1
         title = lines[idx].strip() if idx < len(lines) else ""
 
