@@ -2,6 +2,274 @@
   "directed": true,
   "multigraph": false,
   "graph": {},
-  "nodes": [],
-  "edges": []
+  "nodes": [
+    {
+      "title": "The Dirty Hallway",
+      "id": "113bd65b27a4"
+    },
+    {
+      "title": "A Nexus",
+      "id": "57d37dcd93ba"
+    },
+    {
+      "title": "More Of The Hallway",
+      "id": "d875e614ed9a"
+    },
+    {
+      "title": "Another Corner",
+      "id": "9a2e0d053ec1"
+    },
+    {
+      "title": "A Brighter Hallway",
+      "id": "d480fb26c4c8"
+    },
+    {
+      "title": "The End Of The Passage",
+      "id": "d785c61af301"
+    },
+    {
+      "title": "An Open Field By The Great Field",
+      "id": "b9d1c46b3377"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "2e16758d7041"
+    },
+    {
+      "title": "The Entrance To The Newbie Zone",
+      "id": "23a3a86f6fed"
+    },
+    {
+      "title": "The Beginning Of The Passage",
+      "id": "2dd01a6ff88e"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "5df2d717dab7"
+    },
+    {
+      "title": "Behind The Temple Altar",
+      "id": "b3f2b90ff8b6"
+    },
+    {
+      "title": "By The Temple Altar",
+      "id": "dac20e1bcea5"
+    },
+    {
+      "title": "The Temple Of Midgaard",
+      "id": "bad80c25f808"
+    },
+    {
+      "title": "The Temple Square",
+      "id": "45991aa22d38"
+    },
+    {
+      "title": "Market Square",
+      "id": "bdf5cb167134"
+    },
+    {
+      "title": "The Common Square",
+      "id": "a26bc7ad8e48"
+    },
+    {
+      "title": "The Dark Alley",
+      "id": "ee20fa4b7a57"
+    },
+    {
+      "title": "The Dump",
+      "id": "4ee99bd863aa"
+    }
+  ],
+  "edges": [
+    {
+      "direction": "east",
+      "source": "113bd65b27a4",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "west",
+      "source": "113bd65b27a4",
+      "target": "2dd01a6ff88e"
+    },
+    {
+      "direction": "west",
+      "source": "57d37dcd93ba",
+      "target": "113bd65b27a4"
+    },
+    {
+      "direction": "south",
+      "source": "57d37dcd93ba",
+      "target": "d875e614ed9a"
+    },
+    {
+      "direction": "north",
+      "source": "d875e614ed9a",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "south",
+      "source": "d875e614ed9a",
+      "target": "9a2e0d053ec1"
+    },
+    {
+      "direction": "north",
+      "source": "9a2e0d053ec1",
+      "target": "d875e614ed9a"
+    },
+    {
+      "direction": "west",
+      "source": "9a2e0d053ec1",
+      "target": "d480fb26c4c8"
+    },
+    {
+      "direction": "east",
+      "source": "d480fb26c4c8",
+      "target": "9a2e0d053ec1"
+    },
+    {
+      "direction": "west",
+      "source": "d480fb26c4c8",
+      "target": "d785c61af301"
+    },
+    {
+      "direction": "east",
+      "source": "d785c61af301",
+      "target": "d480fb26c4c8"
+    },
+    {
+      "direction": "west",
+      "source": "d785c61af301",
+      "target": "b9d1c46b3377"
+    },
+    {
+      "direction": "east",
+      "source": "b9d1c46b3377",
+      "target": "d785c61af301"
+    },
+    {
+      "direction": "north",
+      "source": "b9d1c46b3377",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "south",
+      "source": "2e16758d7041",
+      "target": "b9d1c46b3377"
+    },
+    {
+      "direction": "east",
+      "source": "2e16758d7041",
+      "target": "23a3a86f6fed"
+    },
+    {
+      "direction": "south",
+      "source": "2e16758d7041",
+      "target": "5df2d717dab7"
+    },
+    {
+      "direction": "west",
+      "source": "23a3a86f6fed",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "north",
+      "source": "23a3a86f6fed",
+      "target": "2dd01a6ff88e"
+    },
+    {
+      "direction": "south",
+      "source": "2dd01a6ff88e",
+      "target": "23a3a86f6fed"
+    },
+    {
+      "direction": "east",
+      "source": "2dd01a6ff88e",
+      "target": "113bd65b27a4"
+    },
+    {
+      "direction": "north",
+      "source": "5df2d717dab7",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "south",
+      "source": "5df2d717dab7",
+      "target": "b3f2b90ff8b6"
+    },
+    {
+      "direction": "north",
+      "source": "b3f2b90ff8b6",
+      "target": "5df2d717dab7"
+    },
+    {
+      "direction": "south",
+      "source": "b3f2b90ff8b6",
+      "target": "dac20e1bcea5"
+    },
+    {
+      "direction": "north",
+      "source": "dac20e1bcea5",
+      "target": "b3f2b90ff8b6"
+    },
+    {
+      "direction": "south",
+      "source": "dac20e1bcea5",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "north",
+      "source": "bad80c25f808",
+      "target": "dac20e1bcea5"
+    },
+    {
+      "direction": "south",
+      "source": "bad80c25f808",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "north",
+      "source": "45991aa22d38",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "south",
+      "source": "45991aa22d38",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "north",
+      "source": "bdf5cb167134",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "south",
+      "source": "bdf5cb167134",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "north",
+      "source": "a26bc7ad8e48",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "east",
+      "source": "a26bc7ad8e48",
+      "target": "ee20fa4b7a57"
+    },
+    {
+      "direction": "south",
+      "source": "a26bc7ad8e48",
+      "target": "4ee99bd863aa"
+    },
+    {
+      "direction": "west",
+      "source": "ee20fa4b7a57",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "north",
+      "source": "4ee99bd863aa",
+      "target": "a26bc7ad8e48"
+    }
+  ]
 }
