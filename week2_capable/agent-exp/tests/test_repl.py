@@ -390,6 +390,57 @@ def test_repl_run_turn_catches_interrupt_requested():
     assert "[error]" not in all_output
 
 
+def test_new_top_level_instruction_overwrites_stale_goal(tmp_path):
+    """A stale goal left over from a previous session/run must not silently
+    keep steering the agent once the user gives a brand new instruction —
+    otherwise, if this turn runs out of iterations before the model calls
+    goal_update itself, AUTO_CONTINUE_DIRECTIVE resumes it against the OLD
+    goal instead of what the user just asked for."""
+    from boukensha.goals.goal_manager import GoalManager
+
+    goals_dir = tmp_path / "goals"
+    gm = GoalManager(goals_dir)
+    gm.update(current_goal="Reach newbie zone, fight monsters for gold.", status="active")
+
+    repl, _, logger = _make_repl(goals_dir=str(goals_dir))
+    try:
+        with patch("boukensha.repl.Agent") as MockAgent:
+            mock_agent_instance = MagicMock()
+            mock_agent_instance.run.return_value = "done"
+            mock_agent_instance.last_stop_reason = "end_turn"
+            MockAgent.return_value = mock_agent_instance
+            repl.run_turn("go to the bakery")
+    finally:
+        logger.close()
+
+    assert gm.read()["current_goal"] == "go to the bakery"
+
+
+def test_auto_continue_directive_does_not_overwrite_goal_text():
+    """The recursive AUTO_CONTINUE_DIRECTIVE resumption is not a new user
+    instruction and must not stomp the goal with its own generic text."""
+    import tempfile
+    from boukensha.goals.goal_manager import GoalManager
+    from boukensha.repl import AUTO_CONTINUE_DIRECTIVE
+
+    goals_dir = tempfile.mkdtemp()
+    gm = GoalManager(goals_dir)
+    gm.update(current_goal="go to the bakery", status="active")
+
+    repl, _, logger = _make_repl(goals_dir=goals_dir)
+    try:
+        with patch("boukensha.repl.Agent") as MockAgent:
+            mock_agent_instance = MagicMock()
+            mock_agent_instance.run.return_value = "done"
+            mock_agent_instance.last_stop_reason = "end_turn"
+            MockAgent.return_value = mock_agent_instance
+            repl.run_turn(AUTO_CONTINUE_DIRECTIVE)
+    finally:
+        logger.close()
+
+    assert gm.read()["current_goal"] == "go to the bakery"
+
+
 def test_repl_auto_continue_suppressed_when_interrupt_set():
     """Auto-continue must not fire when _interrupt_requested is set."""
     repl, _, logger = _make_repl()

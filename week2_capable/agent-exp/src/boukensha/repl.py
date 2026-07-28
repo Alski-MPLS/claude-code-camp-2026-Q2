@@ -178,6 +178,19 @@ class Repl:
         if self._logger:
             self._logger.turn(n=self._turn)
 
+        # A genuinely new instruction from the user — as opposed to this
+        # method recursing on itself with AUTO_CONTINUE_DIRECTIVE — always
+        # supersedes whatever goal is on disk. Without this, a stale goal
+        # left over from a previous session (or a prior task the model never
+        # marked completed/paused) stays "active", and if this new turn runs
+        # out of iterations before the model calls goal_update itself, the
+        # auto-continue below resumes it with "continue toward the current
+        # goal" — which then resolves to the OLD goal, silently overriding
+        # what the user just asked for.
+        if user_input != AUTO_CONTINUE_DIRECTIVE and self._goals_dir:
+            from .goals.goal_manager import GoalManager
+            GoalManager(self._goals_dir).update(current_goal=user_input, status="active")
+
         self._context.add_message("user", user_input)
 
         agent = Agent(
