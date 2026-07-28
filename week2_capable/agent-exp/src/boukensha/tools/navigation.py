@@ -26,6 +26,8 @@ class Navigation:
         memory_dir: str | Path,
         world_graph: WorldGraph | None = None,
         character_name: str | None = None,
+        prev_hash_ref: list[str | None] | None = None,
+        last_direction_ref: list[str | None] | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
@@ -35,7 +37,15 @@ class Navigation:
         tracker = PlayerTracker(memory_dir)
 
         def _current_room_hash() -> str | None:
-            """Send 'look' and return the hash of the current room."""
+            """Send 'look' and return the hash of the current room.
+
+            Also keeps prev_hash_ref/last_direction_ref (shared with the raw
+            move/process_room tools) in sync with wherever navigate_to
+            actually leaves the character. Without this, those tools' own
+            "last known room" pointer goes stale the moment navigate_to
+            moves the character, and a later raw `move` call would wire a
+            bogus edge from the old room instead of the real current one.
+            """
             session.drain()
             session.send_command("look")
             raw = session.read_until_prompt()
@@ -46,6 +56,10 @@ class Navigation:
             graph.add_room(h, room["title"])
             if character_name:
                 tracker.update(character_name, h, room["title"])
+            if prev_hash_ref is not None:
+                prev_hash_ref[0] = h
+            if last_direction_ref is not None:
+                last_direction_ref[0] = None
             return h
 
         def _route_by_landmark(pf: Pathfinder, start_hash: str, fragment: str) -> tuple[Route, str] | None:

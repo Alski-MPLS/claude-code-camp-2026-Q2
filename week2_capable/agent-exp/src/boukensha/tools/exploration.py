@@ -37,6 +37,8 @@ class Exploration:
         memory_dir: str | Path,
         world_graph: WorldGraph | None = None,
         character_name: str | None = None,
+        prev_hash_ref: list[str | None] | None = None,
+        last_direction_ref: list[str | None] | None = None,
     ) -> None:
         memory_dir = Path(memory_dir)
         mem = RoomMemory(memory_dir)
@@ -51,7 +53,14 @@ class Exploration:
             return set(room.get("exits") or {}) if room else None
 
         def _current_room_hash() -> str | None:
-            """Send 'look' and return the hash of the current room."""
+            """Send 'look' and return the hash of the current room.
+
+            Also keeps prev_hash_ref/last_direction_ref (shared with the raw
+            move/process_room tools) in sync with wherever explore()
+            actually leaves the character — see navigation.py's identical
+            comment for why: without it, those tools would wire a bogus
+            edge from a stale "last known room" the next time they're used.
+            """
             session.drain()
             session.send_command("look")
             raw = session.read_until_prompt()
@@ -62,6 +71,10 @@ class Exploration:
             graph.add_room(h, room["title"])
             if character_name:
                 tracker.update(character_name, h, room["title"])
+            if prev_hash_ref is not None:
+                prev_hash_ref[0] = h
+            if last_direction_ref is not None:
+                last_direction_ref[0] = None
             return h
 
         def _nearest_frontier(start_hash: str) -> tuple[Route, str, str] | None:

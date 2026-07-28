@@ -19,6 +19,38 @@ landed).
 
 ## Implemented
 
+- **process_room hid a room's items/npcs on every revisit after the
+  first.** Found live in the same fountain incident: `process_room` only
+  returns the *diff* vs. stored memory to save tokens, so on a revisit to
+  an already-known room it returned only `"[known room: X] Nothing new
+  observed."` — completely hiding the fountain (an unchanged item) even
+  though it's the whole reason the agent was there. It now always includes
+  current NPCs/items on a known-room revisit, only omitting them (falling
+  back to "Nothing new observed") when the room genuinely has none. See
+  `tools/room_processor.py` (`_process_room`). Tests:
+  `tests/test_room_processor.py`.
+
+- **navigate_to/explore silently moving the character corrupted the map
+  the next time a raw `move` was used.** Found live: The Bakery ended up
+  with two different, impossible "south" exits (one to The General Store,
+  one to Main Street) after mixing `explore()`/`navigate_to` with the raw
+  `move` tool in the same session. Root cause: `move`/`process_room` share
+  a `prev_hash_ref` — the "last known room" pointer used to record which
+  edge a move just walked — but `navigate_to` and `explore()` never
+  updated it, since they track position independently inside a single tool
+  call. So after either of those silently repositioned the character, the
+  next raw `move` call recorded its edge from a stale, no-longer-current
+  room. Both tools now sync `prev_hash_ref` (and clear the stale
+  `last_direction_ref` flag) every time they determine the current room,
+  the same way `move`/`process_room` already did. Same class of bug
+  independently found and fixed via `WorldGraph.add_edge`'s
+  `to_room_exits` check above, but this was the *systemic* source of it —
+  worth checking the live map periodically for any other rooms with two
+  edges sharing a direction (`tests/test_position_sync.py` has the
+  detection query used to find these). See `tools/navigation.py`,
+  `tools/exploration.py` (`_current_room_hash` in both). Tests:
+  `tests/test_position_sync.py`.
+
 - **Landmarks (fountains, wells, statues, etc.) live inside a room's
   description/items, not as their own room title.** Found live: asked to
   "go to the fountain and drink," the agent walked past The Temple Square

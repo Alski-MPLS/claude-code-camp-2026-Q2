@@ -62,7 +62,20 @@ class RoomProcessor:
                 tracker.update(character_name, h, room["title"])
 
             if not diff:
-                return f"[known room: {room['title']}] Nothing new observed."
+                # The description/exits haven't changed, but NPCs and items
+                # (mobs, fountains, shop stock, etc.) are exactly the things
+                # goals ask the agent to act on — silently dropping them here
+                # just because the room itself is "known" means the agent
+                # can walk right past something it already discovered and
+                # have no way of remembering it's there.
+                parts = [f"[known room: {room['title']}]"]
+                if room.get("npcs"):
+                    parts.append(f"NPCs: {', '.join(room['npcs'])}")
+                if room.get("items"):
+                    parts.append(f"Items: {', '.join(room['items'])}")
+                if len(parts) == 1:
+                    parts.append("Nothing new observed.")
+                return "\n".join(parts)
 
             parts = [f"Room: {room['title']}"]
             if diff.get("description"):

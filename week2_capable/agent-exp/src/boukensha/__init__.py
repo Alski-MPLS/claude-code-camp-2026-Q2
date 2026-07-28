@@ -213,6 +213,8 @@ def run(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             character_name=_character_name,
+            prev_hash_ref=_prev_hash_ref,
+            last_direction_ref=_last_direction_ref,
         )
         tools.Exploration.register(
             registry,
@@ -220,6 +222,8 @@ def run(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             character_name=_character_name,
+            prev_hash_ref=_prev_hash_ref,
+            last_direction_ref=_last_direction_ref,
         )
         tools.RoomProcessor.register(
             registry,
@@ -393,6 +397,8 @@ def repl(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             character_name=_character_name,
+            prev_hash_ref=_prev_hash_ref,
+            last_direction_ref=_last_direction_ref,
         )
         tools.Exploration.register(
             registry,
@@ -400,6 +406,8 @@ def repl(
             memory_dir=_memory_dir,
             world_graph=_shared_graph,
             character_name=_character_name,
+            prev_hash_ref=_prev_hash_ref,
+            last_direction_ref=_last_direction_ref,
         )
         tools.RoomProcessor.register(
             registry,
