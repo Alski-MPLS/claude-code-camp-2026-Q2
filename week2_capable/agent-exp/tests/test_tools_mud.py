@@ -331,7 +331,10 @@ def test_move_records_room_and_edge_in_world_graph(tmp_path):
     # Reloading from disk proves move() actually persisted it, not just kept it in memory.
     reloaded = WorldGraph(memory_dir)
     reloaded.load()
-    assert reloaded.graph.number_of_edges() == 1
+    # WorldGraph.add_edge also fills in the reverse direction (north back to
+    # the square), since CircleMUD exits are almost always bidirectional.
+    assert reloaded.graph.number_of_edges() == 2
+    assert reloaded.graph.get_edge_data(street_hash, square_hash) == {"direction": "north"}
 
 
 def test_send_raw_passes_command_through():

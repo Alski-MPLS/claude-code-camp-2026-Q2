@@ -56,14 +56,15 @@ class Navigation:
             if world_graph is None:
                 graph.load()
             pf = Pathfinder(graph)
-            path = pf.find_path_by_title(start_hash, destination)
-            if path is None:
+            route = pf.route_by_title(start_hash, destination)
+            if route is None:
                 return f"No known path to '{destination}'. Explore more of the area first."
+            path = route.directions
             if not path:
                 return f"Already at '{destination}'."
             current_hash = start_hash
             taken: list[str] = []
-            for direction in path:
+            for step, direction in enumerate(path):
                 session.drain()
                 session.send_command(direction)
                 session.read_until_prompt()
@@ -87,6 +88,25 @@ class Navigation:
                         f"({' → '.join(taken) or 'none'}): moving {direction} "
                         f"didn't leave the current room (blocked exit?). "
                         f"Check what's blocking it and retry navigate_to."
+                    )
+                expected_hash = route.nodes[step + 1]
+                if new_hash != expected_hash:
+                    # The room changed, but not to the room the graph expected
+                    # for this step — some earlier edge in the graph doesn't
+                    # match reality (recorded against the wrong room, a stale
+                    # entry from before a parser fix, etc). Walking the rest
+                    # of the precomputed path from here would compound the
+                    # drift, so stop now. Record the edge we actually just
+                    # observed — it's ground truth — so the graph self-heals
+                    # for next time instead of repeating the same bad route.
+                    graph.add_edge(current_hash, new_hash, direction)
+                    graph.save()
+                    return (
+                        f"Move interrupted after {len(taken)}/{len(path)} moves "
+                        f"({' → '.join(taken) or 'none'}): moving {direction} led "
+                        f"to an unexpected room — the map doesn't match reality "
+                        f"here. Corrected that edge; call navigate_to again to "
+                        f"replan from where you actually are."
                     )
                 graph.add_edge(current_hash, new_hash, direction)
                 current_hash = new_hash

@@ -47,3 +47,31 @@ def test_duplicate_add_room_is_idempotent(tmp_path):
     g.add_room("aabbcc001122", "Temple Square")
     # No error, node count still 1
     assert g.has_room("aabbcc001122")
+
+
+def test_add_edge_fills_in_reverse_direction(tmp_path):
+    """CircleMUD exits are almost always bidirectional, but edges are only
+    ever recorded in the direction actually walked. A room only approached
+    from one side must still be pathfinding-reachable from the other, so
+    add_edge should optimistically fill in the reverse direction too."""
+    g = WorldGraph(tmp_path)
+    g.add_room("a", "Room A")
+    g.add_room("b", "Room B")
+    g.add_edge("a", "b", "north")
+    assert g.get_neighbors("b").get("south") == "a"
+
+
+def test_add_edge_does_not_overwrite_observed_reverse_edge(tmp_path):
+    """If the reverse direction has already been observed leading somewhere
+    else (a one-way passage, a maze, a different connecting room), the
+    optimistic fill-in must never clobber that real, previously-recorded
+    edge."""
+    g = WorldGraph(tmp_path)
+    g.add_room("a", "Room A")
+    g.add_room("b", "Room B")
+    g.add_room("c", "Room C — the real destination south of B")
+    # B's south exit was already observed to lead to C, not back to A.
+    g.add_edge("b", "c", "south")
+    # Now A -> B north is recorded (e.g. approached from a different room).
+    g.add_edge("a", "b", "north")
+    assert g.get_neighbors("b").get("south") == "c"

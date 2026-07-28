@@ -8,6 +8,15 @@ from pathlib import Path
 
 import networkx as nx
 
+_OPPOSITE_DIRECTION = {
+    "north": "south",
+    "south": "north",
+    "east": "west",
+    "west": "east",
+    "up": "down",
+    "down": "up",
+}
+
 
 class WorldGraph:
     def __init__(self, base_dir: str | Path) -> None:
@@ -22,6 +31,21 @@ class WorldGraph:
 
     def add_edge(self, from_hash: str, to_hash: str, direction: str) -> None:
         self._g.add_edge(from_hash, to_hash, direction=direction)
+        # Edges are only ever recorded in the direction actually walked, but
+        # CircleMUD exits are almost always bidirectional. Without this, a
+        # room only ever approached from one side is pathfinding-unreachable
+        # even though it's really one step away — the graph shows the room
+        # exists but navigate_to still reports "no known path" to it. Only
+        # fill the gap: never touch that direction out of to_hash if it's
+        # already claimed by a real observed edge — a room can only have one
+        # exit per direction, so an existing one there (even to some other
+        # room, e.g. a one-way passage) means the assumption doesn't apply.
+        opposite = _OPPOSITE_DIRECTION.get(direction)
+        if not opposite:
+            return
+        existing_directions = {data.get("direction") for _, data in self._g[to_hash].items()}
+        if opposite not in existing_directions:
+            self._g.add_edge(to_hash, from_hash, direction=opposite)
 
     def get_neighbors(self, room_hash: str) -> dict[str, str]:
         if room_hash not in self._g:

@@ -134,3 +134,56 @@ def test_navigate_to_aborts_when_a_move_is_blocked(tmp_path):
     # Only the blocked "north" move should have been attempted, never "east".
     assert sent.count("north") == 1
     assert "east" not in sent
+
+
+def test_navigate_to_aborts_when_a_move_lands_in_an_unexpected_room(tmp_path):
+    """A move can succeed (the room really does change) while still not
+    matching what the graph predicted for that step — a stale/incorrect
+    edge left over from before the room-hashing bug was fixed. Continuing
+    to walk the rest of the precomputed path would compound the drift, so
+    navigate_to must notice the mismatch and stop, and it should record the
+    edge actually observed so the graph corrects itself for next time."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+    aaa = mem.room_hash({"title": "Room A", "description": "Desc A."})
+    bbb = mem.room_hash({"title": "Room B", "description": "Desc B."})
+    ccc = mem.room_hash({"title": "Room C", "description": "Desc C."})
+    ddd = mem.room_hash({"title": "Room D", "description": "Desc D."})
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(aaa, "Room A")
+    graph.add_room(bbb, "Room B")
+    graph.add_room(ccc, "Room C")
+    graph.add_room(ddd, "Room D")
+    # The graph (wrongly) believes north from A leads to B.
+    graph.add_edge(aaa, bbb, "north")
+    graph.add_edge(bbb, ccc, "east")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    # look at Room A, move north but really land in Room D (not B).
+    session.read_until_prompt.side_effect = [
+        "Room A\n   Desc A.\n[ Exits: n ]\n",
+        "You go north.\n",
+        "Room D\n   Desc D.\n[ Exits: e ]\n",
+    ]
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "Room C"})
+
+    assert "interrupted" in result.lower()
+    assert "unexpected room" in result.lower()
+    sent = [c.args[0] for c in session.send_command.call_args_list]
+    # Only the drifting "north" move should have been attempted, never "east".
+    assert sent.count("north") == 1
+    assert "east" not in sent
+    # The graph should have self-corrected: A's real north neighbor is D, not B.
+    assert graph.get_neighbors(aaa).get("north") == ddd
