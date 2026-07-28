@@ -76,6 +76,8 @@ class Agent:
 
         while True:
             if self._interrupt_event and self._interrupt_event.is_set():
+                if self._context.messages and self._context.messages[-1].role != "assistant":
+                    self._context.add_message("assistant", "[turn interrupted by user]")
                 from .errors import InterruptRequested
                 raise InterruptRequested()
 

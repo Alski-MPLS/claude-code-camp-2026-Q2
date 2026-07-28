@@ -343,3 +343,66 @@ def test_repl_compact_via_start(capsys):
         logger.close()
     captured = capsys.readouterr()
     assert "compacted" in captured.out
+
+
+# ── Interrupt tests ──────────────────────────────────────────────────────────
+
+def test_repl_request_interrupt_sets_flag():
+    repl, _, logger = _make_repl()
+    try:
+        assert not repl._interrupt_requested.is_set()
+        repl.request_interrupt()
+        assert repl._interrupt_requested.is_set()
+    finally:
+        logger.close()
+
+
+def test_repl_clear_interrupt_clears_flag():
+    repl, _, logger = _make_repl()
+    try:
+        repl.request_interrupt()
+        assert repl._interrupt_requested.is_set()
+        repl.clear_interrupt()
+        assert not repl._interrupt_requested.is_set()
+    finally:
+        logger.close()
+
+
+def test_repl_run_turn_catches_interrupt_requested():
+    """run_turn() should not propagate InterruptRequested; it catches it silently."""
+    from boukensha.errors import InterruptRequested
+
+    repl, _, logger = _make_repl()
+    received = []
+    repl.on_output(received.append)
+    try:
+        with patch("boukensha.repl.Agent") as MockAgent:
+            mock_agent_instance = MagicMock()
+            mock_agent_instance.run.side_effect = InterruptRequested()
+            mock_agent_instance.last_stop_reason = "interrupted"
+            MockAgent.return_value = mock_agent_instance
+            # Should not raise
+            repl.run_turn("do something")
+    finally:
+        logger.close()
+    # Confirm no exception escaped and no error text in output
+    all_output = "\n".join(received)
+    assert "[error]" not in all_output
+
+
+def test_repl_auto_continue_suppressed_when_interrupt_set():
+    """Auto-continue must not fire when _interrupt_requested is set."""
+    repl, _, logger = _make_repl()
+    try:
+        with patch("boukensha.repl.Agent") as MockAgent:
+            mock_agent_instance = MagicMock()
+            mock_agent_instance.run.return_value = "done"
+            mock_agent_instance.last_stop_reason = "max_iterations"
+            MockAgent.return_value = mock_agent_instance
+            # Set the interrupt flag before the turn
+            repl.request_interrupt()
+            repl.run_turn("do something")
+        # Agent.run should have been called exactly once (no auto-continue)
+        assert MockAgent.return_value.run.call_count == 1
+    finally:
+        logger.close()

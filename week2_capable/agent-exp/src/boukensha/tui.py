@@ -146,6 +146,8 @@ class Tui(App):
     def action_interrupt_turn(self) -> None:
         if self._live.get("active"):
             self._repl.request_interrupt()
+            log = self.query_one("#log", RichLog)
+            log.write("[interrupt requested — stopping at the next step…]")
 
     def action_scroll_up(self) -> None:
         self.query_one("#log", RichLog).scroll_up(5)
@@ -246,7 +248,7 @@ class Tui(App):
             log = self.query_one("#log", RichLog)
             log.write("> (continuing…)")
             self._launch_turn(AUTO_CONTINUE_DIRECTIVE)
-        elif text.lower() in ("s", "stop"):
+        elif text.lower() in ("s", "stop") or text.startswith("/"):
             log = self.query_one("#log", RichLog)
             log.write("[stopped]")
             self._turn_count += 1

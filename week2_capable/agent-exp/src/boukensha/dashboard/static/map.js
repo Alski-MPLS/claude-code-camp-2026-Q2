@@ -210,9 +210,19 @@ function renderPlayers(players) {
     const toNode = nodeById.get(p.room_hash);
     if (!fromNode || !toNode) continue;
 
+    // Shorten arrow to stop at destination rect edge (half-width = 55, half-height = 15)
+    const dx = toNode.x - fromNode.x;
+    const dy = toNode.y - fromNode.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Offset from center by the rect half-diagonal projected onto the direction
+    const halfW = 55, halfH = 15;
+    const offset = Math.min(halfW / Math.abs(dx / dist || 1e-9), halfH / Math.abs(dy / dist || 1e-9), dist * 0.5);
+    const endX = toNode.x - (dx / dist) * offset;
+    const endY = toNode.y - (dy / dist) * offset;
+
     playersLayer.append('line')
       .attr('x1', fromNode.x).attr('y1', fromNode.y)
-      .attr('x2', toNode.x).attr('y2', toNode.y)
+      .attr('x2', endX).attr('y2', endY)
       .attr('stroke', '#ffd23f')
       .attr('stroke-width', 2.5)
       .attr('marker-end', 'url(#arrow-head)')
