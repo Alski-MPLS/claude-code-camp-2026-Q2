@@ -1,7 +1,6 @@
-current_goal: 'Reach newbie zone, fight simple monsters for gold, and then locate
-  a weapon shop with ''sword'' in its name. Target cumulative gold: 30-40.'
+current_goal: go to the bakery in the shortest possible way
 hp_flee_threshold: 5
-last_updated: '2026-07-28T21:48:23.941603+00:00'
+last_updated: '2026-07-28T21:56:51.741142+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -15,6 +14,10 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: 'Starting phase: Travel to Newbie Zone.'
-priority: explore
-status: active
+notes: Repeated attempts to navigate directly to 'bakery' have failed due to blocked
+  exit errors (e.g., "blocked exit?"). Manual exploration within known linked areas
+  (Dirty Hallway) did not reveal any path or direct movement towards a location named
+  'bakery'. I am pausing until more information is available regarding the physical
+  state of the environment or map changes.
+priority: paused
+status: paused
