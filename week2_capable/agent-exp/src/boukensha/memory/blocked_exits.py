@@ -21,9 +21,20 @@ class BlockedExits:
         if not self._path.exists():
             return {}
         try:
-            return json.loads(self._path.read_text(encoding="utf-8"))
+            data = json.loads(self._path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             return {}
+        # Tolerate files written by the older schema (a plain list of
+        # blocked directions, no reason) so upgrading the code doesn't
+        # crash on state a previous run already persisted to disk.
+        return {
+            room_hash: (
+                {d: _DEFAULT_REASON for d in room_data}
+                if isinstance(room_data, list)
+                else room_data
+            )
+            for room_hash, room_data in data.items()
+        }
 
     def get(self, room_hash: str) -> set[str]:
         return set(self.read_all().get(room_hash, {}).keys())
