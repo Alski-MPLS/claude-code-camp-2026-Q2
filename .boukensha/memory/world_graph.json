@@ -78,6 +78,82 @@
     {
       "title": "The Dump",
       "id": "4ee99bd863aa"
+    },
+    {
+      "title": "Main Street",
+      "id": "b4a4177eb725"
+    },
+    {
+      "title": "Main Street",
+      "id": "f55aecc816a1"
+    },
+    {
+      "title": "The General Store",
+      "id": "659f54a883af"
+    },
+    {
+      "title": "The Pet Shop",
+      "id": "2a260396b811"
+    },
+    {
+      "title": "Main Street",
+      "id": "6e1a810416c6"
+    },
+    {
+      "title": "The Bakery",
+      "id": "0765e3b81db2"
+    },
+    {
+      "title": "The Armory",
+      "id": "5703b2498d58"
+    },
+    {
+      "title": "Main Street",
+      "id": "0ab4dc2a9c72"
+    },
+    {
+      "title": "The Magic Shop",
+      "id": "61419e42c28c"
+    },
+    {
+      "title": "The Entrance To The Mages' Guild",
+      "id": "204f626522a8"
+    },
+    {
+      "title": "The Entrance Hall Of The Grunting Boar Inn",
+      "id": "cbb23bdcb615"
+    },
+    {
+      "title": "The Post Office",
+      "id": "c1199c4383b5"
+    },
+    {
+      "title": "The Grunting Boar",
+      "id": "ebf0a3a8eed3"
+    },
+    {
+      "title": "The Reception",
+      "id": "1b17d2dff25c"
+    },
+    {
+      "title": "The Cryogenic Center",
+      "id": "82c6ee8f061c"
+    },
+    {
+      "title": "The Entrance To The Clerics' Guild",
+      "id": "d24cefa7a84d"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "69df16ab4aac"
+    },
+    {
+      "title": "The Dirt Path",
+      "id": "8a4ba9f8e7b2"
+    },
+    {
+      "title": "The Great Chessboard Of Midgaard",
+      "id": "4084515dd098"
     }
   ],
   "edges": [
@@ -152,11 +228,6 @@
       "target": "2e16758d7041"
     },
     {
-      "direction": "south",
-      "source": "2e16758d7041",
-      "target": "b9d1c46b3377"
-    },
-    {
       "direction": "east",
       "source": "2e16758d7041",
       "target": "23a3a86f6fed"
@@ -165,6 +236,16 @@
       "direction": "south",
       "source": "2e16758d7041",
       "target": "5df2d717dab7"
+    },
+    {
+      "direction": "north",
+      "source": "2e16758d7041",
+      "target": "69df16ab4aac"
+    },
+    {
+      "direction": "west",
+      "source": "2e16758d7041",
+      "target": "8a4ba9f8e7b2"
     },
     {
       "direction": "west",
@@ -237,6 +318,16 @@
       "target": "bdf5cb167134"
     },
     {
+      "direction": "east",
+      "source": "45991aa22d38",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "45991aa22d38",
+      "target": "d24cefa7a84d"
+    },
+    {
       "direction": "north",
       "source": "bdf5cb167134",
       "target": "45991aa22d38"
@@ -245,6 +336,16 @@
       "direction": "south",
       "source": "bdf5cb167134",
       "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "east",
+      "source": "bdf5cb167134",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "west",
+      "source": "bdf5cb167134",
+      "target": "6e1a810416c6"
     },
     {
       "direction": "north",
@@ -270,6 +371,171 @@
       "direction": "north",
       "source": "4ee99bd863aa",
       "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "west",
+      "source": "b4a4177eb725",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "east",
+      "source": "b4a4177eb725",
+      "target": "f55aecc816a1"
+    },
+    {
+      "direction": "north",
+      "source": "b4a4177eb725",
+      "target": "659f54a883af"
+    },
+    {
+      "direction": "south",
+      "source": "b4a4177eb725",
+      "target": "2a260396b811"
+    },
+    {
+      "direction": "west",
+      "source": "f55aecc816a1",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "south",
+      "source": "659f54a883af",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "north",
+      "source": "2a260396b811",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "east",
+      "source": "6e1a810416c6",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "north",
+      "source": "6e1a810416c6",
+      "target": "0765e3b81db2"
+    },
+    {
+      "direction": "south",
+      "source": "6e1a810416c6",
+      "target": "5703b2498d58"
+    },
+    {
+      "direction": "west",
+      "source": "6e1a810416c6",
+      "target": "0ab4dc2a9c72"
+    },
+    {
+      "direction": "south",
+      "source": "0765e3b81db2",
+      "target": "659f54a883af"
+    },
+    {
+      "direction": "north",
+      "source": "5703b2498d58",
+      "target": "6e1a810416c6"
+    },
+    {
+      "direction": "east",
+      "source": "0ab4dc2a9c72",
+      "target": "6e1a810416c6"
+    },
+    {
+      "direction": "north",
+      "source": "0ab4dc2a9c72",
+      "target": "61419e42c28c"
+    },
+    {
+      "direction": "south",
+      "source": "0ab4dc2a9c72",
+      "target": "204f626522a8"
+    },
+    {
+      "direction": "south",
+      "source": "61419e42c28c",
+      "target": "0ab4dc2a9c72"
+    },
+    {
+      "direction": "north",
+      "source": "204f626522a8",
+      "target": "0ab4dc2a9c72"
+    },
+    {
+      "direction": "east",
+      "source": "204f626522a8",
+      "target": "6e1a810416c6"
+    },
+    {
+      "direction": "west",
+      "source": "cbb23bdcb615",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "north",
+      "source": "cbb23bdcb615",
+      "target": "c1199c4383b5"
+    },
+    {
+      "direction": "east",
+      "source": "cbb23bdcb615",
+      "target": "ebf0a3a8eed3"
+    },
+    {
+      "direction": "up",
+      "source": "cbb23bdcb615",
+      "target": "1b17d2dff25c"
+    },
+    {
+      "direction": "south",
+      "source": "c1199c4383b5",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "ebf0a3a8eed3",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "down",
+      "source": "1b17d2dff25c",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "north",
+      "source": "1b17d2dff25c",
+      "target": "82c6ee8f061c"
+    },
+    {
+      "direction": "south",
+      "source": "82c6ee8f061c",
+      "target": "1b17d2dff25c"
+    },
+    {
+      "direction": "east",
+      "source": "d24cefa7a84d",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "south",
+      "source": "69df16ab4aac",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "east",
+      "source": "8a4ba9f8e7b2",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "west",
+      "source": "8a4ba9f8e7b2",
+      "target": "4084515dd098"
+    },
+    {
+      "direction": "east",
+      "source": "4084515dd098",
+      "target": "8a4ba9f8e7b2"
     }
   ]
 }

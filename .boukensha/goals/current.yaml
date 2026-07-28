@@ -1,6 +1,7 @@
-current_goal: exits?
+current_goal: skip the chessboard as that is too high a level for you to fight. Go
+  back to the newbie area and go to each room to find some easy monsters to fight.
 hp_flee_threshold: 5
-last_updated: '2026-07-28T22:41:39.145766+00:00'
+last_updated: '2026-07-28T23:31:18.555205+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -14,8 +15,6 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Cannot explore due to repeated errors ('could not determine current room')
-  despite knowing potential exits (north/east/south/west). Need manual input or a
-  clear path forward.
+notes: Currently in 'The Temple Of Midgaard'. Fountain not located yet.
 priority: explore
 status: active
