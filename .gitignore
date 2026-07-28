@@ -44,3 +44,4 @@ graphify-out/
 # Claude Code local user overrides
 .claude/settings.local.json
 .claude/CLAUDE.local.md
+.worktrees/
