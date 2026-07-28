@@ -825,6 +825,106 @@ def test_agent_compact_if_needed_runs_before_loop():
     assert len(ctx.messages) < msg_count_before
 
 
+# ── Task 2: interrupt flag tests ──────────────────────────────────────────────
+
+import threading
+import pytest
+from boukensha.errors import InterruptRequested
+
+
+def test_agent_stops_when_interrupt_set_before_run():
+    """Agent should raise InterruptRequested on first iteration if flag is already set."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+
+    mock_builder = MagicMock()
+    mock_builder.parse_response.return_value = {
+        "stop_reason": "end_turn",
+        "content": [{"type": "text", "text": "Done"}],
+    }
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+    mock_client.call.return_value = {}
+
+    ctx.add_message("user", "hello")
+
+    flag = threading.Event()
+    flag.set()
+
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        interrupt_event=flag,
+    )
+    with pytest.raises(InterruptRequested):
+        agent.run()
+
+
+def test_agent_stops_when_interrupt_set_during_run():
+    """Agent should raise InterruptRequested at next iteration boundary after flag is set."""
+    from unittest.mock import MagicMock
+    from boukensha.agent import Agent
+    from boukensha.context import Context
+    from boukensha.registry import Registry
+    from boukensha.tasks.player import Player
+
+    ctx = Context(task=Player, system="sys")
+    registry = Registry(ctx)
+    registry.tool("noop", description="noop", parameters={}, block=lambda: "ok")
+
+    flag = threading.Event()
+
+    # First call returns tool_use (loop continues), second call sets the flag
+    # and returns another tool_use so the loop goes back to the top of while True
+    # where it checks the flag.
+    tool_response = {
+        "stop_reason": "tool_use",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "noop", "input": {}}],
+    }
+
+    call_count = 0
+    original_responses = [tool_response, tool_response]
+
+    mock_builder = MagicMock()
+    mock_builder.to_api_payload.return_value = {}
+    mock_builder.backend = None
+
+    mock_client = MagicMock()
+
+    def client_call_side_effect(**kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 2:
+            flag.set()
+        return {}
+
+    mock_client.call.side_effect = client_call_side_effect
+    mock_builder.parse_response.side_effect = original_responses
+
+    ctx.add_message("user", "go")
+
+    agent = Agent(
+        context=ctx,
+        registry=registry,
+        builder=mock_builder,
+        client=mock_client,
+        interrupt_event=flag,
+        max_iterations=25,
+    )
+    with pytest.raises(InterruptRequested):
+        agent.run()
+
+
 def test_agent_reasoning_blocks_logged():
     """Reasoning blocks in the response content are forwarded to logger.reasoning()."""
     import tempfile

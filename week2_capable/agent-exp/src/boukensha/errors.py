@@ -17,3 +17,7 @@ class ApiError(Exception):
 
 class LoopError(Exception):
     """Raised when the agent loop exceeds its iteration ceiling."""
+
+
+class InterruptRequested(Exception):
+    """Raised by Agent when the interrupt flag is set at an iteration boundary."""
