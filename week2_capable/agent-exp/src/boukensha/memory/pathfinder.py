@@ -46,6 +46,12 @@ class Pathfinder:
         route = self._route(start_hash, end_hash)
         return route.directions if route is not None else None
 
+    def route_to(self, start_hash: str, end_hash: str) -> Route | None:
+        """Like find_path, but also returns the expected node hash after
+        each step — needed by callers (navigate_to, explore) that verify the
+        room actually reached matches what the graph predicted."""
+        return self._route(start_hash, end_hash)
+
     def route_by_title(self, start_hash: str, title_fragment: str) -> Route | None:
         # Titles aren't unique (CircleMUD reuses e.g. "The Great Field Of
         # Midgaard" across several distinct rooms along a road), so a

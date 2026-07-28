@@ -387,6 +387,11 @@ class Mud:
 
         def _look_and_record(target: str | None, preposition: str | None) -> str:
             raw = _look(session, target, preposition)
+            # _look() can return a local validation/connection error (e.g.
+            # "error: not connected...") without ever reaching the MUD — that
+            # string must never be treated as room text.
+            if raw.startswith("error:"):
+                return raw
             # Only a bare "look" (the room itself) tells us who's here right
             # now — "look at X" / "look in X" describe something else.
             if not target and not preposition:
@@ -450,6 +455,15 @@ class Mud:
             if last_direction_ref is not None:
                 last_direction_ref[0] = direction
             raw = _move(session, direction)
+            # _move() can fail its own local validation (bad direction,
+            # not connected) and return an "error: ..." string without ever
+            # sending anything to the MUD. That string must never be parsed
+            # as room text — doing so previously created a phantom room
+            # node titled after the error message, wired into the map with
+            # a real edge, and silently moved the tracked player position
+            # onto it.
+            if raw.startswith("error:"):
+                return raw
             room = RoomParser.parse(raw)
             if room["title"]:
                 # Independent of map memory — combat tools need this even

@@ -61,3 +61,27 @@ def test_find_path_by_title_no_match_returns_none(tmp_path):
     g = _build_graph(tmp_path)
     p = Pathfinder(g)
     assert p.find_path_by_title("aaa", "Nonexistent") is None
+
+
+def test_route_to_includes_expected_node_sequence(tmp_path):
+    g = _build_graph(tmp_path)
+    p = Pathfinder(g)
+    route = p.route_to("aaa", "ccc")
+    assert route.directions == ["east"]
+    assert route.nodes == ["aaa", "ccc"]
+
+
+def test_route_to_same_room_has_empty_directions_and_single_node(tmp_path):
+    g = _build_graph(tmp_path)
+    p = Pathfinder(g)
+    route = p.route_to("aaa", "aaa")
+    assert route.directions == []
+    assert route.nodes == ["aaa"]
+
+
+def test_route_to_no_route_returns_none(tmp_path):
+    g = WorldGraph(tmp_path)
+    g.add_room("aaa", "Room A")
+    g.add_room("bbb", "Room B")
+    p = Pathfinder(g)
+    assert p.route_to("aaa", "bbb") is None

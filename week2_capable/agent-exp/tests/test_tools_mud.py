@@ -212,6 +212,23 @@ def test_look_at_target_does_not_refresh_known_npcs():
     assert "No living" not in result
 
 
+def test_look_when_not_connected_does_not_clear_known_npcs():
+    """_look() returns a local "error: not connected" string without ever
+    reaching the MUD when the session is closed — that must not be treated
+    as an (empty-npc) room observation and wipe out npcs seen earlier."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = False
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret",
+        current_npcs_ref=[["a creepy crawler"]],
+    )
+    result = registry.dispatch("look", {})
+    assert result.startswith("error:")
+    result2 = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "No living" not in result2
+
+
 def test_consider_refuses_unknown_target():
     registry = _make_registry()
     mock_session = MagicMock()
@@ -286,6 +303,53 @@ def test_move_rejects_invalid_direction():
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
     result = registry.dispatch("move", {"direction": "sideways"})
     assert result.startswith("error:")
+
+
+def test_move_rejects_invalid_direction_without_polluting_the_map(tmp_path):
+    """A bad direction is a local Python validation error — _move() returns
+    it without ever contacting the MUD. That error string must never be
+    parsed as room text: doing so previously created a phantom room node
+    titled after the error message, wired into the graph with a real edge
+    from wherever the agent actually was, and silently moved the tracked
+    player position onto it."""
+    from boukensha.memory.world_graph import WorldGraph
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "The Dump\n   A pile of refuse.\n[ Exits: n ]\n"
+    prev_hash_ref: list[str | None] = [None]
+    Mud._register_with_session(
+        registry,
+        mock_session,
+        name="Tester",
+        password="secret",
+        memory_dir=str(memory_dir),
+        world_graph=graph,
+        prev_hash_ref=prev_hash_ref,
+    )
+
+    # Establish a real current room first.
+    registry.dispatch("move", {"direction": "north"})
+    assert graph.graph.number_of_nodes() == 1
+
+    result = registry.dispatch("move", {"direction": "d"})
+
+    assert result.startswith("error:")
+    # No phantom room/edge from the rejected direction.
+    assert graph.graph.number_of_nodes() == 1
+    assert graph.graph.number_of_edges() == 0
+    titles = {a.get("title") for _, a in graph.graph.nodes(data=True)}
+    assert "The Dump" in titles
+    assert not any(t.lower().startswith("error:") for t in titles)
+    # The player tracker must still point at the real room, not the error.
+    tracker = PlayerTracker(memory_dir)
+    assert tracker.read_all()["Tester"]["title"] == "The Dump"
 
 
 def test_move_records_room_and_edge_in_world_graph(tmp_path):

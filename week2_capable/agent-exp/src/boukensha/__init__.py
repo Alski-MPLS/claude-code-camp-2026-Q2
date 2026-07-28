@@ -214,6 +214,13 @@ def run(
             world_graph=_shared_graph,
             character_name=_character_name,
         )
+        tools.Exploration.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            character_name=_character_name,
+        )
         tools.RoomProcessor.register(
             registry,
             session=_mud_session,
@@ -381,6 +388,13 @@ def repl(
         # Register token-saving tools that share the same session
         _character_name = resolved_mud.get("name")
         tools.Navigation.register(
+            registry,
+            session=_mud_session,
+            memory_dir=_memory_dir,
+            world_graph=_shared_graph,
+            character_name=_character_name,
+        )
+        tools.Exploration.register(
             registry,
             session=_mud_session,
             memory_dir=_memory_dir,
