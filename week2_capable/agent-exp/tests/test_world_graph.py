@@ -75,3 +75,39 @@ def test_add_edge_does_not_overwrite_observed_reverse_edge(tmp_path):
     # Now A -> B north is recorded (e.g. approached from a different room).
     g.add_edge("a", "b", "north")
     assert g.get_neighbors("b").get("south") == "c"
+
+
+def test_add_edge_skips_reverse_fill_when_destination_exits_dont_include_it(tmp_path):
+    """The exact bug reported live: walking south from the Bakery into the
+    General Store got an inferred 'north back to the Bakery' edge, but the
+    General Store's own real recorded exits never included north — the
+    passage is one-way. When the destination's real exits are known, never
+    fabricate a reverse edge that contradicts them."""
+    g = WorldGraph(tmp_path)
+    g.add_room("bakery", "The Bakery")
+    g.add_room("store", "The General Store")
+    g.add_edge("bakery", "store", "south", to_room_exits={"south"})
+    assert g.get_neighbors("store").get("north") is None
+
+
+def test_add_edge_still_fills_reverse_when_destination_exits_include_it(tmp_path):
+    """When we do know the destination's real exits and the reverse
+    direction IS among them, the fill-in should still happen — the
+    correctness check should only ever prevent wrong inferences, not
+    disable the feature entirely."""
+    g = WorldGraph(tmp_path)
+    g.add_room("a", "Room A")
+    g.add_room("b", "Room B")
+    g.add_edge("a", "b", "north", to_room_exits={"north", "south"})
+    assert g.get_neighbors("b").get("south") == "a"
+
+
+def test_add_edge_fills_reverse_when_destination_exits_unknown(tmp_path):
+    """Callers that don't yet have the destination's real exits data
+    (to_room_exits=None, the default) keep the old best-effort behavior —
+    the correctness check only applies once we actually have ground truth."""
+    g = WorldGraph(tmp_path)
+    g.add_room("a", "Room A")
+    g.add_room("b", "Room B")
+    g.add_edge("a", "b", "north")
+    assert g.get_neighbors("b").get("south") == "a"

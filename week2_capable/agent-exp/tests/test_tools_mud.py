@@ -366,8 +366,8 @@ def test_move_records_room_and_edge_in_world_graph(tmp_path):
     mock_session.is_open = True
     mock_session.drain.return_value = ""
     mock_session.read_until_prompt.side_effect = [
-        "The Temple Square\n   A large open square.\nExits: north, east\n",
-        "Main Street\n   The main street of town.\nExits: south\n",
+        "The Temple Square\n   A large open square.\n[ Exits: n e ]\n",
+        "Main Street\n   The main street of town.\n[ Exits: n s ]\n",
     ]
     prev_hash_ref: list[str | None] = [None]
     Mud._register_with_session(

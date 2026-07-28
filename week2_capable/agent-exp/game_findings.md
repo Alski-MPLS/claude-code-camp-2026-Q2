@@ -19,6 +19,22 @@ landed).
 
 ## Implemented
 
+- **Some passages are one-way.** Found live: walking south from The Bakery
+  into The General Store got an auto-inferred "north back to the Bakery"
+  edge (the assumed-bidirectional heuristic added earlier), but the General
+  Store's own real recorded `look` exits only ever showed `south` — no
+  `north`. The connection only works one direction. `WorldGraph.add_edge`
+  now takes an optional `to_room_exits` set (the destination room's real,
+  actually-observed exits); when provided, it refuses to fabricate a reverse
+  edge that isn't among them, instead of blindly assuming bidirectionality.
+  All call sites that have just parsed/looked-up the destination room now
+  pass this through: `tools/_walk.py` (`walk_route`, via `RoomMemory`),
+  `tools/mud.py` (`_move_and_record`), `tools/room_processor.py`
+  (`_process_room`), `tools/exploration.py` (`_explore`). Tests:
+  `tests/test_world_graph.py::test_add_edge_skips_reverse_fill_when_destination_exits_dont_include_it`
+  and the two tests immediately after it (still-fills-when-included,
+  fills-when-unknown).
+
 - **Dark rooms require a light source.** The MUD's dark-room response is
   literally just `"It is pitch black..."` — no title, description, or exits —
   whether peeked at or stood in. `explore()` now peeks with `look <direction>`

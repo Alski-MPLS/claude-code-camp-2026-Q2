@@ -50,7 +50,9 @@ class RoomProcessor:
 
             # Link from previous room if the 'move' tool recorded which direction got us here.
             if _prev[0] and _prev[0] != h and last_direction_ref is not None and last_direction_ref[0]:
-                graph.add_edge(_prev[0], h, last_direction_ref[0])
+                graph.add_edge(
+                    _prev[0], h, last_direction_ref[0], to_room_exits=set(room.get("exits") or {})
+                )
             if last_direction_ref is not None:
                 last_direction_ref[0] = None
 

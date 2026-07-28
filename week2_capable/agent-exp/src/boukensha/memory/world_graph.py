@@ -29,7 +29,14 @@ class WorldGraph:
         if room_hash not in self._g:
             self._g.add_node(room_hash, title=title)
 
-    def add_edge(self, from_hash: str, to_hash: str, direction: str) -> None:
+    def add_edge(
+        self,
+        from_hash: str,
+        to_hash: str,
+        direction: str,
+        *,
+        to_room_exits: set[str] | None = None,
+    ) -> None:
         self._g.add_edge(from_hash, to_hash, direction=direction)
         # Edges are only ever recorded in the direction actually walked, but
         # CircleMUD exits are almost always bidirectional. Without this, a
@@ -44,8 +51,17 @@ class WorldGraph:
         if not opposite:
             return
         existing_directions = {data.get("direction") for _, data in self._g[to_hash].items()}
-        if opposite not in existing_directions:
-            self._g.add_edge(to_hash, from_hash, direction=opposite)
+        if opposite in existing_directions:
+            return
+        # If we already know the destination room's real recorded exits (it's
+        # been visited and looked at), never fabricate a return path that
+        # isn't actually among them — some passages are genuinely one-way,
+        # and inferring a wrong reverse edge just recreates the same class
+        # of "map doesn't match reality" bug in a new place. Only fall back
+        # to the optimistic assumption when we have no ground truth yet.
+        if to_room_exits is not None and opposite not in to_room_exits:
+            return
+        self._g.add_edge(to_hash, from_hash, direction=opposite)
 
     def get_neighbors(self, room_hash: str) -> dict[str, str]:
         if room_hash not in self._g:

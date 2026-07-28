@@ -64,7 +64,7 @@ class Navigation:
             if not path:
                 return f"Already at '{destination}'."
             outcome = walk_route(
-                session=session, graph=graph, current_room_hash=_current_room_hash, route=route
+                session=session, graph=graph, mem=mem, current_room_hash=_current_room_hash, route=route
             )
             graph.save()
             if outcome.status != "arrived":

@@ -473,7 +473,7 @@ class Mud:
                     h, _diff = mem.record(room)
                     graph.add_room(h, room["title"])
                     if _prev[0] and _prev[0] != h:
-                        graph.add_edge(_prev[0], h, direction)
+                        graph.add_edge(_prev[0], h, direction, to_room_exits=set(room.get("exits") or {}))
                     _prev[0] = h
                     graph.save()
                     if last_direction_ref is not None:

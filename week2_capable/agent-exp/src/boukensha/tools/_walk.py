@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from boukensha.memory.pathfinder import Route
+from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.world_graph import WorldGraph
 
 
@@ -27,9 +28,14 @@ def walk_route(
     *,
     session: Any,
     graph: WorldGraph,
+    mem: RoomMemory,
     current_room_hash: Callable[[], str | None],
     route: Route,
 ) -> WalkOutcome:
+    def _real_exits(room_hash: str) -> set[str] | None:
+        room = mem.get(room_hash)
+        return set(room.get("exits") or {}) if room else None
+
     current_hash = route.nodes[0]
     taken: list[str] = []
     total = len(route.directions)
@@ -66,7 +72,7 @@ def walk_route(
             # The room changed, but not to the room the graph expected for
             # this step — record the edge we actually just observed (ground
             # truth) so the graph self-heals for next time.
-            graph.add_edge(current_hash, new_hash, direction)
+            graph.add_edge(current_hash, new_hash, direction, to_room_exits=_real_exits(new_hash))
             return WalkOutcome(
                 status="drifted",
                 taken=taken,
@@ -79,7 +85,7 @@ def walk_route(
                     f"actually are."
                 ),
             )
-        graph.add_edge(current_hash, new_hash, direction)
+        graph.add_edge(current_hash, new_hash, direction, to_room_exits=_real_exits(new_hash))
         current_hash = new_hash
         taken.append(direction)
     return WalkOutcome(status="arrived", taken=taken, final_hash=current_hash)

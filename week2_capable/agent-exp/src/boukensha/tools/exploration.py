@@ -46,6 +46,10 @@ class Exploration:
         blocked = BlockedExits(memory_dir)
         tracker = PlayerTracker(memory_dir)
 
+        def _real_exits(room_hash: str) -> set[str] | None:
+            room = mem.get(room_hash)
+            return set(room.get("exits") or {}) if room else None
+
         def _current_room_hash() -> str | None:
             """Send 'look' and return the hash of the current room."""
             session.drain()
@@ -103,7 +107,7 @@ class Exploration:
             approach = ""
             if route.directions:
                 outcome = walk_route(
-                    session=session, graph=graph, current_room_hash=_current_room_hash, route=route
+                    session=session, graph=graph, mem=mem, current_room_hash=_current_room_hash, route=route
                 )
                 if outcome.status != "arrived":
                     graph.save()
@@ -152,7 +156,7 @@ class Exploration:
             new_hash = _current_room_hash()
 
             if new_hash is not None and new_hash != before_hash:
-                graph.add_edge(before_hash, new_hash, direction)
+                graph.add_edge(before_hash, new_hash, direction, to_room_exits=_real_exits(new_hash))
                 graph.save()
                 new_title = graph.graph.nodes[new_hash].get("title", "?")
                 return f"{approach}Explored {direction}: discovered '{new_title}'."
@@ -171,7 +175,7 @@ class Exploration:
             retried_hash = _current_room_hash()
 
             if retried_hash is not None and retried_hash != before_hash:
-                graph.add_edge(before_hash, retried_hash, direction)
+                graph.add_edge(before_hash, retried_hash, direction, to_room_exits=_real_exits(retried_hash))
                 graph.save()
                 new_title = graph.graph.nodes[retried_hash].get("title", "?")
                 return f"{approach}Exit {direction} was closed; opened it and discovered '{new_title}'."
