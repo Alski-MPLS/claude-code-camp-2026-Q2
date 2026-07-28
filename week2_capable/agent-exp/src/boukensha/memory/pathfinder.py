@@ -30,9 +30,21 @@ class Pathfinder:
     def find_path_by_title(
         self, start_hash: str, title_fragment: str
     ) -> list[str] | None:
+        # Titles aren't unique (CircleMUD reuses e.g. "The Great Field Of
+        # Midgaard" across several distinct rooms along a road), so a
+        # fragment can match multiple nodes. Picking the first match in
+        # graph-iteration order can send the player to an arbitrary, possibly
+        # far-away room instead of the one actually reachable/intended.
+        # Evaluate every match and take the shortest real path.
         g = self._graph.graph
         fragment_lower = title_fragment.lower()
+        best_path: list[str] | None = None
         for node, attrs in g.nodes(data=True):
-            if fragment_lower in (attrs.get("title") or "").lower():
-                return self.find_path(start_hash, node)
-        return None
+            if fragment_lower not in (attrs.get("title") or "").lower():
+                continue
+            path = self.find_path(start_hash, node)
+            if path is None:
+                continue
+            if best_path is None or len(path) < len(best_path):
+                best_path = path
+        return best_path

@@ -62,14 +62,35 @@ class Navigation:
             if not path:
                 return f"Already at '{destination}'."
             current_hash = start_hash
+            taken: list[str] = []
             for direction in path:
                 session.drain()
                 session.send_command(direction)
                 session.read_until_prompt()
                 new_hash = _current_room_hash()
-                if new_hash and new_hash != current_hash:
-                    graph.add_edge(current_hash, new_hash, direction)
-                    current_hash = new_hash
+                if new_hash is None:
+                    graph.save()
+                    return (
+                        f"Move interrupted after {len(taken)}/{len(path)} moves "
+                        f"({' → '.join(taken) or 'none'}): could not determine "
+                        f"current room after moving {direction}."
+                    )
+                if new_hash == current_hash:
+                    # The move didn't change rooms (closed door, blocked exit,
+                    # mob in the way, etc). Continuing down the precomputed
+                    # path from here would walk it from the wrong room —
+                    # abort so the caller can look around and retry instead
+                    # of wandering off in an unintended direction.
+                    graph.save()
+                    return (
+                        f"Move interrupted after {len(taken)}/{len(path)} moves "
+                        f"({' → '.join(taken) or 'none'}): moving {direction} "
+                        f"didn't leave the current room (blocked exit?). "
+                        f"Check what's blocking it and retry navigate_to."
+                    )
+                graph.add_edge(current_hash, new_hash, direction)
+                current_hash = new_hash
+                taken.append(direction)
             graph.save()
             return f"Arrived at destination after {len(path)} moves: {' → '.join(path)}"
 

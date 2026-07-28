@@ -114,6 +114,30 @@
     {
       "title": "The Midgaard Donation Room",
       "id": "c70a48f67c1f"
+    },
+    {
+      "title": "16H 100M 80V (news) (motd) >",
+      "id": "be49b4b6a0e1"
+    },
+    {
+      "title": "19H 100M 85V (news) (motd) >",
+      "id": "831b5b906686"
+    },
+    {
+      "title": "22H 100M 86V (news) (motd) >",
+      "id": "9de7cb122b4f"
+    },
+    {
+      "title": "25H 100M 87V (news) (motd) >",
+      "id": "c6bae72a6b78"
+    },
+    {
+      "title": "Another Corner",
+      "id": "9a2e0d053ec1"
+    },
+    {
+      "title": "A Brighter Hallway",
+      "id": "d480fb26c4c8"
     }
   ],
   "edges": [
@@ -279,13 +303,43 @@
     },
     {
       "direction": "north",
+      "source": "2e16758d7041",
+      "target": "be49b4b6a0e1"
+    },
+    {
+      "direction": "east",
+      "source": "2e16758d7041",
+      "target": "9de7cb122b4f"
+    },
+    {
+      "direction": "west",
+      "source": "2e16758d7041",
+      "target": "c6bae72a6b78"
+    },
+    {
+      "direction": "north",
       "source": "23a3a86f6fed",
       "target": "2dd01a6ff88e"
+    },
+    {
+      "direction": "west",
+      "source": "23a3a86f6fed",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "north",
+      "source": "23a3a86f6fed",
+      "target": "113bd65b27a4"
     },
     {
       "direction": "east",
       "source": "2dd01a6ff88e",
       "target": "113bd65b27a4"
+    },
+    {
+      "direction": "south",
+      "source": "2dd01a6ff88e",
+      "target": "23a3a86f6fed"
     },
     {
       "direction": "east",
@@ -296,6 +350,11 @@
       "direction": "east",
       "source": "113bd65b27a4",
       "target": "c70a48f67c1f"
+    },
+    {
+      "direction": "west",
+      "source": "113bd65b27a4",
+      "target": "2dd01a6ff88e"
     },
     {
       "direction": "south",
@@ -313,9 +372,44 @@
       "target": "57d37dcd93ba"
     },
     {
+      "direction": "south",
+      "source": "d875e614ed9a",
+      "target": "9a2e0d053ec1"
+    },
+    {
       "direction": "west",
       "source": "c70a48f67c1f",
       "target": "bad80c25f808"
+    },
+    {
+      "direction": "south",
+      "source": "831b5b906686",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "south",
+      "source": "9de7cb122b4f",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "east",
+      "source": "c6bae72a6b78",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "west",
+      "source": "9a2e0d053ec1",
+      "target": "d480fb26c4c8"
+    },
+    {
+      "direction": "north",
+      "source": "9a2e0d053ec1",
+      "target": "d875e614ed9a"
+    },
+    {
+      "direction": "east",
+      "source": "d480fb26c4c8",
+      "target": "9a2e0d053ec1"
     }
   ]
 }

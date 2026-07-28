@@ -1,6 +1,7 @@
-current_goal: Find the bakery
-hp_flee_threshold: 1
-last_updated: '2026-07-27T22:03:53.351593+00:00'
+current_goal: 'Reach newbie zone, fight simple monsters for gold, and then locate
+  a weapon shop with ''sword'' in its name. Target cumulative gold: 30-40.'
+hp_flee_threshold: 5
+last_updated: '2026-07-28T21:48:23.941603+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -14,6 +15,6 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Successfully located the target bakery in Midgaard.
-priority: completed
-status: completed
+notes: 'Starting phase: Travel to Newbie Zone.'
+priority: explore
+status: active
