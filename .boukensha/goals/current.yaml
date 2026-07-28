@@ -1,7 +1,6 @@
-current_goal: Go find the bakery in the town. It's south of the field and south of
-  the temple.
+current_goal: exits?
 hp_flee_threshold: 5
-last_updated: '2026-07-28T22:18:44.127466+00:00'
+last_updated: '2026-07-28T22:41:39.145766+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -15,10 +14,8 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Repeated attempts to navigate directly to 'bakery' have failed due to blocked
-  exit errors (e.g., "blocked exit?"). Manual exploration within known linked areas
-  (Dirty Hallway) did not reveal any path or direct movement towards a location named
-  'bakery'. I am pausing until more information is available regarding the physical
-  state of the environment or map changes.
-priority: paused
+notes: Cannot explore due to repeated errors ('could not determine current room')
+  despite knowing potential exits (north/east/south/west). Need manual input or a
+  clear path forward.
+priority: explore
 status: active
