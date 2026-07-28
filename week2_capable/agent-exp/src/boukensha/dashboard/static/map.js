@@ -202,6 +202,22 @@ function renderPlayers(players) {
         .text(p.name);
     });
   }
+
+  // Draw movement arrows from previous room to current room
+  for (const p of players) {
+    if (!p.prev_room_hash || p.prev_room_hash === p.room_hash) continue;
+    const fromNode = nodeById.get(p.prev_room_hash);
+    const toNode = nodeById.get(p.room_hash);
+    if (!fromNode || !toNode) continue;
+
+    playersLayer.append('line')
+      .attr('x1', fromNode.x).attr('y1', fromNode.y)
+      .attr('x2', toNode.x).attr('y2', toNode.y)
+      .attr('stroke', '#ffd23f')
+      .attr('stroke-width', 2.5)
+      .attr('marker-end', 'url(#arrow-head)')
+      .attr('opacity', 0.8);
+  }
 }
 
 async function refreshTick() {
@@ -337,6 +353,13 @@ window.loadMap = async function loadMap() {
   const panY = height / 2 - cy * scale;
 
   const g = svg.append('g');
+
+  svg.append('defs').html(`
+  <marker id="arrow-head" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#ffd23f" />
+  </marker>
+`);
+
   currentZoomTransform = d3.zoomIdentity.translate(panX, panY).scale(scale);
   g.attr('transform', currentZoomTransform);
 
