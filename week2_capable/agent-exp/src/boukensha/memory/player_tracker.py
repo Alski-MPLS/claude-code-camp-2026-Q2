@@ -16,10 +16,13 @@ class PlayerTracker:
 
     def update(self, name: str, room_hash: str, title: str) -> None:
         data = self.read_all()
+        existing = data.get(name, {})
+        prev = existing.get("room_hash")
         data[name] = {
             "room_hash": room_hash,
             "title": title,
             "updated_at": datetime.now(timezone.utc).isoformat(),
+            "prev_room_hash": prev if prev and prev != room_hash else existing.get("prev_room_hash"),
         }
         self._write(data)
 

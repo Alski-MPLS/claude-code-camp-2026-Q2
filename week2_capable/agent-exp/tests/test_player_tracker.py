@@ -37,3 +37,29 @@ def test_persists_across_instances(tmp_path):
     PlayerTracker(tmp_path).update("Hero", "abc123", "Temple Square")
     reloaded = PlayerTracker(tmp_path).read_all()
     assert reloaded["Hero"]["room_hash"] == "abc123"
+
+
+def test_prev_room_hash_set_on_room_change(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Aria", "room_a", "Entry Hall")
+    tracker.update("Aria", "room_b", "Dark Corridor")
+    data = tracker.read_all()
+    assert data["Aria"]["room_hash"] == "room_b"
+    assert data["Aria"]["prev_room_hash"] == "room_a"
+
+
+def test_prev_room_hash_none_on_first_update(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Aria", "room_a", "Entry Hall")
+    data = tracker.read_all()
+    assert data["Aria"]["prev_room_hash"] is None
+
+
+def test_prev_room_hash_unchanged_when_room_same(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Aria", "room_a", "Entry Hall")
+    tracker.update("Aria", "room_b", "Dark Corridor")
+    tracker.update("Aria", "room_b", "Dark Corridor")  # same room again
+    data = tracker.read_all()
+    # prev_room_hash should still be room_a (last real move), not room_b
+    assert data["Aria"]["prev_room_hash"] == "room_a"
