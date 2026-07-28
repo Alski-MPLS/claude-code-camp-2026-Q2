@@ -136,6 +136,66 @@ def test_navigate_to_aborts_when_a_move_is_blocked(tmp_path):
     assert "east" not in sent
 
 
+def test_navigate_to_finds_landmark_mentioned_inside_a_room(tmp_path):
+    """A destination like "the fountain" is usually a feature inside a
+    room's description/items, not a room title. When no title matches,
+    navigate_to must fall back to searching room contents and route to
+    whichever room actually mentions it."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    start_raw = "Main Street\n   A street.\n[ Exits: n ]\n"
+    square_raw = (
+        "The Temple Square\n   You are standing on the temple square.\n"
+        "[ Exits: s ]\n"
+        "A large fountain carved from blue-streaked marble is here, bubbling merrily.\n"
+    )
+    start_room = RoomParser.parse(start_raw)
+    square_room = RoomParser.parse(square_raw)
+    start_hash, _ = mem.record(start_room)
+    square_hash, _ = mem.record(square_room)
+    assert "fountain" in square_room["items"][0].lower()
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(start_hash, "Main Street")
+    graph.add_room(square_hash, "The Temple Square")
+    graph.add_edge(start_hash, square_hash, "north")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.side_effect = [start_raw, "You go north.\n", square_raw]
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "fountain"})
+
+    assert "temple square" in result.lower()
+    assert "1 moves" in result
+    sent = [c.args[0] for c in session.send_command.call_args_list]
+    assert sent == ["look", "north", "look"]
+
+
+def test_navigate_to_still_prefers_a_title_match_over_landmark_search(tmp_path):
+    """A room title match must win outright — the landmark fallback should
+    only ever kick in when no title matches at all."""
+    from boukensha.memory.pathfinder import Pathfinder
+
+    g = WorldGraph(tmp_path)
+    g.add_room("aaa", "Room A")
+    g.add_room("bbb", "The Fountain Room")
+    g.add_edge("aaa", "bbb", "north")
+    p = Pathfinder(g)
+    assert p.route_by_title("aaa", "fountain") is not None
+
+
 def test_navigate_to_aborts_when_a_move_lands_in_an_unexpected_room(tmp_path):
     """A move can succeed (the room really does change) while still not
     matching what the graph predicted for that step — a stale/incorrect

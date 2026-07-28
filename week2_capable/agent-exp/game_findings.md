@@ -19,6 +19,23 @@ landed).
 
 ## Implemented
 
+- **Landmarks (fountains, wells, statues, etc.) live inside a room's
+  description/items, not as their own room title.** Found live: asked to
+  "go to the fountain and drink," the agent walked past The Temple Square
+  (which really does have "A large fountain carved from blue-streaked
+  marble is here, bubbling merrily." in its parsed items) because
+  `navigate_to` only ever matched room *titles*, and the agent had no
+  reliable way to recall which room it was in besides whatever was still in
+  its context window. `navigate_to` now falls back to searching every known
+  room's description/items/npcs for the fragment when no title matches, and
+  reports which room it found it in (e.g. "Arrived at 'fountain' (found in
+  'The Temple Square')..."). The actual `drink` action itself already
+  worked fine (`consume_item(mode="drink", target=...)` — the MUD resolves
+  the target itself) — this was purely a wayfinding gap. See
+  `tools/navigation.py` (`_route_by_landmark`). Tests:
+  `tests/test_navigation_tool.py::test_navigate_to_finds_landmark_mentioned_inside_a_room`,
+  `tests/test_navigation_tool.py::test_navigate_to_still_prefers_a_title_match_over_landmark_search`.
+
 - **Some passages are one-way.** Found live: walking south from The Bakery
   into The General Store got an auto-inferred "north back to the Bakery"
   edge (the assumed-bidirectional heuristic added earlier), but the General
