@@ -32,7 +32,28 @@
   </section>
 
   <section id="tab-waterfall" class="tab-pane">
-    <div id="waterfall-container"></div>
+    <div id="waterfall-split">
+      <div id="waterfall-container"></div>
+      <div id="waterfall-detail" hidden>
+        <div id="waterfall-detail-title"></div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Timing</div>
+          <div id="wf-timing"></div>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Tokens</div>
+          <div id="wf-tokens"></div>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Tool Args</div>
+          <pre id="wf-args"></pre>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">MUD Response</div>
+          <pre id="wf-result"></pre>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="tab-goals" class="tab-pane">

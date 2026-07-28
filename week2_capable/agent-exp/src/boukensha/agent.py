@@ -5,6 +5,7 @@ done or an iteration/token ceiling is reached.
 from __future__ import annotations
 
 import json
+import threading
 from typing import TYPE_CHECKING, Any
 
 import boukensha
@@ -47,6 +48,7 @@ class Agent:
         max_iterations: int | None = None,
         max_turn_tokens: int | None = None,
         max_output_tokens: int | None = None,
+        interrupt_event: threading.Event | None = None,
     ) -> None:
         self._context = context
         self._registry = registry
@@ -66,12 +68,19 @@ class Agent:
         self._last_result_key: str | None = None
         self._same_result_streak = 0
         self._stuck = False
+        self._interrupt_event = interrupt_event
 
     def run(self) -> str:
         self._context.reset_turn_tokens()
         self._compact_if_needed()
 
         while True:
+            if self._interrupt_event and self._interrupt_event.is_set():
+                if self._context.messages and self._context.messages[-1].role != "assistant":
+                    self._context.add_message("assistant", "[turn interrupted by user]")
+                from .errors import InterruptRequested
+                raise InterruptRequested()
+
             if self._iteration_limit_reached():
                 if self._logger:
                     self._logger.limit_reached(

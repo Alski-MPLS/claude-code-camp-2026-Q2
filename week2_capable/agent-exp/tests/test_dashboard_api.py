@@ -57,6 +57,7 @@ def test_api_players_returns_tracked_positions(tmp_path):
                 "room_hash": "abc123",
                 "title": "Temple Square",
                 "updated_at": data[0]["updated_at"],
+                "prev_room_hash": None,
             }
         ]
 

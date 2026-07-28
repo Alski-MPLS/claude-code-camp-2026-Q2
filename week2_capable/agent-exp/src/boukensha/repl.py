@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import sys
+import threading
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import boukensha
 from .agent import Agent
-from .errors import ApiError
+from .errors import ApiError, InterruptRequested
 
 if TYPE_CHECKING:
     from .context import Context
@@ -81,6 +82,13 @@ class Repl:
         self._max_auto_continues = self._resolve_max_auto_continues(max_auto_continues)
         self._turn = 0
         self._output_cb: Callable[[str], None] | None = None
+        self._interrupt_requested = threading.Event()
+
+    def request_interrupt(self) -> None:
+        self._interrupt_requested.set()
+
+    def clear_interrupt(self) -> None:
+        self._interrupt_requested.clear()
 
     # ── public properties ──────────────────────────────────────────────────
 
@@ -182,6 +190,7 @@ class Repl:
             max_iterations=self._max_iterations,
             max_turn_tokens=self._max_turn_tokens,
             max_output_tokens=self._max_output_tokens,
+            interrupt_event=self._interrupt_requested,
         )
         try:
             result = agent.run()
@@ -190,11 +199,14 @@ class Repl:
         except ApiError as e:
             self._output(f"\n[error] API call failed: {e}")
             return
+        except InterruptRequested:
+            return
 
         if (
             agent.last_stop_reason == "max_iterations"
             and _auto_continue_count < self._max_auto_continues
             and self._goal_is_active()
+            and not self._interrupt_requested.is_set()
         ):
             self._output(
                 f"\n[auto-continuing — {_auto_continue_count + 1}/{self._max_auto_continues}]"

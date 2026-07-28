@@ -87,6 +87,7 @@ class Tui(App):
         self._spinner_idx = 0
         self._future: Future | None = None
         self._app_thread: threading.Thread | None = None
+        self._pause_mode = False
 
     # ── layout ────────────────────────────────────────────────────────────
 
@@ -116,6 +117,10 @@ class Tui(App):
         if not text:
             return
 
+        if self._pause_mode:
+            self._handle_pause_response(text)
+            return
+
         result = self._repl.handle_command(text)
         if result == "quit":
             self.exit()
@@ -139,8 +144,10 @@ class Tui(App):
         self._turn_count = 0
 
     def action_interrupt_turn(self) -> None:
-        if self._future and not self._future.done():
-            self._future.cancel()
+        if self._live.get("active"):
+            self._repl.request_interrupt()
+            log = self.query_one("#log", RichLog)
+            log.write("[interrupt requested — stopping at the next step…]")
 
     def action_scroll_up(self) -> None:
         self.query_one("#log", RichLog).scroll_up(5)
@@ -213,9 +220,42 @@ class Tui(App):
         self.query_one("#log", RichLog).write(text)
 
     def _on_turn_complete(self) -> None:
+        if self._repl._interrupt_requested.is_set():
+            self._enter_pause_mode()
+            return
         self.query_one("#input", Input).disabled = False
         self._live = self._idle_state()
         self._turn_count += 1
+
+    def _enter_pause_mode(self) -> None:
+        self._pause_mode = True
+        self._live = self._idle_state()
+        inp = self.query_one("#input", Input)
+        inp.disabled = False
+        inp.placeholder = "c=continue  s=stop  or type new instructions…"
+        log = self.query_one("#log", RichLog)
+        log.write("[paused — c=continue  s=stop  or type new instructions]")
+        inp.focus()
+
+    def _handle_pause_response(self, text: str) -> None:
+        self._pause_mode = False
+        self._repl.clear_interrupt()
+        inp = self.query_one("#input", Input)
+        inp.placeholder = "Type a message…"
+
+        if text.lower() in ("c", "continue"):
+            from .repl import AUTO_CONTINUE_DIRECTIVE
+            log = self.query_one("#log", RichLog)
+            log.write("> (continuing…)")
+            self._launch_turn(AUTO_CONTINUE_DIRECTIVE)
+        elif text.lower() in ("s", "stop") or text.startswith("/"):
+            log = self.query_one("#log", RichLog)
+            log.write("[stopped]")
+            self._turn_count += 1
+        else:
+            log = self.query_one("#log", RichLog)
+            log.write(f"> {text}")
+            self._launch_turn(text)
 
     def _on_turn_error(self, message: str) -> None:
         self.query_one("#input", Input).disabled = False
