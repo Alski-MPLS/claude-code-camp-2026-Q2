@@ -16,10 +16,11 @@ from typing import TYPE_CHECKING, Any
 
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.room_memory import RoomMemory
-from boukensha.memory.world_graph import WorldGraph
+from boukensha.memory.world_graph import WorldGraph, OPPOSITE_DIRECTION
 from boukensha.memory.pathfinder import Pathfinder, Route
 from boukensha.memory.player_tracker import PlayerTracker
 from boukensha.memory.blocked_exits import BlockedExits
+from boukensha.memory.darkness import DARK_ROOM_REASON, is_dark_room
 from ._walk import walk_route
 
 if TYPE_CHECKING:
@@ -110,9 +111,44 @@ class Exploration:
                 approach = f"Walked {len(route.directions)} move(s) to the frontier room. "
 
             before_hash = frontier_hash
+
+            def _retreat_from_darkness() -> None:
+                # Best-effort: step back out the way we came so the
+                # character isn't left standing somewhere it can't see.
+                opposite = OPPOSITE_DIRECTION.get(direction)
+                if opposite:
+                    session.drain()
+                    session.send_command(opposite)
+                    session.read_until_prompt()
+
+            def _mark_dark_and_report() -> str:
+                blocked.mark_blocked(before_hash, direction, reason=DARK_ROOM_REASON)
+                graph.save()
+                return (
+                    f"{approach}Exit {direction} leads into darkness — marked "
+                    f"it blocked until a light source is available. Call "
+                    f"explore again to try the next unexplored exit."
+                )
+
+            # Peek before committing to the move at all, where the game
+            # supports it — avoids ever walking blind into a dark room.
+            session.drain()
+            session.send_command(f"look {direction}")
+            peek_raw = session.read_until_prompt()
+            if is_dark_room(peek_raw):
+                return _mark_dark_and_report()
+
             session.drain()
             session.send_command(direction)
-            session.read_until_prompt()
+            move_raw = session.read_until_prompt()
+            if is_dark_room(move_raw):
+                # The peek didn't catch it (e.g. through a closed door) —
+                # we're actually standing in the dark now. Retreat rather
+                # than leave the character somewhere it can't see to fight
+                # or find its way out.
+                _retreat_from_darkness()
+                return _mark_dark_and_report()
+
             new_hash = _current_room_hash()
 
             if new_hash is not None and new_hash != before_hash:
@@ -128,7 +164,10 @@ class Exploration:
             session.read_until_prompt()
             session.drain()
             session.send_command(direction)
-            session.read_until_prompt()
+            retry_raw = session.read_until_prompt()
+            if is_dark_room(retry_raw):
+                _retreat_from_darkness()
+                return _mark_dark_and_report()
             retried_hash = _current_room_hash()
 
             if retried_hash is not None and retried_hash != before_hash:
@@ -151,7 +190,9 @@ class Exploration:
             description=(
                 "Find the nearest room with a known-but-unwalked exit and go "
                 "investigate it — no need to specify a destination. Skips "
-                "exits already confirmed to be locked/blocked. Use this "
+                "exits already confirmed to be locked/blocked, and refuses "
+                "to walk into a dark room (marks it blocked instead) rather "
+                "than risk getting stuck somewhere it can't see. Use this "
                 "whenever asked to explore, map the area, or find something "
                 "whose location isn't known yet. Call repeatedly to keep "
                 "expanding the map outward."

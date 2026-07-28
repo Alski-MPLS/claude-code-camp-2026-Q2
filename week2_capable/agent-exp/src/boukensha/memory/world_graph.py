@@ -8,7 +8,7 @@ from pathlib import Path
 
 import networkx as nx
 
-_OPPOSITE_DIRECTION = {
+OPPOSITE_DIRECTION = {
     "north": "south",
     "south": "north",
     "east": "west",
@@ -40,7 +40,7 @@ class WorldGraph:
         # already claimed by a real observed edge — a room can only have one
         # exit per direction, so an existing one there (even to some other
         # room, e.g. a one-way passage) means the assumption doesn't apply.
-        opposite = _OPPOSITE_DIRECTION.get(direction)
+        opposite = OPPOSITE_DIRECTION.get(direction)
         if not opposite:
             return
         existing_directions = {data.get("direction") for _, data in self._g[to_hash].items()}

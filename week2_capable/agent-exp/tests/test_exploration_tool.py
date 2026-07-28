@@ -33,6 +33,7 @@ def test_explore_discovers_new_room_via_unwalked_exit(tmp_path):
     registry = _make_registry()
     session = _make_session(
         "Room A\n   Desc A.\n[ Exits: n ]\n",
+        "You see a corridor leading north.\n",  # peek
         "You go north.\n",
         "Room B\n   Desc B.\n[ Exits: s ]\n",
     )
@@ -42,7 +43,7 @@ def test_explore_discovers_new_room_via_unwalked_exit(tmp_path):
 
     assert "discovered 'room b'" in result.lower()
     sent = [c.args[0] for c in session.send_command.call_args_list]
-    assert sent == ["look", "north", "look"]
+    assert sent == ["look", "look north", "north", "look"]
 
 
 def test_explore_skips_already_blocked_exit(tmp_path):
@@ -63,6 +64,7 @@ def test_explore_skips_already_blocked_exit(tmp_path):
     registry = _make_registry()
     session = _make_session(
         raw,
+        "You see a room to the east.\n",  # peek
         "You go east.\n",
         "Room C\n   Desc C.\n[ Exits: w ]\n",
     )
@@ -85,6 +87,7 @@ def test_explore_opens_closed_door_and_retries(tmp_path):
     room_a = "Room A\n   Desc A.\n[ Exits: s ]\n"
     session = _make_session(
         room_a,               # initial look
+        "You cannot see through the closed door.\n",  # peek south
         "The door is closed.\n",  # failed move south
         room_a,                # look again, still in Room A
         "You open the door.\n",   # open south
@@ -98,7 +101,7 @@ def test_explore_opens_closed_door_and_retries(tmp_path):
     assert "closed" in result.lower()
     assert "discovered 'room e'" in result.lower()
     sent = [c.args[0] for c in session.send_command.call_args_list]
-    assert sent == ["look", "south", "look", "open south", "south", "look"]
+    assert sent == ["look", "look south", "south", "look", "open south", "south", "look"]
 
 
 def test_explore_marks_exit_blocked_when_still_stuck_after_opening(tmp_path):
@@ -111,6 +114,7 @@ def test_explore_marks_exit_blocked_when_still_stuck_after_opening(tmp_path):
     room_a = "Room A\n   Desc A.\n[ Exits: s ]\n"
     session = _make_session(
         room_a,
+        "You cannot see through the closed door.\n",  # peek south
         "The door is closed.\n",
         room_a,
         "It seems to be locked.\n",
@@ -126,6 +130,59 @@ def test_explore_marks_exit_blocked_when_still_stuck_after_opening(tmp_path):
     room_hash = next(iter(graph.graph.nodes))
     blocked = BlockedExits(memory_dir)
     assert blocked.get(room_hash) == {"south"}
+    assert blocked.reason(room_hash, "south") == "blocked"
+
+
+def test_explore_never_walks_into_darkness_when_peek_reveals_it(tmp_path):
+    """Peeking through an exit before committing to the move should catch
+    a dark room without the character ever having to step into it."""
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    registry = _make_registry()
+    session = _make_session(
+        "Room A\n   Desc A.\n[ Exits: n ]\n",
+        "It is pitch black...\n",  # peek north reveals darkness
+    )
+    Exploration.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("explore", {})
+
+    assert "darkness" in result.lower()
+    sent = [c.args[0] for c in session.send_command.call_args_list]
+    # The peek happened, but the character never actually moved north.
+    assert sent == ["look", "look north"]
+
+    room_hash = next(iter(graph.graph.nodes))
+    blocked = BlockedExits(memory_dir)
+    assert blocked.get(room_hash) == {"north"}
+    assert "light" in blocked.reason(room_hash, "north").lower()
+
+
+def test_explore_retreats_from_darkness_when_peek_misses_it(tmp_path):
+    """If peeking didn't reveal the darkness (e.g. through a door that has
+    to be entered to see past), and the character ends up standing in a
+    dark room, explore must retreat back out rather than leave it stuck
+    somewhere it can't see."""
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    registry = _make_registry()
+    session = _make_session(
+        "Room A\n   Desc A.\n[ Exits: n ]\n",
+        "You see nothing unusual to the north.\n",  # peek looks fine
+        "It is pitch black...\n",  # but moving in reveals darkness
+        "You go south.\n",  # retreat move
+    )
+    Exploration.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("explore", {})
+
+    assert "darkness" in result.lower()
+    sent = [c.args[0] for c in session.send_command.call_args_list]
+    assert sent == ["look", "look north", "north", "south"]
+
+    room_hash = next(iter(graph.graph.nodes))
+    blocked = BlockedExits(memory_dir)
+    assert blocked.get(room_hash) == {"north"}
 
 
 def test_explore_reports_fully_mapped_area(tmp_path):
