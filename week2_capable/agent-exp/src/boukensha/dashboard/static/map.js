@@ -4,10 +4,10 @@
 // connections are drawn as short dashed diagonals instead of moving the
 // room to a new grid cell.
 const GRID = 220;
-const LABEL_MAX_CHARS = 20;
+const ROOM_LABEL_MAX = 15;
 
-function shortLabel(title) {
-  return title.length > LABEL_MAX_CHARS ? title.slice(0, LABEL_MAX_CHARS - 1) + '…' : title;
+function shortRoomLabel(title) {
+  return title.length > ROOM_LABEL_MAX ? title.slice(0, ROOM_LABEL_MAX - 1) + '…' : title;
 }
 
 const DIR_OFFSET = {
@@ -177,7 +177,7 @@ function renderPlayers(players) {
     group.forEach((p, i) => {
       const color = colorForPlayer(p.name);
       const starX = node.x + (i - (group.length - 1) / 2) * 28;
-      const starY = node.y - 22;
+      const starY = node.y - 24;
       // Stagger name labels between two rows so 2+ characters in the same
       // room don't render their names on top of each other.
       const nameY = starY - 12 - (i % 2) * 12;
@@ -381,9 +381,11 @@ window.loadMap = async function loadMap() {
     .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
 
-  const node = g.append('g').selectAll('circle').data(nodes).join('circle')
-    .attr('r', 8).attr('cx', d => d.x).attr('cy', d => d.y)
-    .attr('fill', '#4af').attr('stroke', '#222').attr('stroke-width', 1.5)
+  const RECT_W = 110, RECT_H = 30;
+
+  const nodeGroup = g.append('g').selectAll('g.room-node').data(nodes).join('g')
+    .attr('class', 'room-node')
+    .attr('transform', d => `translate(${d.x - RECT_W / 2},${d.y - RECT_H / 2})`)
     .style('cursor', 'pointer')
     .on('click', (event, d) => {
       event.stopPropagation();
@@ -394,14 +396,19 @@ window.loadMap = async function loadMap() {
       showRoomPopup(d, screenX, screenY, container);
     });
 
-  const label = g.append('g').selectAll('text.node-label').data(nodes).join('text')
-    .attr('class', 'node-label').attr('fill', '#aaa').attr('font-size', 11)
-    // Halo behind the text (same color as the map background) so labels
-    // stay legible where they cross lines or sit near another label.
-    .attr('stroke', '#181818').attr('stroke-width', 3).attr('paint-order', 'stroke fill')
-    .attr('x', d => d.x).attr('y', d => d.y)
-    .attr('dx', 11).attr('dy', 4).text(d => shortLabel(d.title));
-  label.append('title').text(d => d.title);
+  nodeGroup.append('rect')
+    .attr('width', RECT_W).attr('height', RECT_H)
+    .attr('rx', 4)
+    .attr('fill', '#1e3a5f').attr('stroke', '#4af').attr('stroke-width', 1.5);
+
+  nodeGroup.append('text')
+    .attr('x', RECT_W / 2).attr('y', RECT_H / 2)
+    .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+    .attr('fill', '#aaa').attr('font-size', 11).attr('font-family', 'monospace')
+    .attr('stroke', '#181818').attr('stroke-width', 2).attr('paint-order', 'stroke fill')
+    .text(d => shortRoomLabel(d.title));
+
+  nodeGroup.append('title').text(d => d.title);
 
   nodeById = byId;
   lastNodeCount = nodes.length;
