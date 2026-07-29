@@ -51,6 +51,8 @@ flowchart TB
         ROOMEMEM["RoomMemory\nread/write hash-keyed JSON"]
         WGRAPH["WorldGraph\nNetworkX DiGraph"]
         PATHFIND["Pathfinder\nDijkstra shortest path"]
+        PLAYERTRACK["PlayerTracker\nposition + stats"]
+        WSTATS["world_stats\nfrontier_stats / entity_stats"]
     end
 
     subgraph goals["Goal subsystem"]
@@ -66,6 +68,7 @@ flowchart TB
 
     subgraph dashboard["Web dashboard (Flask)"]
         SSE["SSE endpoint\n/events"]
+        OVERVIEWTAB["Overview tab (default)\nrooms/frontier/entities summary\n+ per-player stats & location"]
         LIVETAB["Live tab\nchat + live log"]
         MAPTAB["Map tab\nD3 force-directed graph"]
         WFTAB["Waterfall tab\nper-step timing"]
@@ -95,17 +98,24 @@ flowchart TB
     PATHFIND --> WGRAPH
     COMBAT --> GOALMGR
     GOALMGR <--> GOALFILE
+    AGENT -->|"check(kind=score)"| PLAYERTRACK
+    PLAYERTRACK <--> PLAYERFILE
+    WSTATS --> WGRAPH
+    WSTATS --> ROOMEMEM
 
     LOGGER -->|"publish"| SSE
     SSE --> LIVETAB
     SSE --> WFTAB
     MEMFILES -->|"GET /api/map"| MAPTAB
+    PLAYERFILE -->|"GET /api/players"| MAPTAB
     GOALFILE -->|"GET /api/goal"| GOALTAB
+    MEMFILES -->|"GET /api/overview"| OVERVIEWTAB
+    PLAYERFILE -->|"GET /api/overview"| OVERVIEWTAB
 
     classDef input fill:#e8f0fe,stroke:#4a7ad4;
     classDef output fill:#e6f7e6,stroke:#3a9a3a;
-    class USER,MUD,MEMFILES,GOALFILE input;
-    class LIVETAB,MAPTAB,WFTAB,GOALTAB,SESTAB output;
+    class USER,MUD,MEMFILES,PLAYERFILE,GOALFILE input;
+    class OVERVIEWTAB,LIVETAB,MAPTAB,WFTAB,GOALTAB,SESTAB output;
 ```
 
 ---
@@ -164,6 +174,7 @@ mud_basics: |
 
 | Tab | Data source | Update mechanism |
 |---|---|---|
+| **Overview** (default) | `GET /api/overview` → world_graph.json + rooms/*.json (via `world_stats`) + players.json | Pull — loads eagerly on page load, since it's the tab shown first |
 | **Live** | SSE event stream | Push — each Logger event streams immediately |
 | **Map** | `GET /api/map` → world_graph.json | Pull on tab load + auto-refresh every 30s |
 | **Waterfall** | SSE event stream (iteration/tool_call/tool_result phases) | Push — builds rows as events arrive |
@@ -198,7 +209,10 @@ agent-exp/
 │   │   ├── parser.py                  # RoomParser
 │   │   ├── room_memory.py             # RoomMemory
 │   │   ├── world_graph.py             # WorldGraph
-│   │   └── pathfinder.py             # Pathfinder
+│   │   ├── pathfinder.py              # Pathfinder
+│   │   ├── player_tracker.py          # PlayerTracker (position + stats)
+│   │   ├── player_stats.py            # PlayerStats.parse_score()
+│   │   └── world_stats.py             # frontier_stats() / entity_stats()
 │   ├── goals/
 │   │   ├── __init__.py
 │   │   ├── goal_manager.py            # GoalManager
@@ -224,6 +238,9 @@ agent-exp/
     ├── test_world_graph.py
     ├── test_pathfinder.py
     ├── test_goal_manager.py
+    ├── test_player_tracker.py
+    ├── test_player_stats.py
+    ├── test_world_stats.py
     └── test_dashboard_api.py
 ```
 
@@ -236,3 +253,4 @@ agent-exp/
 - **Dashboard is modular** — each tab is a separate JS module. Adding a new tab means: (1) add a `<button>` in `index.html`, (2) add a JS module, (3) optionally add a `/api/...` endpoint in `app.py`. No changes to core agent code.
 - **`--no-web` still works** — `repl(tui=True)` launches the Textual TUI exactly as before; `repl(tui=False)` gives the plain REPL. The web path is additive.
 - **Log_viz Ruby app** — superseded by the Sessions tab in the Python dashboard. The `log_viz/` folder can be kept for reference or deleted.
+- **`frontier_stats()`'s `walked` count includes inferred edges** — `WorldGraph.add_edge()` auto-fabricates a plausible reverse edge on every traversal (e.g. entering from the north auto-adds a "south" edge back), so the count is "known exits with a graph edge," not "exits the agent has directly walked through." The Overview tab's UI label says "mapped" for this reason; the JSON key itself stays `walked` for backward compatibility with existing consumers.
