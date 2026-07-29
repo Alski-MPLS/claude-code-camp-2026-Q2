@@ -13,6 +13,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'overview') loadOverview();
     if (btn.dataset.tab === 'map') window.loadMap && window.loadMap();
     if (btn.dataset.tab === 'goals') loadGoals();
     if (btn.dataset.tab === 'sessions') loadSessions();
@@ -48,6 +49,41 @@ es.onmessage = e => {
     }
   }
 };
+
+// Overview tab
+async function loadOverview() {
+  const r = await fetch('/api/overview');
+  const data = await r.json();
+
+  const grid = document.getElementById('overview-grid');
+  grid.innerHTML = [
+    ['Rooms known', data.rooms_known],
+    ['Frontier', `${data.frontier.frontier} of ${data.frontier.known_exits} exits · ${data.frontier.walked} walked`],
+    ['Entities', `${data.entities.total} · ${data.entities.mobs} mobs · ${data.entities.objects} objects`],
+  ].map(([label, value]) =>
+    `<div class="overview-card"><div class="overview-card-label">${escapeHtml(label)}</div><div class="overview-card-value">${escapeHtml(String(value))}</div></div>`
+  ).join('');
+
+  const playersEl = document.getElementById('overview-players');
+  if (!data.players.length) {
+    playersEl.innerHTML = '<p class="overview-empty">No players tracked yet.</p>';
+    return;
+  }
+  playersEl.innerHTML = data.players.map(p => {
+    const stats = p.stats || {};
+    const statLine = 'hp' in stats
+      ? `${stats.hp}/${stats.max_hp} hp · ${stats.mana}/${stats.max_mana} mana · ${stats.move}/${stats.max_move} move`
+      : 'stats not yet checked';
+    const from = p.prev_room_hash ? ` — came from ${escapeHtml(p.prev_room_hash)}` : '';
+    return `<div class="overview-card overview-player">
+      <div class="overview-card-label">${escapeHtml(p.name)}</div>
+      <div class="overview-card-value">${escapeHtml(statLine)}</div>
+      <div class="overview-location">${escapeHtml(p.title || '')}${from}</div>
+    </div>`;
+  }).join('');
+}
+
+loadOverview();
 
 // Goals tab
 async function loadGoals() {

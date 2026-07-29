@@ -90,3 +90,11 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
 .entry-user { color: #4af; margin: 8px 0 4px; }
 .entry-assistant { color: #fff; margin: 4px 0 8px; }
 .entry-tool { color: #8f8; font-size: 12px; margin: 2px 0; }
+.overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.overview-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px; }
+.overview-card-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.overview-card-value { color: #fff; font-size: 20px; font-weight: bold; }
+.overview-heading { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.overview-player .overview-card-value { font-size: 14px; font-weight: normal; }
+.overview-location { color: #666; font-size: 12px; margin-top: 6px; }
+.overview-empty { color: #666; font-size: 13px; }

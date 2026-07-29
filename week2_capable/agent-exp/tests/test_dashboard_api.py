@@ -139,3 +139,12 @@ def test_api_overview_reports_rooms_and_players(tmp_path):
         assert data["frontier"] == {"known_exits": 1, "walked": 0, "frontier": 1}
         assert data["players"][0]["name"] == "Hero"
         assert data["players"][0]["stats"]["hp"] == 20
+
+
+def test_index_includes_overview_tab(tmp_path):
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/")
+        html = r.data.decode()
+        assert 'data-tab="overview"' in html
+        assert 'id="tab-overview"' in html
