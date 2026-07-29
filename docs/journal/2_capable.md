@@ -27,6 +27,7 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - I think there is a problem with fighting monsters now and will have to look at it later.
 - Pathing is working great now. I can find the bakery very quickly. It still gets a bit confused with some of the strange areas. Added a feature where it will show an arrow on where the character came from.
 - I had claude review the presentation and make some basic recommendations. It added an overview tab.
+- Added a knowledge feature with the theory that as it learns information about the world, it can store that information and go back to it for reference. I'm hoping this will help move it from "explore/fight" to "explore/learn/adapt/fight".
 
 ## Technical Conclusions
 [todo]
