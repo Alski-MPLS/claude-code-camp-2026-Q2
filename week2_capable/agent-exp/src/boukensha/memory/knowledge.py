@@ -11,6 +11,7 @@ import yaml
 class KnowledgeManager:
     def __init__(self, base_dir: str | Path) -> None:
         self._path = Path(base_dir) / "knowledge.yaml"
+        self._path.parent.mkdir(parents=True, exist_ok=True)
 
     def add(self, topic: str, fact: str, source: str) -> None:
         entries = self._load()
