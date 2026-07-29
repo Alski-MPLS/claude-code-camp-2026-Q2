@@ -148,6 +148,15 @@ def run(
         user_prompts_dir=cfg.user_prompts_dir,
         default_prompts_dir=Config.PROMPTS_DIR,
     )
+
+    # Inject world knowledge into system prompt
+    from ._knowledge_injection import build_knowledge_section
+    from .memory.knowledge import KnowledgeManager as _KM
+    _km = _KM(cfg.dir)
+    _knowledge_section = build_knowledge_section(_km.read_all())
+    if _knowledge_section:
+        resolved_system = (resolved_system or "") + _knowledge_section
+
     resolved_model = model or task_class.model(task_settings)
     resolved_backend = backend or task_class.provider(task_settings)
 
@@ -237,6 +246,7 @@ def run(
         tools.Combat.register(
             registry, session=_mud_session, goals_dir=_goals_dir, current_npcs_ref=_current_npcs_ref
         )
+        tools.Knowledge.register(registry, knowledge_dir=cfg.dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
@@ -332,6 +342,15 @@ def repl(
         user_prompts_dir=cfg.user_prompts_dir,
         default_prompts_dir=Config.PROMPTS_DIR,
     )
+
+    # Inject world knowledge into system prompt
+    from ._knowledge_injection import build_knowledge_section
+    from .memory.knowledge import KnowledgeManager as _KM
+    _km = _KM(cfg.dir)
+    _knowledge_section = build_knowledge_section(_km.read_all())
+    if _knowledge_section:
+        resolved_system = (resolved_system or "") + _knowledge_section
+
     resolved_model = model or task_class.model(task_settings)
     resolved_backend = backend or task_class.provider(task_settings)
 
@@ -421,6 +440,7 @@ def repl(
         tools.Combat.register(
             registry, session=_mud_session, goals_dir=_goals_dir, current_npcs_ref=_current_npcs_ref
         )
+        tools.Knowledge.register(registry, knowledge_dir=cfg.dir)
 
     if tool_registrar is not None:
         dsl = RunDSL(registry)
