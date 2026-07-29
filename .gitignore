@@ -37,6 +37,7 @@ week0_explore/preview/data/world/
 .boukensha/memory/
 .boukensha/goals/
 .boukensha/maps/
+.boukensha/knowledge.yaml
 
 # Graphify build outputs
 graphify-out/

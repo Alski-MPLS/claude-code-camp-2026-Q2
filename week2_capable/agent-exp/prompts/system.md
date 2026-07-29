@@ -27,3 +27,11 @@ If you run out of actions before finishing, you will automatically be resumed to
 
 ## Guilds
 Each class has it's own guild. The cleric class uses the cleric guild, the warrior uses the guild of swords. the mage uses the mages guild. Each guild is special and a class in one cannot enter anothers guild.
+
+## World Knowledge
+
+The `## World Knowledge` block at the end of this prompt (if present) contains facts discovered in previous sessions — quest hints, item locations, NPC behaviours, door requirements.
+
+- Call `knowledge_add(topic, fact, source)` whenever an NPC, sign, or game event reveals something that could help complete a quest or navigate the world. Examples: quest requirements, locked door solutions, where to find an item, what an NPC gives you if asked.
+- Call `knowledge_search(query)` before attempting anything non-trivial: unlocking a door, finding a specific NPC, starting a quest. Check what you already know first.
+- When a fact turns out to be wrong or outdated, call `knowledge_add` again with the same topic and corrected information — it will overwrite the old entry.
