@@ -14,7 +14,10 @@ programs, and a Python web dashboard.
 | **`GoalManager`** | `src/boukensha/goals/goal_manager.py` | Reads/writes `.boukensha/goals/current.yaml`; exposes `read()`, `update(**kwargs)`, `reset()` |
 | **`CombatMonitor`** | `src/boukensha/goals/combat_monitor.py` | Stateless: checks HP vs threshold; returns flee directive if needed |
 | **`EventBus`** | `src/boukensha/dashboard/event_bus.py` | Thread-safe queue; `Logger` publishes structured events; SSE endpoint consumes |
-| **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static force-directed map |
+| **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Overview (default), Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static force-directed map |
+| **`PlayerTracker`** | `src/boukensha/memory/player_tracker.py` | Reads/writes `.boukensha/memory/players.json`; tracks each character's room position (current + previous) and last-known stats |
+| **`PlayerStats`** | `src/boukensha/memory/player_stats.py` | Pure function: parses the MUD `score` command's raw text into `{hp, max_hp, mana, max_mana, move, max_move}` |
+| **`world_stats`** | `src/boukensha/memory/world_stats.py` | `frontier_stats()`/`entity_stats()` — aggregate known-vs-mapped exits and unique mobs/objects across every recorded room, for the Overview tab |
 | **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step |
 | **`process_room` tool** | `src/boukensha/tools/room_processor.py` | Parses current room, diffs vs memory; returns only new/changed info to LLM |
 | **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions |
@@ -31,6 +34,7 @@ flowchart TB
         USER["User goal\n(browser chat or REPL)"]
         MUD["MUD socket response\n(raw telnet text)"]
         MEMFILES[".boukensha/memory/\nrooms/*.json\nworld_graph.json"]
+        PLAYERFILE[".boukensha/memory/\nplayers.json"]
         GOALFILE[".boukensha/goals/\ncurrent.yaml"]
     end
 

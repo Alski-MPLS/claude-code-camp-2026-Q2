@@ -11,7 +11,7 @@ An autonomous AI agent that plays CircleMUD. It keeps room memory, plans routes,
 | Goal tracking | Reads/writes `.boukensha/goals/current.yaml`; agent calls `goal_read`/`goal_update` |
 | Combat automation | `combat_loop` runs a Python fight loop with automatic HP-flee threshold |
 | Token minimization | `process_room` diffs against stored memory and returns nothing when unchanged |
-| Web dashboard | Five-tab Flask app with live SSE stream, map, waterfall, goals, and session history |
+| Web dashboard | Six-tab Flask app — Overview (default), live SSE stream, map, waterfall, goals, and session history |
 
 ## Prerequisites
 
@@ -149,7 +149,7 @@ http://localhost:4568
 
 | Path | Contents |
 |---|---|
-| `.boukensha/memory/` | Room JSON files, world graph (`world_graph.json`) |
+| `.boukensha/memory/` | Room JSON files, world graph (`world_graph.json`), player position + stats (`players.json`) |
 | `.boukensha/goals/current.yaml` | Active goal |
 | `.boukensha/sessions/` | JSONL log files, one per session |
 
