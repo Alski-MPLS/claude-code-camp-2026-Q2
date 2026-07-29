@@ -12,6 +12,7 @@ programs, and a Python web dashboard.
 | **`WorldGraph`** | `src/boukensha/memory/world_graph.py` | NetworkX DiGraph of rooms connected by exit edges; persisted to `.boukensha/memory/world_graph.json` |
 | **`Pathfinder`** | `src/boukensha/memory/pathfinder.py` | Dijkstra shortest path over `WorldGraph`; returns ordered direction list |
 | **`GoalManager`** | `src/boukensha/goals/goal_manager.py` | Reads/writes `.boukensha/goals/current.yaml`; exposes `read()`, `update(**kwargs)`, `reset()` |
+| **`KnowledgeManager`** | `src/boukensha/memory/knowledge.py` | Reads/writes `.boukensha/knowledge.yaml`; exposes `add(topic, fact, source)`, `search(query)`, `read_all()`; atomic writes; case-insensitive deduplication by topic |
 | **`CombatMonitor`** | `src/boukensha/goals/combat_monitor.py` | Stateless: checks HP vs threshold; returns flee directive if needed |
 | **`EventBus`** | `src/boukensha/dashboard/event_bus.py` | Thread-safe queue; `Logger` publishes structured events; SSE endpoint consumes |
 | **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Overview (default), Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static force-directed map |
@@ -21,6 +22,8 @@ programs, and a Python web dashboard.
 | **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step |
 | **`process_room` tool** | `src/boukensha/tools/room_processor.py` | Parses current room, diffs vs memory; returns only new/changed info to LLM |
 | **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions |
+| **`knowledge_add` / `knowledge_search` tools** | `src/boukensha/tools/knowledge.py` | Agent calls `knowledge_add` to persist a discovered fact; `knowledge_search` for keyword lookup across all stored facts |
+| **`build_knowledge_section`** | `src/boukensha/_knowledge_injection.py` | Formats stored entries into a `## World Knowledge` block (≤2000-token cap) appended to the system prompt at startup |
 | **`bin/boukensha`** | `bin/boukensha` | CLI entry point: launches `repl()` with `--web` (default) or `--no-web` |
 | **Existing core** | `src/boukensha/*.py` | Agent loop, backends, JSONL logger, context, REPL, TUI — unchanged |
 
@@ -36,6 +39,7 @@ flowchart TB
         MEMFILES[".boukensha/memory/\nrooms/*.json\nworld_graph.json"]
         PLAYERFILE[".boukensha/memory/\nplayers.json"]
         GOALFILE[".boukensha/goals/\ncurrent.yaml"]
+        KNOWFILE[".boukensha/\nknowledge.yaml"]
     end
 
     subgraph core["boukensha agent core"]
@@ -58,6 +62,12 @@ flowchart TB
     subgraph goals["Goal subsystem"]
         GOALMGR["GoalManager\ncurrent.yaml YAML"]
         COMBAT["CombatMonitor\nHP threshold check"]
+    end
+
+    subgraph knowledge["Knowledge subsystem"]
+        KNOWMGR["KnowledgeManager\nknowledge.yaml YAML"]
+        KNOWINJECT["build_knowledge_section()\n≤2000-token prompt injection"]
+        KNOWTOOLS["knowledge_add / knowledge_search\nagent tools"]
     end
 
     subgraph tools["Token-saving programs\n(registered as agent tools)"]
@@ -87,6 +97,7 @@ flowchart TB
     AGENT -->|"tool dispatch"| NAVTOOL
     AGENT -->|"tool dispatch"| CMBTOOL
     AGENT -->|"goal_read / goal_update"| GOALMGR
+    AGENT -->|"knowledge_add / knowledge_search"| KNOWTOOLS
     AGENT -->|"events"| LOGGER
 
     ROOMTOOL --> PARSER
@@ -98,6 +109,10 @@ flowchart TB
     PATHFIND --> WGRAPH
     COMBAT --> GOALMGR
     GOALMGR <--> GOALFILE
+    KNOWTOOLS --> KNOWMGR
+    KNOWMGR <--> KNOWFILE
+    KNOWINJECT --> KNOWMGR
+    KNOWINJECT -->|"appended to system prompt at startup"| CTX
     AGENT -->|"check(kind=score)"| PLAYERTRACK
     PLAYERTRACK <--> PLAYERFILE
     WSTATS --> WGRAPH
@@ -114,7 +129,7 @@ flowchart TB
 
     classDef input fill:#e8f0fe,stroke:#4a7ad4;
     classDef output fill:#e6f7e6,stroke:#3a9a3a;
-    class USER,MUD,MEMFILES,PLAYERFILE,GOALFILE input;
+    class USER,MUD,MEMFILES,PLAYERFILE,GOALFILE,KNOWFILE input;
     class OVERVIEWTAB,LIVETAB,MAPTAB,WFTAB,GOALTAB,SESTAB output;
 ```
 
@@ -170,6 +185,39 @@ mud_basics: |
 
 ---
 
+## Knowledge File Schema
+
+`.boukensha/knowledge.yaml`:
+
+```yaml
+- topic: red key
+  fact: Ask the guard near the east gate — he will give it to you if you ask.
+  source: east gate guard
+  timestamp: 2026-07-29T00:00:00Z
+
+- topic: minotaur
+  fact: Requires the red key to enter its chamber.
+  source: innkeeper
+  timestamp: 2026-07-29T00:01:00Z
+```
+
+**Fields:**
+
+| Field | Purpose |
+|---|---|
+| `topic` | Short keyword label used for deduplication and search (case-insensitive) |
+| `fact` | The useful information in plain English |
+| `source` | Who or what revealed it — NPC name, room name, sign, etc. |
+| `timestamp` | ISO 8601 UTC; set on every write |
+
+**Deduplication:** When `knowledge_add` is called with a topic that matches an existing entry (case-insensitive), the old entry is replaced entirely. Conflicting or refined facts overwrite rather than accumulate.
+
+**System prompt injection:** At startup, `KnowledgeManager.read_all()` (newest first) is passed to `build_knowledge_section()`, which formats entries up to a ~2000-token cap as a `## World Knowledge` block appended to the system prompt. Entries beyond the cap remain searchable via `knowledge_search`.
+
+**Scope:** World-scoped — shared across all characters and playthroughs. The file is excluded from git (`.gitignore`) since it is runtime state.
+
+---
+
 ## Web Dashboard Tabs
 
 | Tab | Data source | Update mechanism |
@@ -220,7 +268,9 @@ agent-exp/
 │   ├── tools/
 │   │   ├── navigation.py              # navigate_to tool
 │   │   ├── room_processor.py          # process_room tool
-│   │   └── combat.py                  # combat_loop tool
+│   │   ├── combat.py                  # combat_loop tool
+│   │   └── knowledge.py               # knowledge_add / knowledge_search tools
+│   ├── _knowledge_injection.py        # build_knowledge_section() — prompt injection helper
 │   └── dashboard/
 │       ├── __init__.py
 │       ├── app.py                     # Flask app
@@ -241,7 +291,10 @@ agent-exp/
     ├── test_player_tracker.py
     ├── test_player_stats.py
     ├── test_world_stats.py
-    └── test_dashboard_api.py
+    ├── test_dashboard_api.py
+    ├── test_knowledge_manager.py
+    ├── test_tools_knowledge.py
+    └── test_knowledge_injection.py
 ```
 
 ---

@@ -12,6 +12,7 @@ An autonomous AI agent that plays CircleMUD. It keeps room memory, plans routes,
 | Combat automation | `combat_loop` runs a Python fight loop with automatic HP-flee threshold |
 | Token minimization | `process_room` diffs against stored memory and returns nothing when unchanged |
 | Web dashboard | Six-tab Flask app — Overview (default), live SSE stream, map, waterfall, goals, and session history |
+| World knowledge | Agent discovers facts (quest hints, NPC secrets, locked door requirements) and saves them to `.boukensha/knowledge.yaml`; injected into every future session automatically |
 
 ## Prerequisites
 
@@ -151,6 +152,7 @@ http://localhost:4568
 |---|---|
 | `.boukensha/memory/` | Room JSON files, world graph (`world_graph.json`), player position + stats (`players.json`) |
 | `.boukensha/goals/current.yaml` | Active goal |
+| `.boukensha/knowledge.yaml` | World knowledge — facts the agent has discovered (quest hints, NPC secrets, item locations). World-scoped; shared across all characters. Excluded from git. |
 | `.boukensha/sessions/` | JSONL log files, one per session |
 
 ## Running tests
