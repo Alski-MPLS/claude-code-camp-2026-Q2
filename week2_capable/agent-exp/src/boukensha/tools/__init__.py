@@ -9,5 +9,6 @@ from .navigation import Navigation
 from .exploration import Exploration
 from .room_processor import RoomProcessor
 from .combat import Combat
+from .knowledge import Knowledge
 
-__all__ = ["FileSystem", "Mud", "Shell", "Navigation", "Exploration", "RoomProcessor", "Combat"]
+__all__ = ["FileSystem", "Mud", "Shell", "Navigation", "Exploration", "RoomProcessor", "Combat", "Knowledge"]
