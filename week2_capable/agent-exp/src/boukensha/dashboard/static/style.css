@@ -96,5 +96,5 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
 .overview-card-value { color: #fff; font-size: 20px; font-weight: bold; }
 .overview-heading { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
 .overview-player .overview-card-value { font-size: 14px; font-weight: normal; }
-.overview-location { color: #666; font-size: 12px; margin-top: 6px; }
-.overview-empty { color: #666; font-size: 13px; }
+.overview-location { color: #888; font-size: 12px; margin-top: 6px; }
+.overview-empty { color: #888; font-size: 13px; }
