@@ -63,3 +63,29 @@ def test_prev_room_hash_unchanged_when_room_same(tmp_path):
     data = tracker.read_all()
     # prev_room_hash should still be room_a (last real move), not room_b
     assert data["Aria"]["prev_room_hash"] == "room_a"
+
+
+def test_update_stats_records_stats_for_new_player(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20})
+    data = tracker.read_all()
+    assert data["Hero"]["stats"] == {"hp": 20, "max_hp": 20}
+    assert "stats_updated_at" in data["Hero"]
+
+
+def test_update_stats_preserves_existing_position(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Hero", "abc123", "Temple Square")
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20})
+    data = tracker.read_all()
+    assert data["Hero"]["room_hash"] == "abc123"
+    assert data["Hero"]["stats"]["hp"] == 20
+
+
+def test_update_preserves_existing_stats(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20})
+    tracker.update("Hero", "abc123", "Temple Square")
+    data = tracker.read_all()
+    assert data["Hero"]["stats"] == {"hp": 20, "max_hp": 20}
+    assert data["Hero"]["room_hash"] == "abc123"

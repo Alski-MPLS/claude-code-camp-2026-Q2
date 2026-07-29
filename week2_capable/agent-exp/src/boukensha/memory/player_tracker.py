@@ -19,10 +19,21 @@ class PlayerTracker:
         existing = data.get(name, {})
         prev = existing.get("room_hash")
         data[name] = {
+            **existing,
             "room_hash": room_hash,
             "title": title,
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "prev_room_hash": prev if prev and prev != room_hash else existing.get("prev_room_hash"),
+        }
+        self._write(data)
+
+    def update_stats(self, name: str, stats: dict[str, Any]) -> None:
+        data = self.read_all()
+        existing = data.get(name, {})
+        data[name] = {
+            **existing,
+            "stats": stats,
+            "stats_updated_at": datetime.now(timezone.utc).isoformat(),
         }
         self._write(data)
 
