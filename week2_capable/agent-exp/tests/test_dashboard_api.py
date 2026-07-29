@@ -100,3 +100,42 @@ def test_api_session_detail_returns_entries(tmp_path):
         assert r.status_code == 200
         data = json.loads(r.data)
         assert isinstance(data, list)
+
+
+def test_api_overview_returns_zero_stats_when_no_data(tmp_path):
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/api/overview")
+        assert r.status_code == 200
+        data = json.loads(r.data)
+        assert data["rooms_known"] == 0
+        assert data["frontier"] == {"known_exits": 0, "walked": 0, "frontier": 0}
+        assert data["entities"] == {"mobs": 0, "objects": 0, "total": 0}
+        assert data["players"] == []
+
+
+def test_api_overview_reports_rooms_and_players(tmp_path):
+    from boukensha.memory.world_graph import WorldGraph
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+    graph = WorldGraph(memory_dir)
+    room = {"title": "Main Street", "description": "d", "exits": {"north": "..."}, "npcs": [], "items": []}
+    h, _ = mem.record(room)
+    graph.add_room(h, "Main Street")
+    graph.save()
+
+    tracker = PlayerTracker(memory_dir)
+    tracker.update("Hero", h, "Main Street")
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20, "mana": 100, "max_mana": 100, "move": 85, "max_move": 85})
+
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/api/overview")
+        data = json.loads(r.data)
+        assert data["rooms_known"] == 1
+        assert data["frontier"] == {"known_exits": 1, "walked": 0, "frontier": 1}
+        assert data["players"][0]["name"] == "Hero"
+        assert data["players"][0]["stats"]["hp"] == 20

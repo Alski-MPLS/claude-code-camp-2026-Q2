@@ -75,6 +75,27 @@ def create_dashboard_app(
         ]
         return jsonify(players)
 
+    @app.route("/api/overview")
+    def api_overview():
+        from boukensha.memory.world_graph import WorldGraph
+        from boukensha.memory.room_memory import RoomMemory
+        from boukensha.memory.world_stats import frontier_stats, entity_stats
+        from boukensha.memory.player_tracker import PlayerTracker
+
+        g = WorldGraph(memory_path)
+        g.load()
+        mem = RoomMemory(memory_path)
+        players = [
+            {"name": name, **info}
+            for name, info in PlayerTracker(memory_path).read_all().items()
+        ]
+        return jsonify({
+            "rooms_known": g.graph.number_of_nodes(),
+            "frontier": frontier_stats(g, mem),
+            "entities": entity_stats(g, mem),
+            "players": players,
+        })
+
     @app.route("/api/room/<room_hash>")
     def api_room(room_hash: str):
         from boukensha.memory.room_memory import RoomMemory

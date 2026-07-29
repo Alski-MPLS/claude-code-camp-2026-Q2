@@ -24,6 +24,33 @@ python bin/boukensha --web --port 4569
 
 ## Tabs
 
+### Overview
+
+Landing tab. Summary cards for rooms known, frontier exits (known-but-unwalked), and unique entities (mobs/objects) seen across every recorded room, plus each tracked player's last-known HP/mana/move and current location (with where they came from).
+
+Data endpoint: `GET /api/overview`
+
+```json
+{
+  "rooms_known": 26,
+  "frontier": {"known_exits": 73, "walked": 32, "frontier": 41},
+  "entities": {"mobs": 16, "objects": 3, "total": 19},
+  "players": [
+    {
+      "name": "Hero",
+      "room_hash": "abc123",
+      "title": "Temple Square",
+      "updated_at": "2026-07-27T22:10:00+00:00",
+      "prev_room_hash": "def456",
+      "stats": {"hp": 20, "max_hp": 20, "mana": 100, "max_mana": 100, "move": 85, "max_move": 85},
+      "stats_updated_at": "2026-07-27T22:10:05+00:00"
+    }
+  ]
+}
+```
+
+`stats`/`stats_updated_at` are only present once the agent has called `check(kind="score")` at least once — they reflect what the agent last saw, not necessarily the player's true current state (see the CDC/journal caveat below: this is a snapshot of agent-observed state, not ground truth).
+
 ### Live
 
 Real-time event stream delivered via Server-Sent Events (SSE). Each event is appended as a coloured line as it arrives. Styled by phase:
