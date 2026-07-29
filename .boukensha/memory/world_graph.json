@@ -154,6 +154,158 @@
     {
       "title": "The Great Chessboard Of Midgaard",
       "id": "4084515dd098"
+    },
+    {
+      "title": "The Midgaard Donation Room",
+      "id": "c70a48f67c1f"
+    },
+    {
+      "title": "The Eastern End Of Poor Alley",
+      "id": "b5b42aee5e9c"
+    },
+    {
+      "title": "Grubby Inn",
+      "id": "948580e857fd"
+    },
+    {
+      "title": "The Dark Alley At The Levee",
+      "id": "a1bd9136ed23"
+    },
+    {
+      "title": "The Eastern End Of The Alley",
+      "id": "f183f8d72eca"
+    },
+    {
+      "title": "The Deserted Warehouse",
+      "id": "3f69180087e2"
+    },
+    {
+      "title": "The Levee",
+      "id": "12e2340bd966"
+    },
+    {
+      "title": "The Entrance Hall To The Guild Of Thieves",
+      "id": "d8df7f5799d4"
+    },
+    {
+      "title": "Poor Alley",
+      "id": "9af88a3a9b19"
+    },
+    {
+      "title": "Wall Road",
+      "id": "f9db2a4b28d6"
+    },
+    {
+      "title": "Wall Road",
+      "id": "51d285bcb6cf"
+    },
+    {
+      "title": "Inside The West Gate Of Midgaard",
+      "id": "12471660fa68"
+    },
+    {
+      "title": "Outside The West Gate Of Midgaard",
+      "id": "d8b16fb047eb"
+    },
+    {
+      "title": "A Road Through The Plains",
+      "id": "b5701f8c40ee"
+    },
+    {
+      "title": "A Road Through The Plains",
+      "id": "3fb7d5cd2836"
+    },
+    {
+      "title": "A Road Through The Plains",
+      "id": "aef4da880cd2"
+    },
+    {
+      "title": "The Entrance Hall To The Guild Of Swordsmen",
+      "id": "52abdb69ab4d"
+    },
+    {
+      "title": "The Bar Of Swordsmen",
+      "id": "a86c25aa1aa1"
+    },
+    {
+      "title": "The Tournament And Practice Yard",
+      "id": "e22b50f2d290"
+    },
+    {
+      "title": "The Sewers",
+      "id": "94f58896847a"
+    },
+    {
+      "title": "The Junction",
+      "id": "9bbef7bb8c4e"
+    },
+    {
+      "title": "The Dark Passageway",
+      "id": "8c4baa6d6039"
+    },
+    {
+      "title": "The Watery Sewer Bend",
+      "id": "a464282ed344"
+    },
+    {
+      "title": "The Watery Sewer",
+      "id": "760a2feddad3"
+    },
+    {
+      "title": "The Watery Sewer Junction",
+      "id": "737a24cf0dff"
+    },
+    {
+      "title": "A Ledge By A Dark Pool",
+      "id": "91663d697cbe"
+    },
+    {
+      "title": "The Fissure Under The Ledge",
+      "id": "f0628924df0f"
+    },
+    {
+      "title": "The Edge Of The Water",
+      "id": "964771d170c8"
+    },
+    {
+      "title": "A Ledge By A Dark Pool",
+      "id": "d4dc105acba1"
+    },
+    {
+      "title": "The Watery Sewer Junction",
+      "id": "ec17e32d980b"
+    },
+    {
+      "title": "The Watery Sewer Bend",
+      "id": "2eefbcbea1c4"
+    },
+    {
+      "title": "The Edge Of The Water Sewer",
+      "id": "b4cdd7243d2b"
+    },
+    {
+      "title": "The Small Room",
+      "id": "fa7141497d72"
+    },
+    {
+      "title": "The Sewer Pipe",
+      "id": "e694efe50532"
+    },
+    {
+      "title": "The Grand Sewer",
+      "id": "709cc0cdf229"
+    },
+    {
+      "title": "The Dark Hallway",
+      "id": "25fa62c0b92a"
+    },
+    {
+      "title": "The Dark Passageway",
+      "id": "c370995a77a2"
+    },
+    {
+      "title": "The South End Of The Grand Pipe",
+      "id": "de4dfd148827"
     }
   ],
   "edges": [
@@ -308,6 +460,11 @@
       "target": "45991aa22d38"
     },
     {
+      "direction": "east",
+      "source": "bad80c25f808",
+      "target": "c70a48f67c1f"
+    },
+    {
       "direction": "north",
       "source": "45991aa22d38",
       "target": "bad80c25f808"
@@ -364,8 +521,23 @@
     },
     {
       "direction": "west",
+      "source": "a26bc7ad8e48",
+      "target": "b5b42aee5e9c"
+    },
+    {
+      "direction": "west",
       "source": "ee20fa4b7a57",
       "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "east",
+      "source": "ee20fa4b7a57",
+      "target": "a1bd9136ed23"
+    },
+    {
+      "direction": "south",
+      "source": "ee20fa4b7a57",
+      "target": "d8df7f5799d4"
     },
     {
       "direction": "north",
@@ -396,6 +568,11 @@
       "direction": "west",
       "source": "f55aecc816a1",
       "target": "b4a4177eb725"
+    },
+    {
+      "direction": "south",
+      "source": "f55aecc816a1",
+      "target": "52abdb69ab4d"
     },
     {
       "direction": "south",
@@ -430,11 +607,6 @@
     {
       "direction": "south",
       "source": "0765e3b81db2",
-      "target": "659f54a883af"
-    },
-    {
-      "direction": "south",
-      "source": "0765e3b81db2",
       "target": "6e1a810416c6"
     },
     {
@@ -458,6 +630,11 @@
       "target": "204f626522a8"
     },
     {
+      "direction": "west",
+      "source": "0ab4dc2a9c72",
+      "target": "12471660fa68"
+    },
+    {
       "direction": "south",
       "source": "61419e42c28c",
       "target": "0ab4dc2a9c72"
@@ -466,11 +643,6 @@
       "direction": "north",
       "source": "204f626522a8",
       "target": "0ab4dc2a9c72"
-    },
-    {
-      "direction": "east",
-      "source": "204f626522a8",
-      "target": "6e1a810416c6"
     },
     {
       "direction": "west",
@@ -541,6 +713,361 @@
       "direction": "east",
       "source": "4084515dd098",
       "target": "8a4ba9f8e7b2"
+    },
+    {
+      "direction": "west",
+      "source": "c70a48f67c1f",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "east",
+      "source": "b5b42aee5e9c",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "south",
+      "source": "b5b42aee5e9c",
+      "target": "948580e857fd"
+    },
+    {
+      "direction": "west",
+      "source": "b5b42aee5e9c",
+      "target": "9af88a3a9b19"
+    },
+    {
+      "direction": "north",
+      "source": "948580e857fd",
+      "target": "b5b42aee5e9c"
+    },
+    {
+      "direction": "west",
+      "source": "a1bd9136ed23",
+      "target": "ee20fa4b7a57"
+    },
+    {
+      "direction": "east",
+      "source": "a1bd9136ed23",
+      "target": "f183f8d72eca"
+    },
+    {
+      "direction": "south",
+      "source": "a1bd9136ed23",
+      "target": "12e2340bd966"
+    },
+    {
+      "direction": "west",
+      "source": "f183f8d72eca",
+      "target": "a1bd9136ed23"
+    },
+    {
+      "direction": "south",
+      "source": "f183f8d72eca",
+      "target": "3f69180087e2"
+    },
+    {
+      "direction": "north",
+      "source": "3f69180087e2",
+      "target": "f183f8d72eca"
+    },
+    {
+      "direction": "north",
+      "source": "12e2340bd966",
+      "target": "a1bd9136ed23"
+    },
+    {
+      "direction": "north",
+      "source": "d8df7f5799d4",
+      "target": "ee20fa4b7a57"
+    },
+    {
+      "direction": "east",
+      "source": "9af88a3a9b19",
+      "target": "b5b42aee5e9c"
+    },
+    {
+      "direction": "west",
+      "source": "9af88a3a9b19",
+      "target": "f9db2a4b28d6"
+    },
+    {
+      "direction": "east",
+      "source": "f9db2a4b28d6",
+      "target": "9af88a3a9b19"
+    },
+    {
+      "direction": "north",
+      "source": "f9db2a4b28d6",
+      "target": "51d285bcb6cf"
+    },
+    {
+      "direction": "south",
+      "source": "51d285bcb6cf",
+      "target": "f9db2a4b28d6"
+    },
+    {
+      "direction": "north",
+      "source": "51d285bcb6cf",
+      "target": "12471660fa68"
+    },
+    {
+      "direction": "south",
+      "source": "12471660fa68",
+      "target": "51d285bcb6cf"
+    },
+    {
+      "direction": "east",
+      "source": "12471660fa68",
+      "target": "0ab4dc2a9c72"
+    },
+    {
+      "direction": "west",
+      "source": "12471660fa68",
+      "target": "d8b16fb047eb"
+    },
+    {
+      "direction": "east",
+      "source": "d8b16fb047eb",
+      "target": "12471660fa68"
+    },
+    {
+      "direction": "west",
+      "source": "d8b16fb047eb",
+      "target": "b5701f8c40ee"
+    },
+    {
+      "direction": "east",
+      "source": "b5701f8c40ee",
+      "target": "d8b16fb047eb"
+    },
+    {
+      "direction": "west",
+      "source": "b5701f8c40ee",
+      "target": "3fb7d5cd2836"
+    },
+    {
+      "direction": "east",
+      "source": "3fb7d5cd2836",
+      "target": "b5701f8c40ee"
+    },
+    {
+      "direction": "west",
+      "source": "3fb7d5cd2836",
+      "target": "aef4da880cd2"
+    },
+    {
+      "direction": "east",
+      "source": "aef4da880cd2",
+      "target": "3fb7d5cd2836"
+    },
+    {
+      "direction": "north",
+      "source": "52abdb69ab4d",
+      "target": "f55aecc816a1"
+    },
+    {
+      "direction": "east",
+      "source": "52abdb69ab4d",
+      "target": "a86c25aa1aa1"
+    },
+    {
+      "direction": "west",
+      "source": "a86c25aa1aa1",
+      "target": "52abdb69ab4d"
+    },
+    {
+      "direction": "south",
+      "source": "a86c25aa1aa1",
+      "target": "e22b50f2d290"
+    },
+    {
+      "direction": "north",
+      "source": "e22b50f2d290",
+      "target": "a86c25aa1aa1"
+    },
+    {
+      "direction": "down",
+      "source": "e22b50f2d290",
+      "target": "94f58896847a"
+    },
+    {
+      "direction": "south",
+      "source": "94f58896847a",
+      "target": "9bbef7bb8c4e"
+    },
+    {
+      "direction": "north",
+      "source": "9bbef7bb8c4e",
+      "target": "94f58896847a"
+    },
+    {
+      "direction": "east",
+      "source": "9bbef7bb8c4e",
+      "target": "8c4baa6d6039"
+    },
+    {
+      "direction": "west",
+      "source": "8c4baa6d6039",
+      "target": "9bbef7bb8c4e"
+    },
+    {
+      "direction": "east",
+      "source": "8c4baa6d6039",
+      "target": "a464282ed344"
+    },
+    {
+      "direction": "west",
+      "source": "a464282ed344",
+      "target": "8c4baa6d6039"
+    },
+    {
+      "direction": "north",
+      "source": "a464282ed344",
+      "target": "760a2feddad3"
+    },
+    {
+      "direction": "south",
+      "source": "760a2feddad3",
+      "target": "a464282ed344"
+    },
+    {
+      "direction": "north",
+      "source": "760a2feddad3",
+      "target": "2eefbcbea1c4"
+    },
+    {
+      "direction": "south",
+      "source": "737a24cf0dff",
+      "target": "760a2feddad3"
+    },
+    {
+      "direction": "east",
+      "source": "737a24cf0dff",
+      "target": "91663d697cbe"
+    },
+    {
+      "direction": "west",
+      "source": "91663d697cbe",
+      "target": "737a24cf0dff"
+    },
+    {
+      "direction": "down",
+      "source": "91663d697cbe",
+      "target": "f0628924df0f"
+    },
+    {
+      "direction": "north",
+      "source": "91663d697cbe",
+      "target": "d4dc105acba1"
+    },
+    {
+      "direction": "up",
+      "source": "f0628924df0f",
+      "target": "91663d697cbe"
+    },
+    {
+      "direction": "down",
+      "source": "f0628924df0f",
+      "target": "964771d170c8"
+    },
+    {
+      "direction": "up",
+      "source": "964771d170c8",
+      "target": "f0628924df0f"
+    },
+    {
+      "direction": "south",
+      "source": "d4dc105acba1",
+      "target": "91663d697cbe"
+    },
+    {
+      "direction": "west",
+      "source": "d4dc105acba1",
+      "target": "ec17e32d980b"
+    },
+    {
+      "direction": "east",
+      "source": "ec17e32d980b",
+      "target": "d4dc105acba1"
+    },
+    {
+      "direction": "north",
+      "source": "ec17e32d980b",
+      "target": "760a2feddad3"
+    },
+    {
+      "direction": "south",
+      "source": "2eefbcbea1c4",
+      "target": "760a2feddad3"
+    },
+    {
+      "direction": "west",
+      "source": "2eefbcbea1c4",
+      "target": "b4cdd7243d2b"
+    },
+    {
+      "direction": "east",
+      "source": "b4cdd7243d2b",
+      "target": "2eefbcbea1c4"
+    },
+    {
+      "direction": "west",
+      "source": "b4cdd7243d2b",
+      "target": "fa7141497d72"
+    },
+    {
+      "direction": "east",
+      "source": "fa7141497d72",
+      "target": "b4cdd7243d2b"
+    },
+    {
+      "direction": "south",
+      "source": "fa7141497d72",
+      "target": "e694efe50532"
+    },
+    {
+      "direction": "north",
+      "source": "e694efe50532",
+      "target": "fa7141497d72"
+    },
+    {
+      "direction": "south",
+      "source": "e694efe50532",
+      "target": "709cc0cdf229"
+    },
+    {
+      "direction": "north",
+      "source": "709cc0cdf229",
+      "target": "e694efe50532"
+    },
+    {
+      "direction": "east",
+      "source": "709cc0cdf229",
+      "target": "25fa62c0b92a"
+    },
+    {
+      "direction": "south",
+      "source": "709cc0cdf229",
+      "target": "de4dfd148827"
+    },
+    {
+      "direction": "west",
+      "source": "25fa62c0b92a",
+      "target": "709cc0cdf229"
+    },
+    {
+      "direction": "south",
+      "source": "25fa62c0b92a",
+      "target": "c370995a77a2"
+    },
+    {
+      "direction": "north",
+      "source": "c370995a77a2",
+      "target": "25fa62c0b92a"
+    },
+    {
+      "direction": "north",
+      "source": "de4dfd148827",
+      "target": "709cc0cdf229"
     }
   ]
 }

@@ -37,6 +37,21 @@ class WorldGraph:
         *,
         to_room_exits: set[str] | None = None,
     ) -> None:
+        # A room can only have one real exit per direction. If a stale/wrong
+        # edge in this direction already points somewhere else (e.g. left
+        # over from a past position-desync bug, or corrected by drift
+        # detection in _walk.py), drop it before recording the newly
+        # observed one — otherwise the room ends up with two edges in the
+        # same direction to two different rooms, which is what produced the
+        # "bakery has 2 exits" map corruption.
+        if from_hash in self._g:
+            stale = [
+                neighbor
+                for neighbor, data in self._g[from_hash].items()
+                if data.get("direction") == direction and neighbor != to_hash
+            ]
+            for neighbor in stale:
+                self._g.remove_edge(from_hash, neighbor)
         self._g.add_edge(from_hash, to_hash, direction=direction)
         # Edges are only ever recorded in the direction actually walked, but
         # CircleMUD exits are almost always bidirectional. Without this, a

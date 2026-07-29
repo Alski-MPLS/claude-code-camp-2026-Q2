@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.world_graph import WorldGraph
-from boukensha.memory.pathfinder import Pathfinder, Route
+from boukensha.memory.pathfinder import Pathfinder, Route, partial_word_matches, text_matches, word_overlap_matches
 from boukensha.memory.player_tracker import PlayerTracker
 from ._walk import walk_route
 
@@ -62,29 +62,50 @@ class Navigation:
                 last_direction_ref[0] = None
             return h
 
-        def _route_by_landmark(pf: Pathfinder, start_hash: str, fragment: str) -> tuple[Route, str] | None:
-            """Fall back to searching each known room's description/items/
-            npcs for the fragment — a destination like "the fountain" or
-            "the well" is usually a feature INSIDE a room, not a room
-            title, and the LLM has no other reliable way to recall which
-            room that was once the fact scrolls out of context."""
-            fragment_lower = fragment.lower()
-            best: tuple[Route, str] | None = None
+        def _landmark_haystacks() -> dict[str, str]:
+            haystacks: dict[str, str] = {}
             for node in list(graph.graph.nodes):
                 room = mem.get(node)
                 if not room:
                     continue
-                haystack = " ".join(
+                haystacks[node] = " ".join(
                     [room.get("description", ""), *(room.get("items") or []), *(room.get("npcs") or [])]
                 ).lower()
-                if fragment_lower not in haystack:
-                    continue
-                route = pf.route_to(start_hash, node)
-                if route is None:
-                    continue
-                if best is None or len(route.directions) < len(best[0].directions):
-                    best = (route, node)
-            return best
+            return haystacks
+
+        def _route_by_landmark(
+            pf: Pathfinder, start_hash: str, fragment: str, haystacks: dict[str, str]
+        ) -> tuple[Route, str] | None:
+            """Fall back to searching each known room's description/items/
+            npcs for the fragment — a destination like "the fountain" or
+            "the well" is usually a feature INSIDE a room, not a room
+            title, and the LLM has no other reliable way to recall which
+            room that was once the fact scrolls out of context.
+
+            Substring match is tried first; only if nothing matches do we
+            fall back to a distinctive shared word (see
+            pathfinder.word_overlap_matches) — a paraphrase like "the blob"
+            should still resolve to a room whose description says
+            "gelatinous blob" even though the fragment isn't a literal
+            substring, but a generic word shared across many rooms' text
+            (e.g. "guard", "sign") must never be enough on its own."""
+            fragment_lower = fragment.lower()
+
+            def _best_route(matching_nodes: list[str]) -> tuple[Route, str] | None:
+                best: tuple[Route, str] | None = None
+                for node in matching_nodes:
+                    route = pf.route_to(start_hash, node)
+                    if route is None:
+                        continue
+                    if best is None or len(route.directions) < len(best[0].directions):
+                        best = (route, node)
+                return best
+
+            substring_matches = [n for n, haystack in haystacks.items() if fragment_lower in haystack]
+            best = _best_route(substring_matches)
+            if best is not None:
+                return best
+            return _best_route(word_overlap_matches(fragment, haystacks))
 
         def _navigate_to(destination: str, **_: Any) -> str:
             if not session.is_open:
@@ -97,11 +118,35 @@ class Navigation:
             pf = Pathfinder(graph)
             route = pf.route_by_title(start_hash, destination)
             landmark_room: str | None = None
+            haystacks = _landmark_haystacks()
             if route is None:
-                found = _route_by_landmark(pf, start_hash, destination)
+                found = _route_by_landmark(pf, start_hash, destination, haystacks)
                 if found is not None:
                     route, landmark_room = found
             if route is None:
+                titles = {node: attrs.get("title") or "" for node, attrs in graph.graph.nodes(data=True)}
+                known_matches = text_matches(destination, titles) or text_matches(destination, haystacks)
+                if known_matches:
+                    matched_titles = ", ".join(sorted({titles.get(n, n) for n in known_matches}))
+                    return (
+                        f"'{destination}' matches an already-mapped room ({matched_titles}), "
+                        f"but no walkable path there is currently known from here — likely a "
+                        f"one-way passage that was only ever walked in the other direction. "
+                        f"Call explore() to find another route out rather than retrying "
+                        f"navigate_to with the same destination."
+                    )
+                near_misses = partial_word_matches(destination, titles)
+                if near_misses:
+                    suggestions = ", ".join(sorted({titles[n] for n in near_misses}))
+                    return (
+                        f"No confident match for '{destination}'. Similarly named rooms "
+                        f"already mapped (none matched closely enough to route to "
+                        f"automatically): {suggestions}. If one of these is actually what "
+                        f"you meant, navigate_to its exact title. If the real destination "
+                        f"hasn't been visited yet but is named in the CURRENT room's own "
+                        f"description/exits, just move that direction directly instead of "
+                        f"calling navigate_to."
+                    )
                 return f"No known path to '{destination}'. Explore more of the area first."
             path = route.directions
             if landmark_room:

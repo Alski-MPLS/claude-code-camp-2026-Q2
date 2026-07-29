@@ -65,6 +65,127 @@ def test_navigate_to_unknown_destination_returns_error(tmp_path):
     assert path is None
 
 
+def test_navigate_to_suggests_near_misses_instead_of_guessing_wrong(tmp_path):
+    """Live bug: asking for 'Guild of Swordsmen' (not yet mapped) used to
+    silently route to the wrong already-known guild on the shared word
+    'guild'. Now that word_overlap_matches requires every significant word,
+    this returns no route — but the LLM still benefits from being told a
+    similarly-named room already exists, rather than just being told to
+    explore blindly, since it may already be standing right next to the
+    real destination and just needs to move there directly."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    graph.add_room("bbb", "The Entrance To The Clerics' Guild")
+    graph.add_edge("aaa", "bbb", "west")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: w ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "Guild of Swordsmen"})
+
+    assert "No confident match" in result
+    assert "Clerics' Guild" in result
+    assert "move that direction directly" in result
+
+
+def test_navigate_to_reports_known_but_unreachable_room_distinctly(tmp_path):
+    """Live bug: 'The Entrance To The Newbie Zone' was on the map (title
+    matched exactly) but no directed path was known from the agent's
+    current location — a one-way passage elsewhere in the map meant no
+    route existed even though the room itself was fully identified. The old
+    'No confident match' message was actively misleading here: it implied a
+    naming/ambiguity problem and, worse, the near-miss suggestion logic
+    excludes exact matches so it never even mentioned the room the LLM
+    actually asked for. A known-exact-match-but-unreachable room must get
+    its own message naming that room and suggesting explore(), not a
+    generic 'did you mean' list that omits it entirely."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    # Exact title match, but no edge at all connecting it — unreachable.
+    graph.add_room("bbb", "The Entrance To The Newbie Zone")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "The Entrance To The Newbie Zone"})
+
+    assert "already-mapped room" in result
+    assert "Newbie Zone" in result
+    assert "explore()" in result
+    assert "No confident match" not in result
+
+
+def test_navigate_to_reports_known_but_unreachable_landmark_distinctly(tmp_path):
+    """Same bug as the unreachable-title case, but for a landmark: 'go to
+    the fountain' matched Temple Square's description via
+    _route_by_landmark, but Temple Square was unreachable from the agent's
+    current (one-way-trapped) position. That failure used to fall through
+    to a completely generic 'No known path' message because the
+    known-but-unreachable check only looked at room TITLES, not landmark
+    haystacks — so the agent was told nothing about the room it actually
+    matched, and (per a live session) gave up on navigate_to entirely,
+    wrongly believing it needed a knowledge_search hit first."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    start_raw = "The Dark Passageway\n   A passage.\n[ Exits: n ]\n"
+    square_raw = (
+        "The Temple Square\n   You are standing on the temple square.\n"
+        "[ Exits: s ]\n"
+        "A large fountain carved from blue-streaked marble is here, bubbling merrily.\n"
+    )
+    start_room = RoomParser.parse(start_raw)
+    square_room = RoomParser.parse(square_raw)
+    start_hash, _ = mem.record(start_room)
+    square_hash, _ = mem.record(square_room)
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(start_hash, "The Dark Passageway")
+    graph.add_room(square_hash, "The Temple Square")
+    # Deliberately no add_edge — Temple Square is known but unreachable.
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = start_raw
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "fountain"})
+
+    assert "already-mapped room" in result
+    assert "Temple Square" in result
+    assert "explore()" in result
+    assert "No known path" not in result
+
+
 def test_find_path_by_title_picks_nearest_match_for_duplicate_titles(tmp_path):
     """CircleMUD reuses the same room title for multiple distinct rooms
     (e.g. several tiles of "The Great Field Of Midgaard" along a road).
@@ -181,6 +302,53 @@ def test_navigate_to_finds_landmark_mentioned_inside_a_room(tmp_path):
     assert "1 moves" in result
     sent = [c.args[0] for c in session.send_command.call_args_list]
     assert sent == ["look", "north", "look"]
+
+
+def test_navigate_to_finds_landmark_via_word_overlap_when_not_a_literal_substring(tmp_path):
+    """Same paraphrase problem as room titles: the room mentions a
+    'gelatinous blob' but the LLM asks for just the 'gelatinous' one — not a
+    literal substring of the full room text, but its one significant word
+    is fully contained in it. The landmark fallback must catch this the same
+    way Pathfinder.route_by_title does for titles."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    start_raw = "Main Street\n   A street.\n[ Exits: n ]\n"
+    square_raw = (
+        "The Temple Square\n   You are standing on the temple square.\n"
+        "[ Exits: s ]\n"
+        "An oozing green gelatinous blob is here, sucking in bits of debris.\n"
+    )
+    start_room = RoomParser.parse(start_raw)
+    square_room = RoomParser.parse(square_raw)
+    start_hash, _ = mem.record(start_room)
+    square_hash, _ = mem.record(square_room)
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(start_hash, "Main Street")
+    graph.add_room(square_hash, "The Temple Square")
+    graph.add_edge(start_hash, square_hash, "north")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.side_effect = [start_raw, "You go north.\n", square_raw]
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    # Words reversed so this isn't a literal substring of the room text
+    # (which would trivially hit the substring branch instead of exercising
+    # the word-overlap fallback this test targets).
+    result = registry.dispatch("navigate_to", {"destination": "blob gelatinous"})
+
+    assert "temple square" in result.lower()
 
 
 def test_navigate_to_still_prefers_a_title_match_over_landmark_search(tmp_path):

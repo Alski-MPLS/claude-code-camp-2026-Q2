@@ -111,3 +111,20 @@ def test_add_edge_fills_reverse_when_destination_exits_unknown(tmp_path):
     g.add_room("b", "Room B")
     g.add_edge("a", "b", "north")
     assert g.get_neighbors("b").get("south") == "a"
+
+
+def test_add_edge_replaces_stale_edge_in_same_direction(tmp_path):
+    """The exact map corruption reported live: the Bakery ended up with two
+    'south' edges — one stale (to the General Store, from an old
+    position-desync bug) and one correct (back to Main Street) — so the
+    room appeared to have 2 exits when it only has 1. A newly observed edge
+    in a direction must replace any existing edge in that same direction
+    rather than coexist with it."""
+    g = WorldGraph(tmp_path)
+    g.add_room("bakery", "The Bakery")
+    g.add_room("store", "The General Store")
+    g.add_room("main_st", "Main Street")
+    g.add_edge("bakery", "store", "south")
+    g.add_edge("bakery", "main_st", "south")
+    assert g.get_neighbors("bakery").get("south") == "main_st"
+    assert len(list(g.graph["bakery"])) == 1

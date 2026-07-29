@@ -1,8 +1,7 @@
-current_goal: Continue battling any easily defeatable foes (like 'pet dragon') found
-  in The Newbie Zone until gold is acquired or a level up occurs. Systematically explore
-  new areas if combat becomes difficult.
+current_goal: Locate and enter 'The entrance to the newbie zone' and find a suitable
+  combat area with foes (e.g., near a fountain).
 hp_flee_threshold: 5
-last_updated: '2026-07-29T00:36:31.965144+00:00'
+last_updated: '2026-07-29T22:25:52.202604+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -16,6 +15,8 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Focus on maintaining the fight loop and resource acquisition.
-priority: fight
-status: active
+notes: Goal paused due to repeated failure in finding/reaching both specified locations
+  ('fountain', 'newbie zone'). System mapping has stalled in The Sewers. User input
+  required for location clarification.
+priority: idle
+status: paused
