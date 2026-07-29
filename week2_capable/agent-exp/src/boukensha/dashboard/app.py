@@ -1,4 +1,4 @@
-"""Flask dashboard — five tabs with SSE live feed."""
+"""Flask dashboard — six tabs with SSE live feed."""
 
 from __future__ import annotations
 

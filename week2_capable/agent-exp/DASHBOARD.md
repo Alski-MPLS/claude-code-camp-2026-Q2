@@ -26,7 +26,7 @@ python bin/boukensha --web --port 4569
 
 ### Overview
 
-Landing tab. Summary cards for rooms known, frontier exits (known-but-unwalked), and unique entities (mobs/objects) seen across every recorded room, plus each tracked player's last-known HP/mana/move and current location (with where they came from).
+Landing tab. Summary cards for rooms known, frontier exits (known-but-unmapped), and unique entities (mobs/objects) seen across every recorded room, plus each tracked player's last-known HP/mana/move and current location (with where they came from).
 
 Data endpoint: `GET /api/overview`
 

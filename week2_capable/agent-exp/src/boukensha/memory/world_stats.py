@@ -9,8 +9,10 @@ from .world_graph import WorldGraph
 
 
 def frontier_stats(graph: WorldGraph, mem: RoomMemory) -> dict[str, int]:
-    """Known exits vs. exits actually walked (has a graph edge), across
-    every room the agent has recorded. 'Frontier' is known-but-unwalked —
+    """Known exits vs. exits with a corresponding graph edge, across every
+    room the agent has recorded (an edge may include an auto-inferred
+    reverse edge from a traversal in the other direction, not necessarily
+    a direct walk through this exit). 'Frontier' is known-but-unwalked —
     it deliberately does not exclude exits marked blocked in
     BlockedExits, since those are still known frontier, just not
     currently pursuable."""

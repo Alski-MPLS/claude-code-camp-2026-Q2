@@ -58,7 +58,7 @@ async function loadOverview() {
   const grid = document.getElementById('overview-grid');
   grid.innerHTML = [
     ['Rooms known', data.rooms_known],
-    ['Frontier', `${data.frontier.frontier} of ${data.frontier.known_exits} exits · ${data.frontier.walked} walked`],
+    ['Frontier', `${data.frontier.frontier} of ${data.frontier.known_exits} exits · ${data.frontier.walked} mapped`],
     ['Entities', `${data.entities.total} · ${data.entities.mobs} mobs · ${data.entities.objects} objects`],
   ].map(([label, value]) =>
     `<div class="overview-card"><div class="overview-card-label">${escapeHtml(label)}</div><div class="overview-card-value">${escapeHtml(String(value))}</div></div>`

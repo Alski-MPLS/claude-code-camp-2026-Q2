@@ -138,6 +138,7 @@ http://localhost:4568
 
 | Tab | What it shows |
 |---|---|
+| **Overview** | Default landing tab — summary cards for rooms known, frontier exits, and unique entities seen, plus each tracked player's last-known stats and location |
 | **Live** | Real-time SSE event stream — every agent turn, tool call, and response |
 | **Map** | Force-directed graph of visited rooms built from world memory |
 | **Waterfall** | Timing breakdown of each turn: prompt, tool calls, response |
