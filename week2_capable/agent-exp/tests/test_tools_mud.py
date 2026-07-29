@@ -452,3 +452,56 @@ def test_mud_opts_from_config_returns_dict_when_username_set():
     mock_cfg.mud_password = "secret"
     result = boukensha._mud_opts_from_config(mock_cfg)
     assert result == {"host": "localhost", "port": 4000, "name": "Hero", "password": "secret"}
+
+
+def test_check_score_persists_stats_to_player_tracker(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 20(20) hit, 100(100) mana and 85(85) movement points. > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "score"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    data = PlayerTracker(tmp_path).read_all()
+    assert data["Tester"]["stats"] == {
+        "hp": 20, "max_hp": 20,
+        "mana": 100, "max_mana": 100,
+        "move": 85, "max_move": 85,
+    }
+
+
+def test_check_non_score_kind_does_not_touch_player_tracker(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You aren't carrying anything. > "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "inventory"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    assert PlayerTracker(tmp_path).read_all() == {}
+
+
+def test_check_score_without_memory_dir_does_not_crash():
+    """check(kind='score') must still work when the tool is registered
+    without a memory_dir (tracker is None) — e.g. in older callers/tests
+    that don't pass it."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 20(20) hit, 100(100) mana and 85(85) movement points. > "
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("check", {"kind": "score"})
+    assert "20(20) hit" in result

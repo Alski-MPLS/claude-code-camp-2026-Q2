@@ -65,6 +65,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from boukensha.memory.parser import RoomParser
+from boukensha.memory.player_stats import PlayerStats
 from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.player_tracker import PlayerTracker
 
@@ -427,6 +428,14 @@ class Mud:
             block=lambda target, **_: _guard(session) or _send(session, f"examine {target}"),
         )
 
+        def _check_and_record(kind: str) -> str:
+            raw = _check_info(session, kind)
+            if tracker is not None and kind.strip().lower() == "score" and not raw.startswith("error:"):
+                stats = PlayerStats.parse_score(raw)
+                if stats:
+                    tracker.update_stats(name, stats)
+            return raw
+
         registry.tool(
             "check",
             description=(
@@ -446,7 +455,7 @@ class Mud:
                     ),
                 },
             },
-            block=lambda kind, **_: _check_info(session, kind),
+            block=lambda kind, **_: _check_and_record(kind),
         )
 
         # ── Movement ──────────────────────────────────────────────────────────
