@@ -23,6 +23,10 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - It also got thrown into the main menu. I think the character died so I need to add that logic to the code. 
 - It did die. It didn't show on the live feed but it tried to fight a larger monster and got thrown out of the game. Updated that code.
 - It also tried to fight a newbie corpse. Had to fix that also...... It's not really learning at this point..... 
+- I spent the day working on the pathing and mapping issue. It got very confused when it went into a dark area. It also got confused with finding the shortest path. The map feature was very helpful, especially when it started creating paths that made no sense. 
+- I think there is a problem with fighting monsters now and will have to look at it later. 
+- Pathing is working great now. I can find the bakery very quickly. It still gets a bit confused with some of the strange areas. Added a feature where it will show an arrow on where the character came from.
+- I had claude review the presentation and make some basic recommendations. It added an overview tab. 
 
 ## Technical Conclusions
 [todo]

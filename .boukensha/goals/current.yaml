@@ -1,7 +1,8 @@
-current_goal: skip the chessboard as that is too high a level for you to fight. Go
-  back to the newbie area and go to each room to find some easy monsters to fight.
+current_goal: Continue battling any easily defeatable foes (like 'pet dragon') found
+  in The Newbie Zone until gold is acquired or a level up occurs. Systematically explore
+  new areas if combat becomes difficult.
 hp_flee_threshold: 5
-last_updated: '2026-07-28T23:31:18.555205+00:00'
+last_updated: '2026-07-29T00:36:31.965144+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -15,6 +16,6 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Currently in 'The Temple Of Midgaard'. Fountain not located yet.
-priority: explore
+notes: Focus on maintaining the fight loop and resource acquisition.
+priority: fight
 status: active
