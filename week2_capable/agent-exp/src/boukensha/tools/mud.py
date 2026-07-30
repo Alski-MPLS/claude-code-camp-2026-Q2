@@ -868,7 +868,11 @@ def _door(session: MudSession, action: str, target: str) -> str:
     err = _check_enum(action, _DOOR_OPS, "action")
     if err:
         return err
-    return _send(session, f"{action.strip().lower()} {target}")
+    action = action.strip().lower()
+    t = target.strip().lower()
+    if t in _DIRECTIONS:
+        return _send(session, f"{action} door {t}")
+    return _send(session, f"{action} {target}")
 
 
 def _portal(session: MudSession, action: str, target: str | None) -> str:

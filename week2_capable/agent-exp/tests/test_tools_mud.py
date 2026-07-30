@@ -505,3 +505,45 @@ def test_check_score_without_memory_dir_does_not_crash():
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
     result = registry.dispatch("check", {"kind": "score"})
     assert "20(20) hit" in result
+
+
+def test_door_open_with_direction_sends_open_door_direction():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Okay.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("door", {"action": "open", "target": "east"})
+
+    mock_session.send_command.assert_called_once_with("open door east")
+    assert "Okay" in result
+
+
+def test_door_open_with_item_name_unchanged():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You open the chest.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("door", {"action": "open", "target": "chest"})
+
+    mock_session.send_command.assert_called_once_with("open chest")
+    assert "chest" in result
+
+
+def test_door_lock_with_direction_sends_lock_door_direction():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "*click*\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("door", {"action": "lock", "target": "north"})
+
+    mock_session.send_command.assert_called_once_with("lock door north")
+    assert "click" in result
