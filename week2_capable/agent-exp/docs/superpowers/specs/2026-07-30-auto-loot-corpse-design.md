@@ -1,4 +1,4 @@
-# Auto-loot corpse after combat
+# Auto-loot corpse after combat, and fix directional door commands
 
 ## Problem
 
@@ -65,3 +65,49 @@ You get a handful of gold coins from the corpse of the newbie monster.
 - Hunger/thirst automation.
 - Auto key-to-door matching.
 - Looting from anything other than the freshly-killed target's corpse.
+
+## Part 2: fix directional door commands
+
+### Problem
+
+A second transcript showed the `door` tool sends the wrong command for a
+door in a compass direction:
+
+```
+> open east
+There doesn't seem to be an east here.
+> open door
+But it's currently open!
+> open door east
+Okay.
+```
+
+`_door()` in `src/boukensha/tools/mud.py:864` currently always sends
+`"{action} {target}"` (e.g. `"open east"`), which the MUD rejects. The
+correct form for a compass-direction target is `"{action} door {direction}"`.
+A bare `"open door"` (no direction) resolves ambiguously to whichever door
+the MUD considers current/default, which is not reliable — the tool must
+always pass a direction through explicitly when the target is a direction.
+
+### Design
+
+`src/boukensha/tools/mud.py`, function `_door(session, action, target)`:
+
+- If `target` (lowercased/stripped) is a member of the existing
+  `_DIRECTIONS` set (`north/east/south/west/up/down`), send
+  `f"{action} door {target}"`.
+- Otherwise (target is an item/container name, e.g. `"chest"`), keep the
+  current behavior: send `f"{action} {target}"`.
+
+No tool signature or parameter changes — `door(action, target)` keeps
+its existing interface; only the constructed command string changes
+based on whether `target` is a direction.
+
+### Testing
+
+- New test: `door(action="open", target="east")` sends `"open door east"`.
+- New test: `door(action="open", target="chest")` (non-direction target)
+  still sends `"open chest"` — unchanged behavior.
+- Cover at least one other action (`lock`/`unlock`) with a direction target
+  to confirm the `"{action} door {direction}"` form applies generally, not
+  just to `open`.
