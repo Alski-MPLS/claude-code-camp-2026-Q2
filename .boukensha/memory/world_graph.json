@@ -306,6 +306,34 @@
     {
       "title": "The South End Of The Grand Pipe",
       "id": "de4dfd148827"
+    },
+    {
+      "title": "A White Square",
+      "id": "2d26f2fc5f86"
+    },
+    {
+      "title": "A Black Square",
+      "id": "c9ecd92569db"
+    },
+    {
+      "title": "A Black Square",
+      "id": "438310436af0"
+    },
+    {
+      "title": "A White Square",
+      "id": "12d6649b37e1"
+    },
+    {
+      "title": "A White Square",
+      "id": "b29afe522d61"
+    },
+    {
+      "title": "A Black Square",
+      "id": "703a105c0c9a"
+    },
+    {
+      "title": "A Black Square",
+      "id": "ff1643edd95f"
     }
   ],
   "edges": [
@@ -716,6 +744,11 @@
     },
     {
       "direction": "west",
+      "source": "4084515dd098",
+      "target": "2d26f2fc5f86"
+    },
+    {
+      "direction": "west",
       "source": "c70a48f67c1f",
       "target": "bad80c25f808"
     },
@@ -1068,6 +1101,86 @@
       "direction": "north",
       "source": "de4dfd148827",
       "target": "709cc0cdf229"
+    },
+    {
+      "direction": "east",
+      "source": "2d26f2fc5f86",
+      "target": "4084515dd098"
+    },
+    {
+      "direction": "north",
+      "source": "2d26f2fc5f86",
+      "target": "c9ecd92569db"
+    },
+    {
+      "direction": "west",
+      "source": "2d26f2fc5f86",
+      "target": "438310436af0"
+    },
+    {
+      "direction": "south",
+      "source": "2d26f2fc5f86",
+      "target": "703a105c0c9a"
+    },
+    {
+      "direction": "south",
+      "source": "c9ecd92569db",
+      "target": "2d26f2fc5f86"
+    },
+    {
+      "direction": "west",
+      "source": "c9ecd92569db",
+      "target": "12d6649b37e1"
+    },
+    {
+      "direction": "north",
+      "source": "c9ecd92569db",
+      "target": "b29afe522d61"
+    },
+    {
+      "direction": "east",
+      "source": "438310436af0",
+      "target": "2d26f2fc5f86"
+    },
+    {
+      "direction": "north",
+      "source": "438310436af0",
+      "target": "12d6649b37e1"
+    },
+    {
+      "direction": "east",
+      "source": "12d6649b37e1",
+      "target": "c9ecd92569db"
+    },
+    {
+      "direction": "north",
+      "source": "12d6649b37e1",
+      "target": "703a105c0c9a"
+    },
+    {
+      "direction": "south",
+      "source": "12d6649b37e1",
+      "target": "ff1643edd95f"
+    },
+    {
+      "direction": "south",
+      "source": "b29afe522d61",
+      "target": "c9ecd92569db"
+    },
+    {
+      "direction": "north",
+      "source": "703a105c0c9a",
+      "target": "2d26f2fc5f86"
+    },
+    {
+      "direction": "south",
+      "source": "703a105c0c9a",
+      "target": "12d6649b37e1"
+    },
+    {
+      "direction": "north",
+      "source": "ff1643edd95f",
+      "target": "12d6649b37e1"
     }
   ]
 }
