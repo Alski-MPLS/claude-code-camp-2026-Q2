@@ -97,6 +97,7 @@ def test_combat_loop_proceeds_when_consider_looks_safe(tmp_path):
     mock_session.read_until_prompt.side_effect = [
         "This will be a piece of cake.\n",              # consider
         "The rat is dead! You receive experience points.\n",  # kill
+        "You didn't find anything.\n",  # get all corpse
     ]
     Combat.register(
         registry, session=mock_session, goals_dir=tmp_path,
@@ -107,4 +108,45 @@ def test_combat_loop_proceeds_when_consider_looks_safe(tmp_path):
 
     assert "defeated" in result
     sent = [c.args[0] for c in mock_session.send_command.call_args_list]
-    assert sent == ["consider rat", "kill rat"]
+    assert sent == ["consider rat", "kill rat", "get all corpse"]
+
+
+def test_combat_loop_auto_loots_corpse_after_kill(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "This will be a piece of cake.\n",
+        "The rat is dead! You receive experience points.\n",
+        "You get a handful of gold coins from the corpse of the rat.\n",
+    ]
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["a rat"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "rat"})
+
+    assert "defeated" in result
+    assert "Loot: You get a handful of gold coins" in result
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert sent == ["consider rat", "kill rat", "get all corpse"]
+
+
+def test_combat_loop_auto_loot_false_skips_looting(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "The rat is dead! You receive experience points.\n"
+    Combat.register(registry, session=mock_session, goals_dir=tmp_path)
+
+    result = registry.dispatch(
+        "combat_loop", {"target": "rat", "force": True, "auto_loot": False}
+    )
+
+    assert "defeated" in result
+    assert "Loot:" not in result
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert "get all corpse" not in sent

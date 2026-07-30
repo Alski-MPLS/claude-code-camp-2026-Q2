@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from boukensha.goals.goal_manager import GoalManager
 from boukensha.goals.combat_monitor import CombatMonitor
-from boukensha.tools.mud import _match_npc, _no_living_target_message
+from boukensha.tools.mud import _match_npc, _no_living_target_message, _get_item
 
 if TYPE_CHECKING:
     from boukensha.registry import Registry
@@ -60,7 +60,13 @@ class Combat:
                 return int(m.group(1))
             return None
 
-        def _combat_loop(target: str, flee_hp: int = 5, force: bool = False, **_: Any) -> str:
+        def _combat_loop(
+            target: str,
+            flee_hp: int = 5,
+            force: bool = False,
+            auto_loot: bool = True,
+            **_: Any,
+        ) -> str:
             if not session.is_open:
                 return "error: not connected"
 
@@ -105,7 +111,11 @@ class Combat:
 
                 # Check if target is dead
                 if any(p in response_lower for p in _DEAD_PATTERNS):
-                    return f"Combat complete: {target} defeated after {rounds} round(s)."
+                    result = f"Combat complete: {target} defeated after {rounds} round(s)."
+                    if auto_loot:
+                        loot_resp = _get_item(session, "all", "corpse", None)
+                        result += f"\nLoot: {loot_resp}"
+                    return result
 
                 # Check HP from prompt if present
                 hp = _parse_hp(response)
@@ -133,6 +143,9 @@ class Combat:
                 "Always considers the target first and refuses to attack if it looks far "
                 "too dangerous (e.g. \"Do you feel lucky, punk?\") — pass force=true to "
                 "attack anyway. Otherwise automatically flees if HP drops to or below flee_hp. "
+                "On a kill, automatically loots the corpse (get all corpse) and includes the "
+                "loot result in the response — pass auto_loot=false to skip this and inspect "
+                "the corpse yourself first. "
                 "Returns when target dies, you flee, or the round limit is reached. "
                 "No LLM call per round — only use this for straightforward fights."
             ),
@@ -140,6 +153,7 @@ class Combat:
                 "target": {"type": "string", "description": "Name of the mob to attack"},
                 "flee_hp": {"type": "integer", "description": "Flee if HP drops to this value or below (default: 5)"},
                 "force": {"type": "boolean", "description": "Skip the pre-fight danger check and attack even if consider looks dangerous (default: false)"},
+                "auto_loot": {"type": "boolean", "description": "Automatically loot the corpse on a kill (default: true)"},
             },
             block=_combat_loop,
         )
