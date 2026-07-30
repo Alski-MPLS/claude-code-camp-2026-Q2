@@ -1,7 +1,8 @@
-current_goal: Let's go back into town and drink some water at the fountain and by
-  something at the bakery to eat.
+current_goal: Continue to look for foes to kill and grab more gold and experience.
+  Look for any other items that could be used. Keep going until you have gained a
+  level
 hp_flee_threshold: 5
-last_updated: '2026-07-30T13:43:02.097173+00:00'
+last_updated: '2026-07-30T14:53:37.845791+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -15,8 +16,7 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Goal paused due to repeated failure in finding/reaching both specified locations
-  ('fountain', 'newbie zone'). System mapping has stalled in The Sewers. User input
-  required for location clarification.
-priority: idle
+notes: Focus shift entirely to grinding EXP/Combat. Current target location is 'Entrance
+  To The Newbie Zone'. Need at least one enemy encounter to begin fighting.
+priority: fight
 status: active

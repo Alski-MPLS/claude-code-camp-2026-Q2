@@ -334,6 +334,110 @@
     {
       "title": "A Black Square",
       "id": "ff1643edd95f"
+    },
+    {
+      "title": "Inside The East Gate Of Midgaard",
+      "id": "ef89c06dd1bc"
+    },
+    {
+      "title": "Outside The East Gate Of Midgaard",
+      "id": "395ae45fe103"
+    },
+    {
+      "title": "The City Entrance",
+      "id": "fdfa3b45fefc"
+    },
+    {
+      "title": "The Weapon Shop",
+      "id": "cf6f6242ac2c"
+    },
+    {
+      "title": "Ye Olde Water Shoppe",
+      "id": "dfe19535a8b3"
+    },
+    {
+      "title": "The Laneway",
+      "id": "459c6aa111e8"
+    },
+    {
+      "title": "The Path To The Dwarven Village",
+      "id": "40726c06ba3c"
+    },
+    {
+      "title": "The Path At The Base Of The Mountain",
+      "id": "491f780c7f7f"
+    },
+    {
+      "title": "A Bright Hallway",
+      "id": "2f821c560292"
+    },
+    {
+      "title": "The South Stairs",
+      "id": "afbf5a4c5714"
+    },
+    {
+      "title": "The North Stairs",
+      "id": "e8e65f74ab3a"
+    },
+    {
+      "title": "The Balcony",
+      "id": "37b7d7b58a3c"
+    },
+    {
+      "title": "The Balcony",
+      "id": "30dc393514f2"
+    },
+    {
+      "title": "A Narrow Passage",
+      "id": "eebae29193e3"
+    },
+    {
+      "title": "The Hallway",
+      "id": "8dd05f0493c5"
+    },
+    {
+      "title": "The Statue's Room",
+      "id": "42df891e10d7"
+    },
+    {
+      "title": "A Bright Hallway",
+      "id": "c1f58ff84f1e"
+    },
+    {
+      "title": "The Alchemist's Room",
+      "id": "f4ff7b68dc47"
+    },
+    {
+      "title": "The Entrance",
+      "id": "497d3aa74336"
+    },
+    {
+      "title": "A Crossing Of Corridors",
+      "id": "99220f8905b3"
+    },
+    {
+      "title": "A Corner Room",
+      "id": "5549e7b6cd6f"
+    },
+    {
+      "title": "Another Corner",
+      "id": "445fbf8b6f63"
+    },
+    {
+      "title": "A T-Intersection In The Passage",
+      "id": "81ddf8883187"
+    },
+    {
+      "title": "Another Corner",
+      "id": "54587228eeff"
+    },
+    {
+      "title": "An Intersection Of Passages",
+      "id": "38cabe275812"
+    },
+    {
+      "title": "A Turn In The Passage",
+      "id": "fcf6b1914bdb"
     }
   ],
   "edges": [
@@ -356,6 +460,16 @@
       "direction": "south",
       "source": "57d37dcd93ba",
       "target": "d875e614ed9a"
+    },
+    {
+      "direction": "east",
+      "source": "57d37dcd93ba",
+      "target": "2f821c560292"
+    },
+    {
+      "direction": "north",
+      "source": "57d37dcd93ba",
+      "target": "c1f58ff84f1e"
     },
     {
       "direction": "north",
@@ -601,6 +715,16 @@
       "direction": "south",
       "source": "f55aecc816a1",
       "target": "52abdb69ab4d"
+    },
+    {
+      "direction": "east",
+      "source": "f55aecc816a1",
+      "target": "ef89c06dd1bc"
+    },
+    {
+      "direction": "north",
+      "source": "f55aecc816a1",
+      "target": "cf6f6242ac2c"
     },
     {
       "direction": "south",
@@ -1181,6 +1305,266 @@
       "direction": "north",
       "source": "ff1643edd95f",
       "target": "12d6649b37e1"
+    },
+    {
+      "direction": "west",
+      "source": "ef89c06dd1bc",
+      "target": "f55aecc816a1"
+    },
+    {
+      "direction": "east",
+      "source": "ef89c06dd1bc",
+      "target": "395ae45fe103"
+    },
+    {
+      "direction": "south",
+      "source": "ef89c06dd1bc",
+      "target": "dfe19535a8b3"
+    },
+    {
+      "direction": "west",
+      "source": "395ae45fe103",
+      "target": "ef89c06dd1bc"
+    },
+    {
+      "direction": "east",
+      "source": "395ae45fe103",
+      "target": "fdfa3b45fefc"
+    },
+    {
+      "direction": "west",
+      "source": "fdfa3b45fefc",
+      "target": "395ae45fe103"
+    },
+    {
+      "direction": "east",
+      "source": "fdfa3b45fefc",
+      "target": "459c6aa111e8"
+    },
+    {
+      "direction": "south",
+      "source": "cf6f6242ac2c",
+      "target": "f55aecc816a1"
+    },
+    {
+      "direction": "north",
+      "source": "dfe19535a8b3",
+      "target": "ef89c06dd1bc"
+    },
+    {
+      "direction": "west",
+      "source": "459c6aa111e8",
+      "target": "fdfa3b45fefc"
+    },
+    {
+      "direction": "down",
+      "source": "459c6aa111e8",
+      "target": "40726c06ba3c"
+    },
+    {
+      "direction": "up",
+      "source": "40726c06ba3c",
+      "target": "459c6aa111e8"
+    },
+    {
+      "direction": "north",
+      "source": "40726c06ba3c",
+      "target": "491f780c7f7f"
+    },
+    {
+      "direction": "south",
+      "source": "491f780c7f7f",
+      "target": "40726c06ba3c"
+    },
+    {
+      "direction": "west",
+      "source": "2f821c560292",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "east",
+      "source": "2f821c560292",
+      "target": "afbf5a4c5714"
+    },
+    {
+      "direction": "west",
+      "source": "afbf5a4c5714",
+      "target": "2f821c560292"
+    },
+    {
+      "direction": "north",
+      "source": "afbf5a4c5714",
+      "target": "e8e65f74ab3a"
+    },
+    {
+      "direction": "up",
+      "source": "afbf5a4c5714",
+      "target": "30dc393514f2"
+    },
+    {
+      "direction": "south",
+      "source": "afbf5a4c5714",
+      "target": "eebae29193e3"
+    },
+    {
+      "direction": "south",
+      "source": "e8e65f74ab3a",
+      "target": "afbf5a4c5714"
+    },
+    {
+      "direction": "up",
+      "source": "e8e65f74ab3a",
+      "target": "37b7d7b58a3c"
+    },
+    {
+      "direction": "west",
+      "source": "e8e65f74ab3a",
+      "target": "8dd05f0493c5"
+    },
+    {
+      "direction": "down",
+      "source": "37b7d7b58a3c",
+      "target": "e8e65f74ab3a"
+    },
+    {
+      "direction": "south",
+      "source": "37b7d7b58a3c",
+      "target": "30dc393514f2"
+    },
+    {
+      "direction": "north",
+      "source": "30dc393514f2",
+      "target": "37b7d7b58a3c"
+    },
+    {
+      "direction": "down",
+      "source": "30dc393514f2",
+      "target": "afbf5a4c5714"
+    },
+    {
+      "direction": "north",
+      "source": "eebae29193e3",
+      "target": "afbf5a4c5714"
+    },
+    {
+      "direction": "south",
+      "source": "eebae29193e3",
+      "target": "f4ff7b68dc47"
+    },
+    {
+      "direction": "east",
+      "source": "8dd05f0493c5",
+      "target": "e8e65f74ab3a"
+    },
+    {
+      "direction": "west",
+      "source": "8dd05f0493c5",
+      "target": "42df891e10d7"
+    },
+    {
+      "direction": "east",
+      "source": "42df891e10d7",
+      "target": "8dd05f0493c5"
+    },
+    {
+      "direction": "south",
+      "source": "42df891e10d7",
+      "target": "c1f58ff84f1e"
+    },
+    {
+      "direction": "north",
+      "source": "c1f58ff84f1e",
+      "target": "42df891e10d7"
+    },
+    {
+      "direction": "south",
+      "source": "c1f58ff84f1e",
+      "target": "57d37dcd93ba"
+    },
+    {
+      "direction": "north",
+      "source": "f4ff7b68dc47",
+      "target": "eebae29193e3"
+    },
+    {
+      "direction": "down",
+      "source": "f4ff7b68dc47",
+      "target": "497d3aa74336"
+    },
+    {
+      "direction": "up",
+      "source": "497d3aa74336",
+      "target": "f4ff7b68dc47"
+    },
+    {
+      "direction": "north",
+      "source": "497d3aa74336",
+      "target": "99220f8905b3"
+    },
+    {
+      "direction": "south",
+      "source": "99220f8905b3",
+      "target": "497d3aa74336"
+    },
+    {
+      "direction": "east",
+      "source": "99220f8905b3",
+      "target": "5549e7b6cd6f"
+    },
+    {
+      "direction": "west",
+      "source": "5549e7b6cd6f",
+      "target": "99220f8905b3"
+    },
+    {
+      "direction": "north",
+      "source": "5549e7b6cd6f",
+      "target": "445fbf8b6f63"
+    },
+    {
+      "direction": "south",
+      "source": "445fbf8b6f63",
+      "target": "5549e7b6cd6f"
+    },
+    {
+      "direction": "west",
+      "source": "445fbf8b6f63",
+      "target": "81ddf8883187"
+    },
+    {
+      "direction": "east",
+      "source": "81ddf8883187",
+      "target": "445fbf8b6f63"
+    },
+    {
+      "direction": "south",
+      "source": "81ddf8883187",
+      "target": "54587228eeff"
+    },
+    {
+      "direction": "west",
+      "source": "81ddf8883187",
+      "target": "fcf6b1914bdb"
+    },
+    {
+      "direction": "north",
+      "source": "54587228eeff",
+      "target": "81ddf8883187"
+    },
+    {
+      "direction": "east",
+      "source": "54587228eeff",
+      "target": "38cabe275812"
+    },
+    {
+      "direction": "west",
+      "source": "38cabe275812",
+      "target": "54587228eeff"
+    },
+    {
+      "direction": "east",
+      "source": "fcf6b1914bdb",
+      "target": "81ddf8883187"
     }
   ]
 }
