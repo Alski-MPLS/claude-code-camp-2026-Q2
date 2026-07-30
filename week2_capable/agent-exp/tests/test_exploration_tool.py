@@ -101,7 +101,7 @@ def test_explore_opens_closed_door_and_retries(tmp_path):
     assert "closed" in result.lower()
     assert "discovered 'room e'" in result.lower()
     sent = [c.args[0] for c in session.send_command.call_args_list]
-    assert sent == ["look", "look south", "south", "look", "open south", "south", "look"]
+    assert sent == ["look", "look south", "south", "look", "open door south", "south", "look"]
 
 
 def test_explore_marks_exit_blocked_when_still_stuck_after_opening(tmp_path):

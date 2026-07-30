@@ -177,7 +177,7 @@ class Exploration:
             # Didn't move — could just be a closed (not locked) door. Try
             # opening it once and retry before giving up on this exit.
             session.drain()
-            session.send_command(f"open {direction}")
+            session.send_command(f"open door {direction}")
             session.read_until_prompt()
             session.drain()
             session.send_command(direction)
