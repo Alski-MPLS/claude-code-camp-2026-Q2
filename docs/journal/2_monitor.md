@@ -29,6 +29,8 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - I had claude review the presentation and make some basic recommendations. It added an overview tab. 
 - The web monitoring solution is helping out alot. I could add more features but for now, it's doing the job and helping with flushing out the logic for the agent. I can have claude code review the sessions files and make recommendations where it gets stuck or has a loop.
 - I think I have the overall logic to a point where I can start building more features. It can get to the right areas if I'm a bit more specfic at the prompt. It can fight and can obtain items and gold. It knows where the fountain and bakery are and can get there quickly. It knows now how to train. I've found that that I have to play the game myself if it gets stuck and then provide it with the necessary output so it can learn. I was hoping it will figure this out on it's own but that might be week 3. 
+    - Example: I had to figure out how to open the doors in the newbie area and take that info and ask Claude to add it to the prompts. 
+- It can still get confused if there is not a clear title or different description for the rooms. It still has issues with the chess board area and I had to manually get him out of there. It also had issues with darkness. I finally had to delete the character and recreate it. I added some logic to avoid darkness until we can figure out how to obtain a light source.
 - So, I'm going to leave it as is for now. I'll make sure to update the folder name to week2_monitoring and then finish up this md file.
 
 
