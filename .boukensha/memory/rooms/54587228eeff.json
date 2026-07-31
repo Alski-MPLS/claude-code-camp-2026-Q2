@@ -1,0 +1,10 @@
+{
+  "title": "Another Corner",
+  "description": "Well... what is there to say.  More fungus, more weird sounds, and a slight breeze from the north.  Bet you want to sign a lease, don't ya...",
+  "exits": {
+    "north": null,
+    "east": null
+  },
+  "npcs": [],
+  "items": []
+}

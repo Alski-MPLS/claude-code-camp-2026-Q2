@@ -1,0 +1,12 @@
+{
+  "title": "The Armory",
+  "description": "The armory has a wide assortment of armor displayed on the walls and in the windows. Helmets, shields, and suits of armor are for sale. To the north is the main street. On the wall is a small note.",
+  "exits": {
+    "north": null
+  },
+  "npcs": [],
+  "items": [
+    "An odif yltsaeb is here, walking backwards.",
+    "An armorer stands here displaying his new (and previously owned) armors."
+  ]
+}

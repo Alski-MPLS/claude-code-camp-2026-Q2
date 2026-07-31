@@ -1,0 +1,10 @@
+{
+  "title": "The Dark Passageway",
+  "description": "A passage.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

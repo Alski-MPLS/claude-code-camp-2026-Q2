@@ -1,0 +1,27 @@
+{
+  "4ee99bd863aa": {
+    "down": "blocked"
+  },
+  "12e2340bd966": {
+    "south": "blocked"
+  },
+  "d8df7f5799d4": {
+    "east": "blocked"
+  },
+  "204f626522a8": {
+    "south": "blocked"
+  },
+  "d24cefa7a84d": {
+    "north": "blocked"
+  },
+  "c370995a77a2": {
+    "south": "blocked"
+  },
+  "38cabe275812": {
+    "north": "blocked",
+    "south": "blocked"
+  },
+  "fcf6b1914bdb": {
+    "south": "blocked"
+  }
+}

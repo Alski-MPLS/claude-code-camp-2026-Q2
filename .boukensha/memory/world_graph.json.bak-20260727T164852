@@ -1,0 +1,292 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "title": "The Temple Square",
+      "id": "45991aa22d38"
+    },
+    {
+      "title": "The Entrance Hall Of The Grunting Boar Inn",
+      "id": "cbb23bdcb615"
+    },
+    {
+      "title": "The Entrance To The Clerics' Guild",
+      "id": "d24cefa7a84d"
+    },
+    {
+      "title": "Market Square",
+      "id": "bdf5cb167134"
+    },
+    {
+      "title": "Main Street",
+      "id": "b4a4177eb725"
+    },
+    {
+      "title": "The Pet Shop",
+      "id": "2a260396b811"
+    },
+    {
+      "title": "The Dark Alley",
+      "id": "ee20fa4b7a57"
+    },
+    {
+      "title": "The General Store",
+      "id": "659f54a883af"
+    },
+    {
+      "title": "The Post Office",
+      "id": "c1199c4383b5"
+    },
+    {
+      "title": "The Temple Of Midgaard",
+      "id": "bad80c25f808"
+    },
+    {
+      "title": "The Reading Room",
+      "id": "76986e54a80b"
+    },
+    {
+      "title": "The Common Square",
+      "id": "a26bc7ad8e48"
+    },
+    {
+      "title": "The Eastern End Of Poor Alley",
+      "id": "b5b42aee5e9c"
+    },
+    {
+      "title": "The Bakery",
+      "id": "0765e3b81db2"
+    },
+    {
+      "title": "Main Street",
+      "id": "6e1a810416c6"
+    },
+    {
+      "title": "By The Temple Altar",
+      "id": "dac20e1bcea5"
+    },
+    {
+      "title": "Behind The Temple Altar",
+      "id": "b3f2b90ff8b6"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "5df2d717dab7"
+    },
+    {
+      "title": "Alas, you cannot go that way...",
+      "id": "0864156e9be7"
+    },
+    {
+      "title": "The Great Field Of Midgaard",
+      "id": "2e16758d7041"
+    },
+    {
+      "title": "The Dirt Path",
+      "id": "8a4ba9f8e7b2"
+    },
+    {
+      "title": "This zone is above your recommended level.",
+      "id": "bea48a9acc85"
+    },
+    {
+      "title": "This zone is above your recommended level.",
+      "id": "9eed1e9f4ffa"
+    },
+    {
+      "title": "A White Square",
+      "id": "2d26f2fc5f86"
+    },
+    {
+      "title": "This zone is above your recommended level.",
+      "id": "edfaa957b7f0"
+    },
+    {
+      "title": "A Black Square",
+      "id": "c9ecd92569db"
+    },
+    {
+      "title": "This zone is above your recommended level.",
+      "id": "c4fe50ae4f38"
+    }
+  ],
+  "edges": [
+    {
+      "direction": "east",
+      "source": "45991aa22d38",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "north",
+      "source": "45991aa22d38",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "west",
+      "source": "cbb23bdcb615",
+      "target": "d24cefa7a84d"
+    },
+    {
+      "direction": "north",
+      "source": "cbb23bdcb615",
+      "target": "c1199c4383b5"
+    },
+    {
+      "direction": "west",
+      "source": "cbb23bdcb615",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "south",
+      "source": "d24cefa7a84d",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "east",
+      "source": "bdf5cb167134",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "west",
+      "source": "bdf5cb167134",
+      "target": "b5b42aee5e9c"
+    },
+    {
+      "direction": "north",
+      "source": "bdf5cb167134",
+      "target": "45991aa22d38"
+    },
+    {
+      "direction": "south",
+      "source": "b4a4177eb725",
+      "target": "2a260396b811"
+    },
+    {
+      "direction": "south",
+      "source": "b4a4177eb725",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "north",
+      "source": "2a260396b811",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "east",
+      "source": "2a260396b811",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "ee20fa4b7a57",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "south",
+      "source": "659f54a883af",
+      "target": "b4a4177eb725"
+    },
+    {
+      "direction": "south",
+      "source": "659f54a883af",
+      "target": "2a260396b811"
+    },
+    {
+      "direction": "south",
+      "source": "c1199c4383b5",
+      "target": "cbb23bdcb615"
+    },
+    {
+      "direction": "west",
+      "source": "bad80c25f808",
+      "target": "76986e54a80b"
+    },
+    {
+      "direction": "south",
+      "source": "bad80c25f808",
+      "target": "a26bc7ad8e48"
+    },
+    {
+      "direction": "north",
+      "source": "bad80c25f808",
+      "target": "dac20e1bcea5"
+    },
+    {
+      "direction": "west",
+      "source": "76986e54a80b",
+      "target": "bad80c25f808"
+    },
+    {
+      "direction": "east",
+      "source": "a26bc7ad8e48",
+      "target": "ee20fa4b7a57"
+    },
+    {
+      "direction": "north",
+      "source": "a26bc7ad8e48",
+      "target": "659f54a883af"
+    },
+    {
+      "direction": "north",
+      "source": "b5b42aee5e9c",
+      "target": "0765e3b81db2"
+    },
+    {
+      "direction": "east",
+      "source": "6e1a810416c6",
+      "target": "bdf5cb167134"
+    },
+    {
+      "direction": "north",
+      "source": "dac20e1bcea5",
+      "target": "b3f2b90ff8b6"
+    },
+    {
+      "direction": "north",
+      "source": "b3f2b90ff8b6",
+      "target": "5df2d717dab7"
+    },
+    {
+      "direction": "east",
+      "source": "5df2d717dab7",
+      "target": "0864156e9be7"
+    },
+    {
+      "direction": "north",
+      "source": "5df2d717dab7",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "west",
+      "source": "2e16758d7041",
+      "target": "8a4ba9f8e7b2"
+    },
+    {
+      "direction": "west",
+      "source": "8a4ba9f8e7b2",
+      "target": "bea48a9acc85"
+    },
+    {
+      "direction": "west",
+      "source": "bea48a9acc85",
+      "target": "9eed1e9f4ffa"
+    },
+    {
+      "direction": "north",
+      "source": "2d26f2fc5f86",
+      "target": "edfaa957b7f0"
+    },
+    {
+      "direction": "east",
+      "source": "c9ecd92569db",
+      "target": "0864156e9be7"
+    },
+    {
+      "direction": "north",
+      "source": "c9ecd92569db",
+      "target": "c4fe50ae4f38"
+    }
+  ]
+}

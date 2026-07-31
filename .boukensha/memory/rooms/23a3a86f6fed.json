@@ -1,0 +1,10 @@
+{
+  "title": "The Entrance To The Newbie Zone",
+  "description": "Ahhh... the entrance to the newbie zone!  Just the place you have been looking for.  Well, when you've readied yourself you can enter to the north.",
+  "exits": {
+    "north": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

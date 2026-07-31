@@ -1,0 +1,13 @@
+{
+  "title": "The Post Office",
+  "description": "You are in the central post office for Midgaard.  Piles of assorted mail lay untouched in the corners, collecting cobwebs.  Several large crates have been pried open by curious customs agents, and are now stacked along the west wall, hiding plenty of 'WANTED' posters. There is a sign posted on the wall here.",
+  "exits": {
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A janitor is walking around, cleaning up.",
+    "An oozing green gelatinous blob is here, sucking in bits of debris.",
+    "The head postmaster is standing here, waiting to help you with your mail."
+  ]
+}

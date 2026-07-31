@@ -1,0 +1,10 @@
+{
+  "title": "Behind The Temple Altar",
+  "description": "You are on a dirt path leading away from the Temple Altar which is south of here.  To the north, the path continues through the lush contryside of Midgaard towards the Dragonhelm Mountains far off to the north.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -1,0 +1,11 @@
+{
+  "title": "The Junction",
+  "description": "You stand in a junction leading north, west and east.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

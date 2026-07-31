@@ -1,0 +1,10 @@
+{
+  "title": "The Small Room",
+  "description": "The only thing in this room of interest is a chair, and that appears to have been bolted to the rock floor.  A doorway leads south and another leads east into darkness.",
+  "exits": {
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

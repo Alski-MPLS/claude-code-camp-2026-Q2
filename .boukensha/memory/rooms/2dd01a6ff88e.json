@@ -1,0 +1,10 @@
+{
+  "title": "The Beginning Of The Passage",
+  "description": "You find yourself entering a long corridor.  You can hear the sound of creatures roaming about, but you can't tell where the sound emanates from exactly. Exits lead to the east along the hallway, and south back to the entrance.",
+  "exits": {
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

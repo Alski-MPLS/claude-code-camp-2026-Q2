@@ -1,0 +1,16 @@
+{
+  "title": "The Grunting Boar",
+  "description": "You are standing in the bar.  The bar is set against the northern wall, old archaic writing, carvings and symbols cover its top.  A fireplace is built into the western wall, and through the southeastern windows you can see the temple square.  This place makes you feel like home. A small sign with big letters is fastened to the bar.",
+  "exits": {
+    "west": null
+  },
+  "npcs": [
+    "A singing, happy Drunk.",
+    "A singing, happy Drunk.",
+    "A singing, happy Drunk."
+  ],
+  "items": [
+    "A janitor is walking around, cleaning up.",
+    "A bartender watches you calmly, while he skillfully mixes a drink."
+  ]
+}

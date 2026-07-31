@@ -1,0 +1,11 @@
+{
+  "title": "The Dark Passageway",
+  "description": "You can't see anything but the ground where you put your feet. The passageway seems to continue west and north.  To the east there is water covering the floor and that leads through an arched entry to a watery sewer.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

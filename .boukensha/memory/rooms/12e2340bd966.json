@@ -1,0 +1,12 @@
+{
+  "title": "The Levee",
+  "description": "You are at the levee.  South of here you see the river gently flowing west. The river bank is very low making it possible to enter the river.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A retired captain stands here, selling boats."
+  ]
+}

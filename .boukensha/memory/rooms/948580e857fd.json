@@ -1,0 +1,12 @@
+{
+  "title": "Grubby Inn",
+  "description": "You are inside the old Grubby Inn.  This place has not been cleaned for several decades; vile smells make you dizzy.",
+  "exits": {
+    "north": null
+  },
+  "npcs": [],
+  "items": [
+    "A beggar is here, asking for a few coins.",
+    "Filthy is standing here, eager to serve you a special drink."
+  ]
+}

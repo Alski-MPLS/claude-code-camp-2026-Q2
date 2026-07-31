@@ -1,0 +1,11 @@
+{
+  "title": "The Weapon Shop",
+  "description": "The smell of worked metals and various quenching oils fills the room.  Every available space in the room including the ceiling is loaded with various equipment and weaponry.  There is a small note on the counter.",
+  "exits": {
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A weaponsmith is standing here."
+  ]
+}

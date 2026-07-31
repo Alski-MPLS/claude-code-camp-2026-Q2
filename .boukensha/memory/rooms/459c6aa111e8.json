@@ -1,0 +1,12 @@
+{
+  "title": "The Laneway",
+  "description": "The trees stand close here, and the tall, bushy undergrowth prevents you from seeing far in any direction save east, where a broad lane continues off into the distance; and west, where the same lane continues towards what looks like a fairly large city.  The muted sounds of city commotion reach your ears from a distance; stray dogs barking, children crying, and street salesmen shouting. A steep path leads down from here to the northeast towards the Dwarven Village, and a small trail leads through the trees towards the hills to the north.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "west": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": []
+}

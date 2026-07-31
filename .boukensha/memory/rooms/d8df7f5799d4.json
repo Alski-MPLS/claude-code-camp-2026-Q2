@@ -1,0 +1,14 @@
+{
+  "title": "The Entrance Hall To The Guild Of Thieves",
+  "description": "The entrance hall to the thieves' and assassins' guild.  A place where you can lose both your life and your money, if you are not careful.  To the north is the dark alley and to the east is the thieves' bar.",
+  "exits": {
+    "north": null,
+    "east": null
+  },
+  "npcs": [
+    "A cityguard stands here."
+  ],
+  "items": [
+    "An automatic teller machine has been installed in the wall here."
+  ]
+}

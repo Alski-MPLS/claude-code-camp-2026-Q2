@@ -1,0 +1,12 @@
+{
+  "title": "The Watery Sewer Bend",
+  "description": "You can't see anything but the water you're in up to your hips.  The sewer seems to bend and lead south and west.",
+  "exits": {
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "The small hairy Spider is here, busy with its web."
+  ]
+}

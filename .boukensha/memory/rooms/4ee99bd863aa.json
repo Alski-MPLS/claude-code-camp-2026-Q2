@@ -1,0 +1,10 @@
+{
+  "title": "The Dump",
+  "description": "The dump, where the people from the city drop their garbage.  Through the garbage you can see a large junction of pipes, looks like the entrance to the sewer system.  North of here you see the common square.",
+  "exits": {
+    "north": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": []
+}

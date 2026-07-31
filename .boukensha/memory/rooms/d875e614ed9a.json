@@ -1,0 +1,12 @@
+{
+  "title": "More Of The Hallway",
+  "description": "Oh joy!  More of this annoying passage.  Perhaps there is something more exciting through that door to the west?  Or you can keep searching the hallways to the north or south.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ]
+}

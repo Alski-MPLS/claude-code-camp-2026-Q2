@@ -1,0 +1,10 @@
+{
+  "title": "The End Of The Passage",
+  "description": "Ahhh... at last, the end of the hallway... you can exit into open air to the west,or return to the east and make sure you didn't miss anything.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

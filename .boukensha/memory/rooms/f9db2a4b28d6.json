@@ -1,0 +1,13 @@
+{
+  "title": "Wall Road",
+  "description": "You are walking next to the western city wall.  Wall Road continues further north and south.  A small, poor alley leads east. Some letters have been written on the wall here.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "The Mayor is standing here."
+  ]
+}

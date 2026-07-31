@@ -1,0 +1,12 @@
+{
+  "title": "The Sewer Pipe",
+  "description": "You are in what reminds you of a foul sewer, as if you liked being here! You can see two exits leading either north or south.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the small Spider is lying here."
+  ]
+}

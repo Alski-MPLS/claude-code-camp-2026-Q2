@@ -1,31 +1,62 @@
 # Architecture — `agent-exp`
 
 Enhanced MUD agent with persistent room memory, goal tracking, token-saving
-programs, and a Python web dashboard.
+programs, autonomous exploration, combat safety gates, and a Python web
+dashboard.
 
 ## Component Overview
 
 | Component | Location | Responsibility |
 |---|---|---|
-| **`RoomParser`** | `src/boukensha/memory/parser.py` | Pure function: raw MUD `look` text → structured dict (title, description, exits, npcs, items) |
+| **`RoomParser`** | `src/boukensha/memory/parser.py` | Pure function: raw MUD `look` text → structured dict (title, description, exits, npcs, items). Skips leading zone-banner/failure-message lines (anything ending in `.`/`!`/`?`) to find the real title, so e.g. "This zone is above the level of most zones..." or "Alas, you cannot go that way..." never gets recorded as a fake room. Files corpses ("... is lying here.") as items, not npcs, regardless of name length. |
 | **`RoomMemory`** | `src/boukensha/memory/room_memory.py` | Reads/writes `.boukensha/memory/rooms/{hash}.json`; hash = `sha256(title + "\n" + desc)[:12]` |
-| **`WorldGraph`** | `src/boukensha/memory/world_graph.py` | NetworkX DiGraph of rooms connected by exit edges; persisted to `.boukensha/memory/world_graph.json` |
-| **`Pathfinder`** | `src/boukensha/memory/pathfinder.py` | Dijkstra shortest path over `WorldGraph`; returns ordered direction list |
+| **`WorldGraph`** | `src/boukensha/memory/world_graph.py` | NetworkX DiGraph of rooms connected by exit edges; persisted to `.boukensha/memory/world_graph.json`. `add_edge()` drops any stale same-direction edge to a different room before recording the new one, and — only when no real edge already claims that direction on the far side, and only when it doesn't contradict the destination's own known exits — infers the reverse edge too, so a room only ever approached from one side is still pathfinding-reachable. |
+| **`Pathfinder`** | `src/boukensha/memory/pathfinder.py` | Dijkstra shortest path over `WorldGraph`. Returns a `Route` (directions + the expected room hash after each step, for drift detection). `route_by_title()` matches by substring first, then falls back to all-significant-words-must-match overlap (`word_overlap_matches`) to avoid a generic shared word — e.g. "guild" — matching the wrong room; when multiple rooms match, picks whichever has the shortest real route. |
 | **`GoalManager`** | `src/boukensha/goals/goal_manager.py` | Reads/writes `.boukensha/goals/current.yaml`; exposes `read()`, `update(**kwargs)`, `reset()` |
 | **`KnowledgeManager`** | `src/boukensha/memory/knowledge.py` | Reads/writes `.boukensha/knowledge.yaml`; exposes `add(topic, fact, source)`, `search(query)`, `read_all()`; atomic writes; case-insensitive deduplication by topic |
+| **`BlockedExits`** | `src/boukensha/memory/blocked_exits.py` | Persists exits confirmed to need something the agent doesn't have yet (locked door, dark room needing light) per room+direction, with a reason string, to `.boukensha/memory/blocked_exits.json` — so `explore()` stops retrying them every pass. `unmark()` clears one once a workaround is found. |
+| **`darkness`** | `src/boukensha/memory/darkness.py` | `is_dark_room(raw)` — detects the MUD's "pitch black" response (no title/description/exits), whether standing in it or peeking into it from next door |
 | **`CombatMonitor`** | `src/boukensha/goals/combat_monitor.py` | Stateless: checks HP vs threshold; returns flee directive if needed |
 | **`EventBus`** | `src/boukensha/dashboard/event_bus.py` | Thread-safe queue; `Logger` publishes structured events; SSE endpoint consumes |
-| **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Overview (default), Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static force-directed map |
+| **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Overview (default), Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static compass-grid map with player position markers |
 | **`PlayerTracker`** | `src/boukensha/memory/player_tracker.py` | Reads/writes `.boukensha/memory/players.json`; tracks each character's room position (current + previous) and last-known stats |
 | **`PlayerStats`** | `src/boukensha/memory/player_stats.py` | Pure function: parses the MUD `score` command's raw text into `{hp, max_hp, mana, max_mana, move, max_move}` |
 | **`world_stats`** | `src/boukensha/memory/world_stats.py` | `frontier_stats()`/`entity_stats()` — aggregate known-vs-mapped exits and unique mobs/objects across every recorded room, for the Overview tab |
-| **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step |
+| **`_walk` (`walk_route`)** | `src/boukensha/tools/_walk.py` | Shared step-by-step route walker used by both `navigate_to` and `explore`. Executes a `Route` one move at a time and stops the instant reality stops matching the plan — never blindly finishes a multi-step route against a room the character isn't actually in anymore. Returns a `WalkOutcome` (`arrived` / `blocked` / `drifted` / `lost`), self-healing the graph with the edge actually observed on `drifted`. |
+| **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step. Destination matches room titles first, then falls back to searching every mapped room's description/items/npcs (a landmark like "the fountain"); disambiguates multiple matches by shortest route; distinguishes "known room but unreachable" (one-way passage) from "no match" (with near-miss suggestions) so the LLM gets an actionable message instead of a flat failure. |
+| **`explore` tool** | `src/boukensha/tools/exploration.py` | Finds the nearest room with a known-but-unwalked exit (seen in a `look`'s `[ Exits: ]` line but with no graph edge yet), routes there via `Pathfinder`/`walk_route`, then probes the frontier exit itself — peeks before moving to avoid walking blind into a dark room, retries a closed (not locked) door once, and marks the exit blocked via `BlockedExits` if it still doesn't yield. No destination needed; call repeatedly to expand the map outward. |
 | **`process_room` tool** | `src/boukensha/tools/room_processor.py` | Parses current room, diffs vs memory; returns only new/changed info to LLM |
-| **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions |
+| **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions. Hard-refuses to engage a target that isn't a currently-known living NPC in the room (catches "fighting" a corpse or a name that's simply not there), and separately refuses (regardless of the first check) if its own `consider` call comes back matching a danger-phrase list (e.g. "Do you feel lucky, punk?") — both gates skippable only via explicit `force=true`. On a kill, auto-loots the corpse (`auto_loot=true` by default) and folds the loot result into the response. |
+| **`attack` / `consider` / `skill_strike`** | `src/boukensha/tools/mud.py` | Gated the same way as `combat_loop`: refuse a target that isn't in the shared "known NPCs in this room" list, populated by every `move`/bare `look`. `skill_strike`'s `rescue`/`assist` are exempt (they target a player, not an npc). |
+| **`door` tool** | `src/boukensha/tools/mud.py` | Open/close/lock/unlock a door or container. A direction target (e.g. `north`) sends `<action> door <direction>`, matching what the MUD's door syntax actually expects; a named target sends `<action> <target>` directly. |
 | **`knowledge_add` / `knowledge_search` tools** | `src/boukensha/tools/knowledge.py` | Agent calls `knowledge_add` to persist a discovered fact; `knowledge_search` for keyword lookup across all stored facts |
 | **`build_knowledge_section`** | `src/boukensha/_knowledge_injection.py` | Formats stored entries into a `## World Knowledge` block (≤2000-token cap) appended to the system prompt at startup |
 | **`bin/boukensha`** | `bin/boukensha` | CLI entry point: launches `repl()` with `--web` (default) or `--no-web` |
 | **Existing core** | `src/boukensha/*.py` | Agent loop, backends, JSONL logger, context, REPL, TUI — unchanged |
+
+---
+
+## Cross-Tool Position Sync
+
+`move` (raw), `navigate_to`, `explore`, and `process_room` are four separate
+tool registrars that can each move the character, but only one of them —
+whichever ran most recently — knows where the character actually is. They
+share three single-slot references, created once in `__init__.py` and
+passed to every registrar:
+
+- **`prev_hash_ref`** — the room hash the *next* raw `move` should draw its
+  edge from.
+- **`last_direction_ref`** — the direction of a move still in flight, so a
+  crash/disconnect mid-move doesn't leave a bogus edge behind.
+- **`current_npcs_ref`** — the NPC list `RoomParser` saw in the last room
+  look, read by every combat tool's presence gate (see below).
+
+Without this, a live bug reproduced in `test_position_sync.py`: `navigate_to`
+or `explore` would move the character, but a *later* raw `move` call would
+still wire its edge from the stale room `prev_hash_ref` remembered from
+before those tools ran — producing impossible double connections, like a
+room ending up with two different "south" exits pointing at two different
+rooms.
 
 ---
 
@@ -36,7 +67,7 @@ flowchart TB
     subgraph inputs["Inputs"]
         USER["User goal\n(browser chat or REPL)"]
         MUD["MUD socket response\n(raw telnet text)"]
-        MEMFILES[".boukensha/memory/\nrooms/*.json\nworld_graph.json"]
+        MEMFILES[".boukensha/memory/\nrooms/*.json\nworld_graph.json\nblocked_exits.json"]
         PLAYERFILE[".boukensha/memory/\nplayers.json"]
         GOALFILE[".boukensha/goals/\ncurrent.yaml"]
         KNOWFILE[".boukensha/\nknowledge.yaml"]
@@ -53,8 +84,10 @@ flowchart TB
     subgraph memory["Memory subsystem"]
         PARSER["RoomParser\n(pure, no LLM)"]
         ROOMEMEM["RoomMemory\nread/write hash-keyed JSON"]
-        WGRAPH["WorldGraph\nNetworkX DiGraph"]
-        PATHFIND["Pathfinder\nDijkstra shortest path"]
+        WGRAPH["WorldGraph\nNetworkX DiGraph\n+ reverse-edge inference"]
+        PATHFIND["Pathfinder\nDijkstra + Route\ntitle/landmark matching"]
+        BLOCKED["BlockedExits\nlocked/dark exits, with reason"]
+        DARK["darkness.is_dark_room()"]
         PLAYERTRACK["PlayerTracker\nposition + stats"]
         WSTATS["world_stats\nfrontier_stats / entity_stats"]
     end
@@ -71,16 +104,18 @@ flowchart TB
     end
 
     subgraph tools["Token-saving programs\n(registered as agent tools)"]
-        NAVTOOL["navigate_to(dest)\n→ Pathfinder → move commands"]
+        NAVTOOL["navigate_to(dest)\n→ Pathfinder → walk_route"]
+        EXPLORETOOL["explore()\n→ nearest frontier → walk_route\n→ probe exit, avoid darkness"]
         ROOMTOOL["process_room()\n→ RoomParser → diff vs memory"]
-        CMBTOOL["combat_loop(target)\n→ Python fight loop"]
+        CMBTOOL["combat_loop(target)\n→ npc-presence + danger gates\n→ Python fight loop → auto-loot"]
+        WALKSHARED["walk_route()\nshared by navigate_to + explore"]
     end
 
     subgraph dashboard["Web dashboard (Flask)"]
         SSE["SSE endpoint\n/events"]
         OVERVIEWTAB["Overview tab (default)\nrooms/frontier/entities summary\n+ per-player stats & location"]
         LIVETAB["Live tab\nchat + live log"]
-        MAPTAB["Map tab\nD3 force-directed graph"]
+        MAPTAB["Map tab\ncompass-grid layout\n+ player position markers"]
         WFTAB["Waterfall tab\nper-step timing"]
         GOALTAB["Goals tab\ncurrent.yaml viewer"]
         SESTAB["Sessions tab\nJSONL transcript viewer"]
@@ -95,6 +130,7 @@ flowchart TB
 
     AGENT -->|"tool dispatch"| ROOMTOOL
     AGENT -->|"tool dispatch"| NAVTOOL
+    AGENT -->|"tool dispatch"| EXPLORETOOL
     AGENT -->|"tool dispatch"| CMBTOOL
     AGENT -->|"goal_read / goal_update"| GOALMGR
     AGENT -->|"knowledge_add / knowledge_search"| KNOWTOOLS
@@ -106,7 +142,14 @@ flowchart TB
     PARSER --> WGRAPH
     WGRAPH <--> MEMFILES
     NAVTOOL --> PATHFIND
+    EXPLORETOOL --> PATHFIND
+    EXPLORETOOL --> BLOCKED
+    EXPLORETOOL --> DARK
+    BLOCKED <--> MEMFILES
     PATHFIND --> WGRAPH
+    NAVTOOL --> WALKSHARED
+    EXPLORETOOL --> WALKSHARED
+    WALKSHARED --> WGRAPH
     COMBAT --> GOALMGR
     GOALMGR <--> GOALFILE
     KNOWTOOLS --> KNOWMGR
@@ -153,11 +196,83 @@ sequenceDiagram
     M->>M: merge new data → write rooms/{hash}.json
     M-->>A: diff (new fields only, or {} if unchanged)
     P->>G: add_node(hash, title=...) + add_edge(prev_hash, hash, direction=...)
+    G->>G: drop stale same-direction edge, if any
+    G->>G: infer reverse edge, if safe to (no existing edge, no contradicting known exits)
     G->>G: save world_graph.json
     A-->>Agent: diff string (empty = "nothing new")
 ```
 
 Only the diff is returned to the LLM — if the agent has been in this room before and nothing changed, it gets an empty string back, consuming almost no tokens.
+
+---
+
+## Exploration & Route-Walking Reliability
+
+`navigate_to` and `explore` both plan a `Route` (a list of directions plus
+the room hash expected after each one) and then hand it to the shared
+`walk_route()` in `_walk.py`, which executes it one step at a time and
+checks reality against the plan after every single move:
+
+| Outcome | Meaning | What happens |
+|---|---|---|
+| `arrived` | Every step landed in the expected room | Route complete, edges (re-)confirmed along the way |
+| `blocked` | A move didn't change rooms at all | Stop immediately; message tells the caller to check what's blocking it |
+| `drifted` | The room changed, but not to the room the graph predicted | Stop; the edge actually observed is recorded (self-healing the graph), so the caller can replan from where it really is |
+| `lost` | Couldn't determine the current room after moving | Stop; nothing is assumed about position |
+
+This means a stale or wrong graph edge is corrected the moment it's
+actually walked, rather than silently compounding into a route that finishes
+somewhere else entirely.
+
+`explore()` layers frontier-finding on top of this: it scans every mapped
+room for a known exit (from a past `look`'s `[ Exits: ]` line) with no
+corresponding graph edge yet, routes to the nearest one, then probes it —
+peeking with `look <direction>` before ever moving, to avoid walking blind
+into a dark room (`darkness.is_dark_room()`). If the peek doesn't catch it
+(e.g. behind a closed door), it retreats the way it came rather than leaving
+the character somewhere it can't see. A door that doesn't budge gets one
+`open door <direction>` retry; if the exit still doesn't yield, it's marked
+blocked (`BlockedExits`, with a reason) so `explore()` skips it on future
+calls instead of retrying forever.
+
+**`WorldGraph` reverse-edge inference:** edges are only ever recorded in the
+direction actually walked, but CircleMUD exits are almost always
+bidirectional. `add_edge()` fills in the reverse edge automatically —
+*unless* the destination room already has a real edge claimed in that
+direction (a genuine one-way passage elsewhere), or the destination's own
+recorded exits are already known and don't include the reverse direction (so
+a confirmed one-way passage is never overwritten with a fabricated way
+back). This is what makes a room reachable in pathfinding the moment it's
+first visited from any side, instead of only after being approached from
+every direction at least once.
+
+---
+
+## Combat Safety Gates
+
+`combat_loop` (and the lower-level `attack`/`consider`/`skill_strike` in
+`mud.py`) refuse before ever sending a command to the MUD, in two
+independent, code-level (not LLM-judgment) layers — both bypassable only
+with an explicit override:
+
+1. **Target-presence gate** — the target must fuzzy-match an entry in
+   `current_npcs_ref`, the NPC list `RoomParser` saw in the last `move`/bare
+   `look`. A room with only a corpse (`RoomParser` files those as items, not
+   npcs, regardless of name length) or an unrelated/absent name refuses
+   immediately with a message listing what's actually in the room, instead
+   of sending a doomed command and relaying back the MUD's cryptic
+   "Consider killing who?"/"That player is not here."
+2. **Danger gate** (`combat_loop` only) — always runs `consider` itself
+   first (regardless of whether the caller already did), and refuses if the
+   response matches a known "you will lose badly" phrase (e.g. "Do you feel
+   lucky, punk?", "miracle to win"). Marks the goal `status: flee` when it
+   fires.
+
+Pass `force=true` to `combat_loop` to skip both gates for a deliberate fight.
+
+On a kill, `combat_loop` auto-loots the corpse (`get all corpse`) and folds
+the result into its response; pass `auto_loot=false` to inspect the corpse
+manually first instead.
 
 ---
 
@@ -218,16 +333,49 @@ mud_basics: |
 
 ---
 
+## Blocked-Exits File Schema
+
+`.boukensha/memory/blocked_exits.json`:
+
+```json
+{
+  "a1b2c3d4e5f6": {
+    "north": "dark (needs a light source)",
+    "east": "blocked"
+  }
+}
+```
+
+Keyed by room hash, then direction, to a free-text reason. `explore()`
+consults this before treating an exit as a frontier candidate; `unmark()`
+clears an entry once the agent finds a way through (a key, a light source),
+so it re-enters the frontier on the next `explore()` call. Older files
+written as a plain list of directions (no reason) are still read correctly,
+defaulting each to reason `"blocked"`.
+
+---
+
 ## Web Dashboard Tabs
 
 | Tab | Data source | Update mechanism |
 |---|---|---|
 | **Overview** (default) | `GET /api/overview` → world_graph.json + rooms/*.json (via `world_stats`) + players.json | Pull — loads eagerly on page load, since it's the tab shown first |
 | **Live** | SSE event stream | Push — each Logger event streams immediately |
-| **Map** | `GET /api/map` → world_graph.json | Pull on tab load + auto-refresh every 30s |
+| **Map** | `GET /api/map` + `GET /api/players` → world_graph.json + players.json | Pull on tab load + auto-refresh every 3s |
 | **Waterfall** | SSE event stream (iteration/tool_call/tool_result phases) | Push — builds rows as events arrive |
 | **Goals** | `GET /api/goal` → current.yaml | Pull on tab load + auto-refresh every 5s |
 | **Sessions** | `GET /api/sessions` → .boukensha/sessions/*.jsonl | Pull — replaces Ruby log_viz |
+
+**Map tab layout:** rooms are placed on a fixed compass grid (north = up,
+east = right, etc.) rather than a force-directed simulation, so "north of"
+always actually renders above — up/down exits (no spare axis on a flat map)
+render as short dashed diagonals instead. Rooms that would otherwise land on
+the same cell (real MUD geometry is often non-Euclidean) are nudged to the
+nearest free cell. Player positions render as colored star markers, one per
+character in `players.json`, refreshed alongside the map. Clicking a room
+opens a popup (with an arrow pointing at the room) showing its full
+description/exits/npcs/items; clicking outside it, or panning/zooming,
+dismisses it.
 
 The dashboard runs as a background thread inside the same Python process when `--web` is passed, or as a standalone process (`boukensha --dashboard-only`).
 
@@ -238,9 +386,11 @@ The dashboard runs as a background thread inside the same Python process when `-
 | Situation | Old behavior (LLM per step) | New behavior (program-first) |
 |---|---|---|
 | Entering a known room | LLM reads full `look` output | `process_room()` returns diff — often empty |
-| Navigating to a destination | LLM decides each move step-by-step | `navigate_to(dest)` runs Dijkstra, issues moves in a Python loop |
-| Fighting a weak mob | LLM decides each attack round | `combat_loop(target)` loops `attack` commands; LLM only invoked for skill choice |
+| Navigating to a destination | LLM decides each move step-by-step | `navigate_to(dest)` runs Dijkstra, issues moves via `walk_route`, self-corrects on drift |
+| Deciding where to explore next | LLM picks a direction to try | `explore()` finds the nearest unwalked exit itself, avoids known-blocked/dark ones, and reports what it found |
+| Fighting a weak mob | LLM decides each attack round | `combat_loop(target)` loops `attack` commands, auto-loots on a kill; LLM only invoked for skill choice |
 | HP drops below threshold | LLM decides what to do | `CombatMonitor` updates goal to `flee` + returns directive; LLM reads directive |
+| Deciding whether a fight is safe | LLM judges the `consider` result | `combat_loop` gates on it itself and refuses if it looks like a loss, unless `force=true` |
 | Unknown room | LLM reads full `look` output | `process_room()` returns full data (LLM still needed for first visit) |
 
 ---
@@ -256,19 +406,25 @@ agent-exp/
 │   │   ├── __init__.py
 │   │   ├── parser.py                  # RoomParser
 │   │   ├── room_memory.py             # RoomMemory
-│   │   ├── world_graph.py             # WorldGraph
-│   │   ├── pathfinder.py              # Pathfinder
+│   │   ├── world_graph.py             # WorldGraph (+ reverse-edge inference)
+│   │   ├── pathfinder.py              # Pathfinder, Route, title/landmark matching
+│   │   ├── blocked_exits.py           # BlockedExits
+│   │   ├── darkness.py                # is_dark_room()
 │   │   ├── player_tracker.py          # PlayerTracker (position + stats)
 │   │   ├── player_stats.py            # PlayerStats.parse_score()
-│   │   └── world_stats.py             # frontier_stats() / entity_stats()
+│   │   ├── world_stats.py             # frontier_stats() / entity_stats()
+│   │   └── knowledge.py               # KnowledgeManager
 │   ├── goals/
 │   │   ├── __init__.py
 │   │   ├── goal_manager.py            # GoalManager
 │   │   └── combat_monitor.py          # CombatMonitor
 │   ├── tools/
+│   │   ├── mud.py                     # low-level MUD tools + npc-presence gate
 │   │   ├── navigation.py              # navigate_to tool
+│   │   ├── exploration.py             # explore tool
+│   │   ├── _walk.py                   # walk_route() shared by navigate_to/explore
 │   │   ├── room_processor.py          # process_room tool
-│   │   ├── combat.py                  # combat_loop tool
+│   │   ├── combat.py                  # combat_loop tool (danger gate + auto-loot)
 │   │   └── knowledge.py               # knowledge_add / knowledge_search tools
 │   ├── _knowledge_injection.py        # build_knowledge_section() — prompt injection helper
 │   └── dashboard/
@@ -277,7 +433,7 @@ agent-exp/
 │       ├── event_bus.py               # Thread-safe event queue
 │       ├── static/
 │       │   ├── app.js                 # Tab routing + SSE client
-│       │   ├── map.js                 # D3 force-directed graph
+│       │   ├── map.js                 # Compass-grid map + player markers
 │       │   ├── waterfall.js           # Waterfall chart
 │       │   └── style.css
 │       └── templates/
@@ -287,7 +443,15 @@ agent-exp/
     ├── test_room_memory.py
     ├── test_world_graph.py
     ├── test_pathfinder.py
+    ├── test_navigation_tool.py
+    ├── test_exploration_tool.py
+    ├── test_blocked_exits.py
+    ├── test_darkness.py
+    ├── test_position_sync.py
     ├── test_goal_manager.py
+    ├── test_combat.py
+    ├── test_combat_monitor.py
+    ├── test_tools_mud.py
     ├── test_player_tracker.py
     ├── test_player_stats.py
     ├── test_world_stats.py
@@ -306,4 +470,5 @@ agent-exp/
 - **Dashboard is modular** — each tab is a separate JS module. Adding a new tab means: (1) add a `<button>` in `index.html`, (2) add a JS module, (3) optionally add a `/api/...` endpoint in `app.py`. No changes to core agent code.
 - **`--no-web` still works** — `repl(tui=True)` launches the Textual TUI exactly as before; `repl(tui=False)` gives the plain REPL. The web path is additive.
 - **Log_viz Ruby app** — superseded by the Sessions tab in the Python dashboard. The `log_viz/` folder can be kept for reference or deleted.
-- **`frontier_stats()`'s `walked` count includes inferred edges** — `WorldGraph.add_edge()` auto-fabricates a plausible reverse edge on every traversal (e.g. entering from the north auto-adds a "south" edge back), so the count is "known exits with a graph edge," not "exits the agent has directly walked through." The Overview tab's UI label says "mapped" for this reason; the JSON key itself stays `walked` for backward compatibility with existing consumers.
+- **Reverse-edge inference is guarded, not naive** — `WorldGraph.add_edge()` only fabricates a return path when nothing contradicts it (see "Exploration & Route-Walking Reliability" above). A confirmed one-way passage is never silently overwritten.
+- **Combat and navigation gates are code, not prompt instructions** — both were added after an LLM demonstrably saw a clear warning (a dangerous `consider` result, an absent target) and proceeded anyway. A hard refusal in the tool itself can't be argued past the way a system-prompt instruction can; `force=true` exists for the rare deliberate override.

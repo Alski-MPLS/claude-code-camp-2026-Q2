@@ -1,0 +1,13 @@
+{
+  "title": "A Turn In The Passage",
+  "description": "This corner is much like all the others... except you see a strange glow coming from the south.  Could be an exit... you hope.",
+  "exits": {
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the zombiefied newbie is lying here.",
+    "A funny little imp-like thing (a quasit perhaps?) is sneaking about here."
+  ]
+}

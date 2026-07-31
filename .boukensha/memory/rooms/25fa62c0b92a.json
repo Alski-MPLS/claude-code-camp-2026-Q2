@@ -1,0 +1,10 @@
+{
+  "title": "The Dark Hallway",
+  "description": "You can't see much of this, even with a light.  The hallway goes into a passageway to the south.  A doorway leads west.",
+  "exits": {
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -33,11 +33,12 @@ jspm_packages/
 
 week0_explore/preview/data/world/
 
+# I think Andrew want's to see this information. 
 .boukensha/sessions/
-.boukensha/memory/
-.boukensha/goals/
-.boukensha/maps/
-.boukensha/knowledge.yaml
+# .boukensha/memory/
+# .boukensha/goals/
+# .boukensha/maps/
+# .boukensha/knowledge.yaml
 
 # Graphify build outputs
 graphify-out/

@@ -1,0 +1,12 @@
+{
+  "title": "The Statue's Room",
+  "description": "Here, the passage enters a small room.  Exits lead to the east and south, and you notice a wonderful, large (and tastefully done) statue to the north.",
+  "exits": {
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A newbie is here, and he looks quite sure of himself."
+  ]
+}

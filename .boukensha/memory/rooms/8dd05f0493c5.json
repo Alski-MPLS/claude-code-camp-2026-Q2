@@ -1,0 +1,13 @@
+{
+  "title": "The Hallway",
+  "description": "As you continue wandering down the hallway, you notice banners, pictures, and other fine decorations adorning the walls all along this passage.  It seems very different from the dismal passage where you entered.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A newbie is here talking a lot.",
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ]
+}

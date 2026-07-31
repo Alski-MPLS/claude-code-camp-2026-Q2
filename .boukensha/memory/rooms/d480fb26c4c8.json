@@ -1,0 +1,12 @@
+{
+  "title": "A Brighter Hallway",
+  "description": "The hallway continues on in a east-west direction... and it seems to be brightening up to the west.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ]
+}

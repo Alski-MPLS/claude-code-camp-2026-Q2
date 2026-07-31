@@ -1,0 +1,15 @@
+{
+  "title": "Main Street",
+  "description": "You are at the end of the main street of Midgaard.  South of here is the entrance to the Guild of Magic Users.  The street continues east towards the market square.  The magic shop is to the north and to the west is the city gate.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A beastly fido is mucking through the garbage looking for food here.",
+    "A beastly fido is mucking through the garbage looking for food here."
+  ]
+}

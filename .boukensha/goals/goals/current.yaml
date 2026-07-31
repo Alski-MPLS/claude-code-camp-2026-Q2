@@ -1,0 +1,19 @@
+current_goal: Explore the MUD
+hp_flee_threshold: 5
+last_updated: null
+mud_basics: '- Use ''score'' to check HP/mana/moves
+
+  - Use ''look'' to describe current room
+
+  - Use ''exits'' to list available exits
+
+  - north/south/east/west/up/down to move
+
+  - ''kill <target>'' to attack
+
+  - ''flee'' to escape combat
+
+  '
+notes: ''
+priority: explore
+status: active

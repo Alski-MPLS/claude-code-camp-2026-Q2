@@ -1,0 +1,10 @@
+{
+  "title": "The Watery Sewer",
+  "description": "You can't see anything but the water you're in up to your hips.  The sewer seems to lead south and north.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -1,0 +1,11 @@
+{
+  "title": "The General Store",
+  "description": "You are inside the general store.  All sorts of items are stacked on shelves behind the counter, safely out of your reach. A small note hangs on the wall.",
+  "exits": {
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A grocer stands at the counter, with a slightly impatient look on his face."
+  ]
+}

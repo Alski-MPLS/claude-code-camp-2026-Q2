@@ -33,9 +33,33 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - It can still get confused if there is not a clear title or different description for the rooms. It still has issues with the chess board area and I had to manually get him out of there. It also had issues with darkness. I finally had to delete the character and recreate it. I added some logic to avoid darkness until we can figure out how to obtain a light source.
 - So, I'm going to leave it as is for now. I'll make sure to update the folder name to week2_monitoring and then finish up this md file.
 
+## Where the program stands now.
+
+### High level architecture diagram
+- Everything hangs off the MUD socket session - the same connection gets shared by the raw move/attack tools, navigate_to, explore, and combat_loop so they're not fighting each other for control.
+- Room memory is split into a few pieces: RoomParser turns raw text into structured data, RoomMemory hashes and stores it per room, and WorldGraph is the actual map (a directed graph of rooms connected by exits).
+- Added a whole exploration layer on top of that - BlockedExits remembers locked doors/dark rooms so it stops retrying them, and there's now dark-room detection so it doesn't wander in blind.
+- Combat got its own safety layer too - it won't attack something that isn't actually in the room, and it won't attack something it's going to lose to, unless I force it.
+- The dashboard is just a Flask app reading the same memory files everything else writes to - map, overview, live feed, goals, sessions, all pulling from the same source of truth.
+
+### Data Flow
+- User (me) gives it a goal -> agent loop decides which tool to call -> tool talks to the MUD -> result gets parsed and saved to memory before it ever goes back to the LLM.
+- Most of the "thinking" now happens in code, not the LLM - process_room only sends back what's new, navigate_to/explore just run the pathfinding and walk it themselves.
+- Every room it parses updates three things at once - room memory, the world graph, and now a "who's actually alive here" list the combat tools check against.
+- If a planned route doesn't match reality (wrong room, blocked move) it stops immediately and fixes the map instead of blindly continuing - that was a big source of the "confused" behavior earlier.
+- All of this gets logged to JSONL as it happens, which is what feeds the live tab, waterfall, and sessions viewer in the dashboard.
+
+### Some ToDo's
+- Still get a few duplicate rooms in the map from before the parsing fix - would be nice to write a one-time cleanup pass instead of leaving them.
+- The "is this monster too dangerous" check is just a list of phrases I've seen so far - probably going to break on a different area of the game with different wording.
+- Haven't solved the light source problem yet - it just avoids dark rooms entirely right now instead of actually getting a torch and going in.
+- Want to get it self-diagnosing more of this instead of me reading session logs and telling Claude what broke.
+- The chess board area is still a mess - some kind of non-standard room layout that confuses the pathing. Need to look at that specifically.
+
+
 
 ## Technical Conclusions
-Adding the monitoring features was pretty easy with Claude. I kept moving between adding new features in the web page vs trying to update the logic of the agent so it wouldn't get stuck. Everytime I would make a change it would break something else (pathing would break because it would become to literal). This is going to be a challenge going forward. 
+Adding the monitoring features was pretty easy with Claude. I kept moving between adding new features in the web page vs trying to update the logic of the agent so it wouldn't get stuck, lost or oveall confused. Everytime I would make a change it would break something else (pathing would break because it would become to literal). This is going to be a challenge going forward. 
 
 ## Key Takeaways
 Monitoring add on was easy to build once I could come up with the requirements. It's in python so it's easy to add additional features (though I'm sure it's just as easy with RUBY). To figure out the logic is going to take hours to go through each potential scenario. I'm hoping we can build some kind of additonal loop that will utilize an LLM to figure this out instead and update the code without my help. This might require a complete redesign. This is getting hard.

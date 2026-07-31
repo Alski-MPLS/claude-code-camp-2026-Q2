@@ -1,0 +1,14 @@
+{
+  "title": "The Path At The Base Of The Mountain",
+  "description": "Now you are at the bottom of a rugged mountain.  The forest around you is very dense, and it seems very dark to the north.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [
+    "A dwarven mining worker is here.",
+    "A dwarven mining worker is here.",
+    "A dwarven mining worker is here."
+  ],
+  "items": []
+}

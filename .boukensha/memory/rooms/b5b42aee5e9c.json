@@ -1,0 +1,15 @@
+{
+  "title": "The Eastern End Of Poor Alley",
+  "description": "You are at the poor alley.  South of here is the Grubby Inn and to the east you see common square.  The alley continues further west.",
+  "exits": {
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
+    "A beastly fido is mucking through the garbage looking for food here.",
+    "A beastly fido is mucking through the garbage looking for food here."
+  ]
+}

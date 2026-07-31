@@ -1,0 +1,10 @@
+{
+  "title": "The Balcony",
+  "description": "Here you can look out and observe the world around.  Constructed in a semi-circle around the dome of the room, the balcony allows you to look out in almost any direction.  Wandering to the south end, you can see the great city of Midgaard off to the south-west.",
+  "exits": {
+    "north": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": []
+}

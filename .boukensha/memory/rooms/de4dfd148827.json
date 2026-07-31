@@ -1,0 +1,11 @@
+{
+  "title": "The South End Of The Grand Pipe",
+  "description": "You stand in water to your knees.  A doorway leads west from here.  The pipe stretches north.",
+  "exits": {
+    "north": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the small Spider is lying here."
+  ]
+}

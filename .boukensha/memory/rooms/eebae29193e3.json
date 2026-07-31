@@ -1,0 +1,12 @@
+{
+  "title": "A Narrow Passage",
+  "description": "The thin passage is plain and undecorated, but still clean.  It ends abruptly to the south at a small oak door, behind which you hear movement...",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A newbie is here annoying the hell out of you."
+  ]
+}

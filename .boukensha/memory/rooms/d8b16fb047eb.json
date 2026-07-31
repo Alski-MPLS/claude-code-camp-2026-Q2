@@ -1,0 +1,10 @@
+{
+  "title": "Outside The West Gate Of Midgaard",
+  "description": "You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  To the west you can see the edge of a big forest.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

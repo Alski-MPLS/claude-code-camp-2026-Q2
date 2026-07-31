@@ -1,0 +1,15 @@
+{
+  "title": "Main Street",
+  "description": "The main street, to the north is the weapon shop and to the south is the Guild of Swordsmen.  To the east you leave town and to the west the street leads to the market square.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A beastly fido is mucking through the garbage looking for food here.",
+    "A beastly fido is mucking through the garbage looking for food here."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "A T-Intersection In The Passage",
+  "description": "This is an intersection of a long east-west passage with a corridor leading south.  The air seems a bit clearer here though, as if you were approaching an exit.",
+  "exits": {
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -1,0 +1,10 @@
+{
+  "title": "By The Temple Altar",
+  "description": "You are by the temple altar in the northern end of the Temple of Midgaard. A huge altar made from white polished marble dominates this part of the temple. Towering behind the altar is a ten foot tall sitting statue of Odin, the King of the Gods. To the north, steps lead out the back of the temple towards the countryside.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

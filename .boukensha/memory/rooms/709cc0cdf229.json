@@ -1,0 +1,11 @@
+{
+  "title": "The Grand Sewer",
+  "description": "You are in a grand sewer pipe.  This stretches toward the south.  It is large indeed!  A doorway leads to the east from here.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

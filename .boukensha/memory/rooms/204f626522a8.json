@@ -1,0 +1,13 @@
+{
+  "title": "The Entrance To The Mages' Guild",
+  "description": "The entrance hall to this guild is a small, poor lighted room.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "An automatic teller machine has been installed in the wall here.",
+    "A sorcerer is guarding the entrance."
+  ]
+}

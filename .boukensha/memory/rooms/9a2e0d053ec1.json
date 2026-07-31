@@ -1,0 +1,12 @@
+{
+  "title": "Another Corner",
+  "description": "Another corner of the passage, and just as untidy as the rest of this place (maybe more so?).  There is a door to the east though... wonder where that leads?  Oh, and the hallway continues west and north.",
+  "exits": {
+    "north": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ]
+}

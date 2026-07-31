@@ -1,0 +1,10 @@
+{
+  "title": "The Great Field Of Midgaard",
+  "description": "You are walking on a wide dirt path through the lush, green, fresh Midgaard countryside.  You can see to the horizon to the north, east, and west; the busy city of Midgaard lies to the south.  All around you is healthy green grass and an occasional large oak tree.  The sun feels wonderful on your face and a pleasant wind blows through your hair.  Birds chirp quietly to themselves and you can smell the faint scent of flowers and freshly cut grass.  You feel like you could lie down in the grass and stay here forever, surrounded by powerful beauty in all directions. The path you are on continues north through the field and south back to Midgaard.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

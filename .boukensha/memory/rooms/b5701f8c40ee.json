@@ -1,0 +1,10 @@
+{
+  "title": "A Road Through The Plains",
+  "description": "You are on a dust covered east-west road crossing the grassy plains between Midgaard the forest of Haon-Dor.  An occasional hunter or adventurer can be seen, heading to or from the forest.  To the east is the walled city, Midgaard, and to the west the road continues towards a large forest.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

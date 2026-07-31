@@ -1,0 +1,13 @@
+{
+  "title": "An Intersection Of Passages",
+  "description": "Cold, smelly, and coated with green fungus... just like last week's left-overs.  Furthermore you want nothing to do with either, you just want out right now.",
+  "exits": {
+    "north": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the zombiefied newbie is lying here."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "The Reception",
+  "description": "You are standing in the reception.  The staircase leads down to the entrance hall.  An exit to the north leads to the Cryogenic Center. There is a small sign on the counter.",
+  "exits": {
+    "north": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": [
+    "An automatic teller machine has been installed in the wall here.",
+    "A receptionist is standing behind the counter here, smiling at you."
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Poor Alley",
+  "description": "You are on Poor Alley, which continues further east.  You see the city wall to the west.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A beggar is here, asking for a few coins."
+  ]
+}

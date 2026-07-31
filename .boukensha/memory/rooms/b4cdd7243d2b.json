@@ -1,0 +1,10 @@
+{
+  "title": "The Edge Of The Water Sewer",
+  "description": "You stand in a room where half of the floor is covered in water.  The water leads east and a doorway leads west.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

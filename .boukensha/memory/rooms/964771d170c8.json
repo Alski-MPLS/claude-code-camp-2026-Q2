@@ -1,0 +1,9 @@
+{
+  "title": "The Edge Of The Water",
+  "description": "The pool side is dimly lit up by your light.  You can see absolutely nothing else nearby.  The darkness her seems enormously oppressive here. The air is damp and the rock on which you stand is slippery.  The pool seems too dark to make anything clear.  The pool seems to extend to the east.  The rock can be climbed upwards from here.",
+  "exits": {
+    "up": null
+  },
+  "npcs": [],
+  "items": []
+}

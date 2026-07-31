@@ -1,0 +1,10 @@
+{
+  "title": "The Dark Passageway",
+  "description": "You can't see anything but the ground where you put your feet.  The passageway seems to continue south and north.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

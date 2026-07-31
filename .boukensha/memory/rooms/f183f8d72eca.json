@@ -1,0 +1,12 @@
+{
+  "title": "The Eastern End Of The Alley",
+  "description": "You are standing at the eastern end of the alley, the city wall is just east, blocking any further movement.  A small warehouse is directly south of here.",
+  "exits": {
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble."
+  ]
+}

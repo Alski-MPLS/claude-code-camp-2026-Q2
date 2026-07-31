@@ -1,0 +1,10 @@
+{
+  "title": "The City Entrance",
+  "description": "You stand on the outskirts of a large city - Midgaard; the capital of this land.  The road leads east into the peace and quiet - and dangers - of the forest; and to the west it becomes the main street of the town; surrounded by a confusion of shops, bars, and market places.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

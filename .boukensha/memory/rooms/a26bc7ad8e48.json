@@ -1,0 +1,17 @@
+{
+  "title": "The Common Square",
+  "description": "The common square, people pass you, talking to each other.  To the west is the poor alley and to the east is the dark alley.  To the north, this square is connected to the market square.  From the south you notice a nasty smell.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
+    "A beastly fido is mucking through the garbage looking for food here.",
+    "A beastly fido is mucking through the garbage looking for food here.",
+    "A beastly fido is mucking through the garbage looking for food here."
+  ]
+}

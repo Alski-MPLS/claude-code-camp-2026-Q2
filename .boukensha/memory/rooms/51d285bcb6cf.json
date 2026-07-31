@@ -1,0 +1,10 @@
+{
+  "title": "Wall Road",
+  "description": "You are walking next to the western city wall.  The road continues further south and the city gate is just north of here.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

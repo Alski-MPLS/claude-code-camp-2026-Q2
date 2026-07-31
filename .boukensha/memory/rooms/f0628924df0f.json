@@ -1,0 +1,10 @@
+{
+  "title": "The Fissure Under The Ledge",
+  "description": "This is a small fissure in the solid rock.  Under you lies the deep dark pool.  The water trickles quietly down from the ledge above you.  The water smells like the water in a sewer.",
+  "exits": {
+    "up": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": []
+}

@@ -1,0 +1,11 @@
+{
+  "title": "The North Stairs",
+  "description": "Here, the hall opens into a wide room, with a high domed roof.  Now that that you have come clear of the enclosed passage, you can see that the stair leads upward to an open air balcony overlooking the area.  To the south the room continues, and another stair is visible matching the one in front of you.",
+  "exits": {
+    "south": null,
+    "west": null,
+    "up": null
+  },
+  "npcs": [],
+  "items": []
+}

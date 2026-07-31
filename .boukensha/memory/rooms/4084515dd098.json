@@ -1,0 +1,10 @@
+{
+  "title": "The Great Chessboard Of Midgaard",
+  "description": "You stand in the archway of the Chessboard of Midgaard.  The giant wooden gate is rusted open. A narrow dirt path leads eastwards into the thick grass and the chessboard opens up to the west.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

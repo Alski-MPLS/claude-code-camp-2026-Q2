@@ -1,0 +1,11 @@
+{
+  "title": "The Deserted Warehouse",
+  "description": "You are inside the warehouse.  The room is decorated with various old items from ships.",
+  "exits": {
+    "north": null
+  },
+  "npcs": [],
+  "items": [
+    "A sailor stands here, waiting to help you."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "The Midgaard Donation Room",
+  "description": "You are in a small, undecorated room just off of the main temple.  There are a couple of small wooden benches here where people occasionally sit while they wait for items to appear.  The temple is to the west.",
+  "exits": {
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "A very kind and caring soul is here looking out for those who need it."
+  ]
+}

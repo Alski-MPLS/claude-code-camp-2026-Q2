@@ -1,0 +1,17 @@
+{
+  "dummy": {
+    "room_hash": "57d37dcd93ba",
+    "title": "A Nexus",
+    "updated_at": "2026-07-30T14:54:18.394795+00:00",
+    "prev_room_hash": "113bd65b27a4",
+    "stats": {
+      "hp": 33,
+      "max_hp": 37,
+      "mana": 100,
+      "max_mana": 100,
+      "move": 53,
+      "max_move": 87
+    },
+    "stats_updated_at": "2026-07-30T14:26:50.585210+00:00"
+  }
+}

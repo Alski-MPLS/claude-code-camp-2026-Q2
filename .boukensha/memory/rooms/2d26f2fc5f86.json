@@ -1,0 +1,12 @@
+{
+  "title": "A White Square",
+  "description": "You are standing on a white marble square.  There is a large rusty gate to the east.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

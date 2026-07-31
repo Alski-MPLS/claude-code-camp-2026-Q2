@@ -1,0 +1,11 @@
+{
+  "title": "The Watery Sewer Junction",
+  "description": "You can't see anything but the water you're in up to your hips.  The sewer seems to lead into a junction going south, north and east.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

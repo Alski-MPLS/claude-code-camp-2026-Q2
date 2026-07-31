@@ -1,0 +1,13 @@
+{
+  "title": "The Cryogenic Center",
+  "description": "You are standing in an impossibly white sterile room with cylindrical body-length canisters lined up against the walls.  The Reception is to the south.",
+  "exits": {
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A janitor is walking around, cleaning up.",
+    "A janitor is walking around, cleaning up.",
+    "The cryogenicist is here, playing with a canister of liquid nitrogen."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "A White Square",
+  "description": "You are standing on a white marble square.",
+  "exits": {
+    "north": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

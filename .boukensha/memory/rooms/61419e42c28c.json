@@ -1,0 +1,11 @@
+{
+  "title": "The Magic Shop",
+  "description": "Behind the counter you see various items, neatly placed in racks, presumably most of them are magic.",
+  "exits": {
+    "south": null
+  },
+  "npcs": [],
+  "items": [
+    "A wizard walks around behind the counter, talking to himself."
+  ]
+}
