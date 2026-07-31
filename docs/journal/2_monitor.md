@@ -55,6 +55,17 @@ First step is to develop a plan.md file while watching the video from Saturday a
 - Haven't solved the light source problem yet - it just avoids dark rooms entirely right now instead of actually getting a torch and going in.
 - Want to get it self-diagnosing more of this instead of me reading session logs and telling Claude what broke.
 - The chess board area is still a mess - some kind of non-standard room layout that confuses the pathing. Need to look at that specifically.
+- Need to figure out how to interact with other NPC's to gather clues and start working on quests.ß
+
+### Graphify findings
+Had Claude trace through the knowledge graph it built of agent-exp (via `/graphify`) and it found a node-identity bug in graphify itself, not in my code - worth fixing at some point since it's actively skewing the graph's "God Nodes" ranking. (The findings are below to be fixed, maybe in week 3.)
+
+- **Root cause**: graphify's AST extractor can't always resolve a bare type reference (`Context`, `Registry`, `Logger`) back to the module that actually defines it. When it fails, it falls back inconsistently - sometimes minting a new per-file id, sometimes reusing a bare unscoped one.
+- **Over-fragmentation example**: `Registry` exists as 8 separate nodes in the graph - one real one (`src_boukensha_registry_registry`, degree 20) plus 7 near-empty degree-1 aliases, one per file that references it (`repl.py`, `knowledge.py`, and 5 test files). Same thing happened to `Logger` (3 nodes instead of 1). This hides how central these classes actually are.
+- **Over-merging example (worse)**: `Context` has one canonical node in `context.py`, but also a second bare node - literal id `"context"`, empty `source_file` - that pulled in 37 edges from 11 unrelated files (`__init__.py`, `repl.py`, and 8 different test files) that all just happen to reference the `Context` type. This one fabricates false "these two files are connected" relationships between files that don't actually share anything.
+- **Also caused 2 false self-loops** flagged by the health check: `bin/boukensha` importing the `boukensha` package (two different things sharing a name, collapsed onto one id) and `src/boukensha/__init__.py`'s `from . import backends, tasks, tools` (a normal relative import, not a real self-reference).
+- **Checked whether this actually mattered**: the "Surprising Connections" section of the report came back clean - none of the 5 surprises it surfaced route through the fragmented/merged nodes. So this is a real data-quality bug, but so far it's only skewing the God Nodes ranking specifically, not the parts of the report I'd actually trust for insight.
+- **To fix later**: either re-run `/graphify` with `--mode deep` (better inference budget) or patch graphify's own id-resolution so an unresolved type reference always gets a file-qualified fallback id instead of sometimes falling back to the bare name.
 
 
 
