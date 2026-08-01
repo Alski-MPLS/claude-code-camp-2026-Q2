@@ -349,7 +349,7 @@ window.loadMap = async function loadMap() {
     zoneCounts.get(key).count += 1;
   }
   const zoneHtml = [...zoneCounts.values()]
-    .map(z => `<span class="legend-group"><span class="legend-swatch" style="background:${z.color}"></span>${escapeHtml(z.label)} (${z.count})</span>`)
+    .map(z => `<span class="legend-group"><span class="legend-swatch" style="background:${escapeHtml(z.color)}"></span>${escapeHtml(z.label)} (${z.count})</span>`)
     .join('');
   const edgeHtml = `
     <span class="legend-group"><span class="legend-line" style="border-color:#444"></span>walked</span>
@@ -440,7 +440,7 @@ window.loadMap = async function loadMap() {
     .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
 
-  const RECT_W = 110, RECT_H = 54;
+  const RECT_W = 110, RECT_H = 74;
 
   const nodeGroup = g.append('g').selectAll('g.room-node').data(nodes).join('g')
     .attr('class', 'room-node')
@@ -482,7 +482,7 @@ window.loadMap = async function loadMap() {
       const parts = [];
       if (d.npc_count) parts.push(`${d.npc_count} npc${d.npc_count === 1 ? '' : 's'}`);
       if (d.item_count) parts.push(`${d.item_count} item${d.item_count === 1 ? '' : 's'}`);
-      return parts.join(', ');
+      return shortRoomLabel(parts.join(', '));
     });
 
   nodeGroup.filter(d => d.aliases && d.aliases.length).append('text')
