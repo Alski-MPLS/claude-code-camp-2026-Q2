@@ -477,8 +477,12 @@ def test_navigate_to_resolves_via_alias_before_title_search(tmp_path):
     # weaker assertion (e.g. just "swordsmen" in result) wouldn't tell the
     # two rooms apart. The move count/path is what actually distinguishes
     # "took the alias's 2-hop route" from "took route_by_title's 1-hop
-    # shortest-substring-match route".
-    assert result == "Arrived at 'guild of swordsmen' after 2 moves: south → east"
+    # shortest-substring-match route". The message also now names the
+    # aliased-to room, same as the landmark branch does.
+    assert result == (
+        "Arrived at 'guild of swordsmen' (aliased to 'The Guild Of Swordsmen') "
+        "after 2 moves: south → east"
+    )
 
 
 def test_navigate_alias_add_resolves_current_room_and_persists(tmp_path):
@@ -576,6 +580,138 @@ def test_navigate_alias_add_reports_failure_when_destination_unresolvable(tmp_pa
 
     assert "could not resolve" in result.lower()
     assert RoomAliases(memory_dir).get("newbie zone") is None
+
+
+def test_navigate_alias_add_resolves_known_but_unreachable_room(tmp_path):
+    """A room can be fully mapped by title yet have no walkable route from
+    the current position (e.g. a one-way passage only ever walked the other
+    direction). navigate_to reports this distinctly from 'no match at all'
+    — navigate_alias_add must be able to alias that same room directly,
+    since aliasing only persists a room hash and never actually requires a
+    route. Previously this failed with 'Could not resolve', instructing the
+    agent to do something (navigate_to it successfully) that was impossible
+    for this exact room, per the final review's Important #2 finding."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    # Exact title match, but no edge connecting it — known but unreachable.
+    graph.add_room("bbb", "The Entrance To The Newbie Zone")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch(
+        "navigate_alias_add",
+        {"alias": "newbie zone", "destination": "The Entrance To The Newbie Zone"},
+    )
+
+    assert "remembered" in result.lower()
+    assert "newbie zone" in result.lower()
+    assert RoomAliases(memory_dir).get("newbie zone") == "bbb"
+
+
+def test_navigate_alias_add_refuses_to_guess_ambiguous_unreachable_match(tmp_path):
+    """If the name fragment matches more than one known-but-unresolvable
+    room, navigate_alias_add must refuse rather than silently pick one —
+    aliasing the wrong room would be worse than the existing 'could not
+    resolve' failure, since it would then wrongly short-circuit future
+    navigate_to calls."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    # Two distinct, unreachable rooms that both match "guild" by word
+    # overlap (word_overlap_matches requires "guild" alone since it's the
+    # only significant word in "the guild").
+    graph.add_room("bbb", "The Warriors Guild")
+    graph.add_room("ccc", "The Thieves Guild")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_alias_add", {"alias": "the guild", "destination": "the guild"})
+
+    assert "could not resolve" in result.lower()
+    assert RoomAliases(memory_dir).get("the guild") is None
+
+
+def test_navigate_to_alias_success_message_names_resolved_room(tmp_path):
+    """Minor #4: the alias success path must name the room reached, the
+    same way the landmark path already does with '(found in ...)'."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    main_raw = "Main Street\n   A street.\n[ Exits: n ]\n"
+    bakery_raw = "The Bakery\n   Smells of fresh bread.\n[ Exits: s ]\n"
+    main_hash, _ = mem.record(RoomParser.parse(main_raw))
+    bakery_hash, _ = mem.record(RoomParser.parse(bakery_raw))
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(main_hash, "Main Street")
+    graph.add_room(bakery_hash, "The Bakery")
+    graph.add_edge(main_hash, bakery_hash, "north")
+    RoomAliases(memory_dir).add("bakery", bakery_hash)
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.side_effect = [main_raw, "You go north.\n", bakery_raw]
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "bakery"})
+
+    assert result == "Arrived at 'bakery' (aliased to 'The Bakery') after 1 moves: north"
+
+
+def test_navigate_to_tool_description_mentions_alias(tmp_path):
+    """Important #1: the registered tool description is what the model
+    actually reads on every call — it must mention the alias-first lookup
+    and navigate_alias_add, not just the title/landmark fallback chain."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    description = registry.get("navigate_to").description
+
+    assert "alias" in description.lower()
+    assert "navigate_alias_add" in description
 
 
 def test_navigate_to_lists_all_known_titles_when_nothing_matches_at_all(tmp_path):

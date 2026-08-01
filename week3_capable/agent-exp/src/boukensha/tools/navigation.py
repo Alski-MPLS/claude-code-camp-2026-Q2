@@ -120,6 +120,7 @@ class Navigation:
             pf = Pathfinder(graph)
             route: Route | None = None
             landmark_room: str | None = None
+            alias_title: str | None = None
             alias_hash = aliases.get(destination)
             if alias_hash and graph.has_room(alias_hash):
                 route = pf.route_to(start_hash, alias_hash)
@@ -132,10 +133,11 @@ class Navigation:
                         f"other direction. Call explore() to find another route out "
                         f"rather than retrying navigate_to with the same destination."
                     )
+                alias_title = graph.graph.nodes[alias_hash].get("title", destination)
             if route is None:
                 route = pf.route_by_title(start_hash, destination)
-            haystacks = _landmark_haystacks()
             if route is None:
+                haystacks = _landmark_haystacks()
                 found = _route_by_landmark(pf, start_hash, destination, haystacks)
                 if found is not None:
                     route, landmark_room = found
@@ -184,6 +186,8 @@ class Navigation:
             if landmark_room:
                 landmark_title = graph.graph.nodes[landmark_room].get("title", "?")
                 dest_desc = f"'{destination}' (found in '{landmark_title}')"
+            elif alias_title:
+                dest_desc = f"'{destination}' (aliased to '{alias_title}')"
             else:
                 dest_desc = f"'{destination}'"
             if not path:
@@ -212,6 +216,25 @@ class Navigation:
                 if found is not None:
                     route, _landmark_room = found
             if route is None or not route.nodes:
+                # No routable match — but the room may still be mapped by
+                # name (title or landmark text) and simply unreachable from
+                # here right now (e.g. behind a one-way passage). Aliasing
+                # only persists a room hash, not a walk, so a route isn't
+                # actually required — reuse the same name-only matching
+                # navigate_to's own known-but-unreachable branch relies on
+                # to find it. Only act on an unambiguous single match; an
+                # ambiguous one is worse to guess than to refuse.
+                titles = {node: attrs.get("title") or "" for node, attrs in graph.graph.nodes(data=True)}
+                known_matches = set(text_matches(destination, titles)) | set(text_matches(destination, haystacks))
+                if len(known_matches) == 1:
+                    room_hash = next(iter(known_matches))
+                    aliases.add(alias, room_hash)
+                    title = graph.graph.nodes[room_hash].get("title", destination)
+                    return (
+                        f"Remembered: '{alias}' now resolves directly to '{title}' "
+                        f"(currently unreachable from here — no walkable path is "
+                        f"known yet, but the alias is recorded for once one is)."
+                    )
                 return (
                     f"Could not resolve '{destination}' to a known room to alias — "
                     f"navigate_to it successfully first, then retry navigate_alias_add "
@@ -227,12 +250,15 @@ class Navigation:
             description=(
                 "Navigate to a known destination using the built room map. "
                 "Uses the shortest known path — no LLM needed per move step. "
-                "Matches destination against room titles first; if nothing "
-                "matches, falls back to searching every mapped room's "
-                "description/items/npcs, so a landmark like 'the fountain' "
-                "or 'the well' resolves to whichever room actually mentions "
-                "it. Returns the path taken, or an error if the destination "
-                "is unknown."
+                "Checks a learned alias first (see navigate_alias_add); if "
+                "no alias matches, matches destination against room titles; "
+                "if nothing matches, falls back to searching every mapped "
+                "room's description/items/npcs, so a landmark like 'the "
+                "fountain' or 'the well' resolves to whichever room actually "
+                "mentions it. Returns the path taken, or an error if the "
+                "destination is unknown. Call navigate_alias_add to teach a "
+                "shorthand term a direct alias so future calls resolve it "
+                "instantly instead of re-matching."
             ),
             parameters={
                 "destination": {

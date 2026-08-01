@@ -210,6 +210,11 @@ Only the diff is returned to the LLM — if the agent has been in this room befo
 
 ## Exploration & Route-Walking Reliability
 
+`navigate_to` checks a learned alias (`RoomAliases`) before any title or
+landmark matching, so a destination the agent has already confirmed once
+(via `navigate_alias_add`) resolves deterministically without re-running the
+substring/word-overlap matchers at all.
+
 `navigate_to` and `explore` both plan a `Route` (a list of directions plus
 the room hash expected after each one) and then hand it to the shared
 `walk_route()` in `_walk.py`, which executes it one step at a time and
@@ -422,7 +427,7 @@ agent-exp/
 │   │   └── combat_monitor.py          # CombatMonitor
 │   ├── tools/
 │   │   ├── mud.py                     # low-level MUD tools + npc-presence gate
-│   │   ├── navigation.py              # navigate_to tool
+│   │   ├── navigation.py              # navigate_to / navigate_alias_add tools
 │   │   ├── exploration.py             # explore tool
 │   │   ├── _walk.py                   # walk_route() shared by navigate_to/explore
 │   │   ├── room_processor.py          # process_room tool
