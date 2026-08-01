@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boukensha Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <nav id="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="live">Live</button>
+    <button class="tab-btn" data-tab="map">Map</button>
+    <button class="tab-btn" data-tab="waterfall">Waterfall</button>
+    <button class="tab-btn" data-tab="goals">Goals</button>
+    <button class="tab-btn" data-tab="sessions">Sessions</button>
+  </nav>
+
+  <section id="tab-overview" class="tab-pane active">
+    <div id="overview-grid" class="overview-grid"></div>
+    <h2 class="overview-heading">Player</h2>
+    <div id="overview-players"></div>
+  </section>
+
+  <section id="tab-live" class="tab-pane">
+    <div id="live-log"></div>
+  </section>
+
+  <section id="tab-map" class="tab-pane">
+    <div id="map-status"></div>
+    <div id="map-container">
+      <svg id="map-svg"></svg>
+      <div id="room-popup" hidden>
+        <div id="room-popup-arrow"></div>
+        <div id="room-popup-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-waterfall" class="tab-pane">
+    <div id="waterfall-split">
+      <div id="waterfall-container"></div>
+      <div id="waterfall-detail" hidden>
+        <div id="waterfall-detail-title"></div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Timing</div>
+          <div id="wf-timing"></div>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Tokens</div>
+          <div id="wf-tokens"></div>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">Tool Args</div>
+          <pre id="wf-args"></pre>
+        </div>
+        <div class="wf-detail-section">
+          <div class="wf-detail-label">MUD Response</div>
+          <pre id="wf-result"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-goals" class="tab-pane">
+    <pre id="goals-content"></pre>
+  </section>
+
+  <section id="tab-sessions" class="tab-pane">
+    <div id="sessions-list"></div>
+    <div id="session-transcript"></div>
+  </section>
+
+  <script src="/static/app.js" type="module"></script>
+  <script src="/static/map.js" type="module"></script>
+  <script src="/static/waterfall.js" type="module"></script>
+</body>
+</html>

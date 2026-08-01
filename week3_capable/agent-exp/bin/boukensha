@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+"""Boukensha MUD agent CLI."""
+
+import argparse
+import sys
+from pathlib import Path
+
+PACKAGE_ROOT = Path(__file__).parent.parent
+
+# Allow running from repo root without install
+sys.path.insert(0, str(PACKAGE_ROOT / "src"))
+
+# BOUKENSHA_DIR is left unset here so boukensha.config.Config resolves its own
+# default (the nearest ancestor .git directory's .boukensha/), unless the
+# caller has already set BOUKENSHA_DIR in the environment.
+
+import boukensha
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="boukensha",
+        description="Boukensha MUD agent",
+    )
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        default=False,
+        help="Start the web dashboard (default: off)",
+    )
+    parser.add_argument(
+        "--no-web",
+        action="store_true",
+        default=False,
+        help="Disable the web dashboard",
+    )
+    parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        default=False,
+        help="Use plain REPL instead of Textual TUI",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=4568,
+        help="Dashboard port (default: 4568)",
+    )
+    args = parser.parse_args()
+
+    use_web = args.web and not args.no_web
+    use_tui = not args.no_tui
+
+    boukensha.repl(
+        tui=use_tui,
+        web=use_web,
+        web_port=args.port,
+    )
+
+
+if __name__ == "__main__":
+    main()

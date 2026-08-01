@@ -1,0 +1,101 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; background: #111; color: #ccc; height: 100vh; display: flex; flex-direction: column; }
+#tabs { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; }
+.tab-btn { background: none; border: none; color: #888; padding: 10px 20px; cursor: pointer; font: inherit; }
+.tab-btn.active { color: #fff; border-bottom: 2px solid #4af; }
+.tab-pane { display: none; flex: 1; overflow: auto; padding: 12px; }
+.tab-pane.active { display: flex; flex-direction: column; }
+#live-log { flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
+#live-log .phase-tool_call { color: #4af; }
+#live-log .phase-tool_result { color: #8f8; }
+#live-log .phase-response { color: #fff; }
+#live-log .phase-compaction { color: #fa4; font-style: italic; }
+#map-status { padding: 6px 2px; font-size: 12px; color: #888; min-height: 18px; }
+#map-container { position: relative; flex: 1; }
+#map-svg { width: 100%; height: 70vh; background: #181818; border-radius: 6px; display: block; }
+
+#room-popup {
+  position: absolute;
+  z-index: 10;
+  width: 260px;
+  max-width: 80vw;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  pointer-events: auto;
+}
+#room-popup[hidden] { display: none; }
+#room-popup-body { max-height: 260px; overflow-y: auto; }
+#room-popup-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  transform: rotate(45deg);
+}
+/* arrow on the bottom edge, pointing down at the room (popup sits above it) */
+#room-popup.arrow-bottom #room-popup-arrow {
+  bottom: -7px; left: 50%; margin-left: -6px;
+  border-top: none; border-left: none;
+}
+/* arrow on the top edge, pointing up at the room (popup sits below it) */
+#room-popup.arrow-top #room-popup-arrow {
+  top: -7px; left: 50%; margin-left: -6px;
+  border-bottom: none; border-right: none;
+}
+.room-popup-title { color: #4af; font-weight: bold; margin-bottom: 4px; }
+.room-popup-section { color: #888; margin-top: 6px; }
+#waterfall-split { display: flex; gap: 12px; flex: 1; min-height: 0; }
+#waterfall-container { flex: 1; overflow-x: auto; min-width: 0; }
+#waterfall-detail {
+  width: 320px;
+  flex-shrink: 0;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+}
+#waterfall-detail[hidden] { display: none; }
+#waterfall-detail-title { color: #4af; font-weight: bold; margin-bottom: 10px; font-size: 13px; }
+.wf-detail-section { margin-bottom: 12px; }
+.wf-detail-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+#wf-timing, #wf-tokens { color: #ccc; }
+#wf-args, #wf-result {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 180px;
+  overflow-y: auto;
+  color: #8f8;
+  margin: 0;
+}
+#goals-content { background: #1a1a1a; padding: 12px; border-radius: 6px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+#sessions-list table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#sessions-list th, #sessions-list td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #333; }
+#sessions-list th { color: #888; }
+#sessions-list tr:hover td { background: #1e1e1e; cursor: pointer; }
+#session-transcript { margin-top: 16px; }
+.entry-user { color: #4af; margin: 8px 0 4px; }
+.entry-assistant { color: #fff; margin: 4px 0 8px; }
+.entry-tool { color: #8f8; font-size: 12px; margin: 2px 0; }
+.overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.overview-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 16px; }
+.overview-card-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.overview-card-value { color: #fff; font-size: 28px; font-weight: bold; line-height: 1.2; }
+.overview-card-sub { color: #888; font-size: 13px; margin-top: 6px; line-height: 1.4; }
+.overview-heading { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.overview-player .overview-card-value { font-size: 15px; font-weight: normal; line-height: 1.5; }
+.overview-location { color: #888; font-size: 12px; margin-top: 6px; }
+.overview-empty { color: #888; font-size: 13px; }
