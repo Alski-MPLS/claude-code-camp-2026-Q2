@@ -8,5 +8,7 @@
     "west": null
   },
   "npcs": [],
-  "items": []
+  "items": [
+    "The Mayor is standing here."
+  ]
 }

@@ -1,8 +1,6 @@
-current_goal: Continue to look for foes to kill and grab more gold and experience.
-  Look for any other items that could be used. Keep going until you have gained a
-  level
+current_goal: Go to the newbie zone
 hp_flee_threshold: 5
-last_updated: '2026-07-30T14:53:37.845791+00:00'
+last_updated: '2026-08-01T17:14:16.598545+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room

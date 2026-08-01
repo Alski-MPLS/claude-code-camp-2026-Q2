@@ -112,10 +112,11 @@ async function loadSessions() {
 }
 
 async function loadSessionDetail(id) {
+  const container = document.getElementById('session-transcript');
+  container.innerHTML = '<div class="entry-tool">Loading…</div>';
   const r = await fetch('/api/sessions/' + id);
   const entries = await r.json();
-  const container = document.getElementById('session-transcript');
-  container.innerHTML = entries.map(e => {
+  const html = entries.map(e => {
     if (e.phase === 'response') return `<div class="entry-assistant"><strong>Assistant:</strong> ${escapeHtml(e.text)}</div>`;
     if (e.phase === 'tool_call') return `<div class="entry-tool">→ ${escapeHtml(e.name)}(${escapeHtml(JSON.stringify(e.args || {}))})</div>`;
     if (e.phase === 'tool_result') return `<div class="entry-tool">← ${escapeHtml((e.result || '').slice(0, 300))}</div>`;
@@ -123,6 +124,8 @@ async function loadSessionDetail(id) {
       const last = (e.messages || []).at(-1);
       if (last && last.role === 'user') return `<div class="entry-user"><strong>User:</strong> ${escapeHtml(last.content)}</div>`;
     }
+    if (e.phase === 'limit_reached') return `<div class="entry-tool">⚠ limit reached: ${escapeHtml(e.reason || '')}</div>`;
     return '';
   }).join('');
+  container.innerHTML = html || `<div class="entry-tool">No transcript entries recorded for this session (${entries.length} raw event${entries.length === 1 ? '' : 's'}, none renderable).</div>`;
 }
