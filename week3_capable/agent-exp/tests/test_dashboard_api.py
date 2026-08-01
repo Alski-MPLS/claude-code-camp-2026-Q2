@@ -148,3 +148,43 @@ def test_index_includes_overview_tab(tmp_path):
         html = r.data.decode()
         assert 'data-tab="overview"' in html
         assert 'id="tab-overview"' in html
+
+
+def test_api_map_includes_enrichment_fields(tmp_path):
+    from boukensha.memory.world_graph import WorldGraph
+    from boukensha.memory.room_memory import RoomMemory
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    mem = RoomMemory(memory_dir)
+
+    room_a = {"title": "Temple Square", "description": "d", "exits": {"north": "x"}, "npcs": ["a guard"], "items": []}
+    hash_a, _ = mem.record(room_a)
+    graph.add_room(hash_a, "Temple Square")
+
+    room_b = {"title": "Wall Road", "description": "d", "exits": {}, "npcs": [], "items": []}
+    hash_b, _ = mem.record(room_b)
+    graph.add_room(hash_b, "Wall Road")
+
+    # to_room_exits omitted so the south reverse edge is auto-filled as
+    # "inferred" (see the note in test_map_enrichment.py's equivalent case).
+    graph.add_edge(hash_a, hash_b, "north")
+    graph.save()
+
+    app, _ = _make_app(tmp_path)
+    with app.test_client() as c:
+        r = c.get("/api/map")
+        assert r.status_code == 200
+        data = json.loads(r.data)
+
+    node_a = next(n for n in data["nodes"] if n["id"] == hash_a)
+    assert node_a["npc_count"] == 1
+    assert node_a["item_count"] == 0
+    assert "zone_id" in node_a
+    assert "zone_label" in node_a
+    assert node_a["aliases"] == []
+
+    link = next(l for l in data["links"] if l["source"] == hash_a and l["target"] == hash_b)
+    assert link["kind"] == "walked"
+    reverse = next(l for l in data["links"] if l["source"] == hash_b and l["target"] == hash_a)
+    assert reverse["kind"] == "inferred"

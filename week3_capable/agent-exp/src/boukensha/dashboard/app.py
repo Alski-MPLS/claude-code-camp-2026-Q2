@@ -52,15 +52,44 @@ def create_dashboard_app(
     @app.route("/api/map")
     def api_map():
         from boukensha.memory.world_graph import WorldGraph
+        from boukensha.memory.room_memory import RoomMemory
+        from boukensha.memory.room_aliases import RoomAliases
+        from boukensha.memory.map_enrichment import (
+            classify_edges, node_frontier, node_aliases, assign_zones,
+        )
+
         g = WorldGraph(memory_path)
         g.load()
         nx_g = g.graph
-        nodes = [
-            {"id": n, "title": attrs.get("title", n)}
-            for n, attrs in nx_g.nodes(data=True)
-        ]
+        mem = RoomMemory(memory_path)
+        aliases = RoomAliases(memory_path)
+
+        frontier = node_frontier(g, mem)
+        alias_map = node_aliases(aliases)
+        zones = assign_zones(g)
+        edge_kinds = classify_edges(g, mem)
+
+        nodes = []
+        for n, attrs in nx_g.nodes(data=True):
+            room = mem.get(n) or {}
+            zone = zones.get(n, {"zone_id": 0, "zone_label": "Zone 0", "zone_color": "#3a5f8a"})
+            nodes.append({
+                "id": n,
+                "title": attrs.get("title", n),
+                "zone_id": zone["zone_id"],
+                "zone_label": zone["zone_label"],
+                "zone_color": zone["zone_color"],
+                "unwalked": frontier.get(n, 0),
+                "aliases": alias_map.get(n, []),
+                "npc_count": len(room.get("npcs") or []),
+                "item_count": len(room.get("items") or []),
+            })
         links = [
-            {"source": u, "target": v, "direction": d.get("direction", "")}
+            {
+                "source": u, "target": v,
+                "direction": d.get("direction", ""),
+                "kind": edge_kinds.get((u, v), "walked"),
+            }
             for u, v, d in nx_g.edges(data=True)
         ]
         return jsonify({"nodes": nodes, "links": links})
