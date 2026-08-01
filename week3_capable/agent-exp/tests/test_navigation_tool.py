@@ -576,3 +576,61 @@ def test_navigate_alias_add_reports_failure_when_destination_unresolvable(tmp_pa
 
     assert "could not resolve" in result.lower()
     assert RoomAliases(memory_dir).get("newbie zone") is None
+
+
+def test_navigate_to_lists_all_known_titles_when_nothing_matches_at_all(tmp_path):
+    """When a destination shares no vocabulary with any mapped room's title,
+    description, items, or npcs, the old message ("No known path... Explore
+    more") gave the LLM nothing to work with even when it already knows
+    (from its own memory of the session) which room it actually means. It
+    must instead see every currently known room title so it can retry with
+    the exact one."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    graph.add_room("bbb", "The Sweetwater Pastry Shop")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "bakery"})
+
+    assert "Sweetwater Pastry Shop" in result
+    assert "Main Street" in result
+    assert "navigate_alias_add" in result
+
+
+def test_navigate_to_omits_full_title_list_when_a_near_miss_exists(tmp_path):
+    """The full-list fallback must only fire when there's truly no
+    near-miss either — a near-miss message is more specific and should
+    still win, unchanged from existing behavior."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    graph.add_room("aaa", "Main Street")
+    graph.add_room("bbb", "The Entrance To The Clerics' Guild")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "Guild of Swordsmen"})
+
+    assert "No confident match" in result
+    assert "navigate_alias_add" not in result

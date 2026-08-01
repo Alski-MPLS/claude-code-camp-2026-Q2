@@ -163,6 +163,22 @@ class Navigation:
                         f"description/exits, just move that direction directly instead of "
                         f"calling navigate_to."
                     )
+                all_titles = sorted({t for t in titles.values() if t})
+                if all_titles:
+                    _MAX_TITLES = 60
+                    shown = all_titles[:_MAX_TITLES]
+                    suffix = f", plus {len(all_titles) - _MAX_TITLES} more" if len(all_titles) > _MAX_TITLES else ""
+                    return (
+                        f"No confident match for '{destination}' — it shares no "
+                        f"recognizable vocabulary with any mapped room. All "
+                        f"currently known room titles: {', '.join(shown)}{suffix}. "
+                        f"If one of these is actually your destination, retry "
+                        f"navigate_to with its exact title, then call "
+                        f"navigate_alias_add(alias='{destination}', "
+                        f"destination='<exact title>') so this shorthand resolves "
+                        f"directly next time. If the destination truly isn't mapped "
+                        f"yet, call explore()."
+                    )
                 return f"No known path to '{destination}'. Explore more of the area first."
             path = route.directions
             if landmark_room:
