@@ -419,9 +419,19 @@ def test_navigate_to_aborts_when_a_move_lands_in_an_unexpected_room(tmp_path):
 
 def test_navigate_to_resolves_via_alias_before_title_search(tmp_path):
     """An aliased destination must resolve directly through the alias store,
-    bypassing the ambiguous word-overlap title search entirely — this is
-    what lets a term like 'guild of swordsmen' stop being ambiguous once
-    the agent has confirmed which guild it actually means."""
+    bypassing route_by_title's substring-match-then-shortest-route logic
+    entirely — not merely agree with it by coincidence.
+
+    The fixture is deliberately adversarial: a decoy room ("Ruined Guild Of
+    Swordsmen Annex") that ALSO contains "guild of swordsmen" as a literal
+    substring sits just one hop from the start room, while the real target
+    ("The Guild Of Swordsmen") sits two hops away via an intermediate room.
+    Without the alias, route_by_title would find both as substring matches
+    and pick the shortest route — the wrong, closer decoy. The alias points
+    "guild of swordsmen" directly at the real target's room hash, so
+    navigate_to must land on the farther, correct room instead. If the
+    alias-first branch in _navigate_to were removed, this test would fail
+    (it would resolve to the 1-hop decoy instead of the 2-hop real room)."""
     from boukensha.tools.navigation import Navigation
     from boukensha.registry import Registry
     from boukensha.context import Context
@@ -433,17 +443,22 @@ def test_navigate_to_resolves_via_alias_before_title_search(tmp_path):
     memory_dir = tmp_path / "memory"
     mem = RoomMemory(memory_dir)
 
-    main_raw = "Main Street\n   A street.\n[ Exits: e ]\n"
+    main_raw = "Main Street\n   A street.\n[ Exits: s ]\n"
+    mid_raw = "Guild Antechamber\n   A quiet hallway.\n[ Exits: e ]\n"
     guild_raw = "The Guild Of Swordsmen\n   A training hall.\n[ Exits: w ]\n"
     main_hash, _ = mem.record(RoomParser.parse(main_raw))
+    mid_hash, _ = mem.record(RoomParser.parse(mid_raw))
     guild_hash, _ = mem.record(RoomParser.parse(guild_raw))
+    decoy_hash = "decoy-annex"
 
     graph = WorldGraph(memory_dir)
     graph.add_room(main_hash, "Main Street")
-    graph.add_room("bbb", "The Entrance To The Clerics' Guild")
+    graph.add_room(decoy_hash, "Ruined Guild Of Swordsmen Annex")
+    graph.add_room(mid_hash, "Guild Antechamber")
     graph.add_room(guild_hash, "The Guild Of Swordsmen")
-    graph.add_edge(main_hash, "bbb", "west")
-    graph.add_edge(main_hash, guild_hash, "east")
+    graph.add_edge(main_hash, decoy_hash, "west")  # 1 hop: wrong room, matches by substring too
+    graph.add_edge(main_hash, mid_hash, "south")
+    graph.add_edge(mid_hash, guild_hash, "east")  # 2 hops: the real, aliased target
 
     RoomAliases(memory_dir).add("guild of swordsmen", guild_hash)
 
@@ -451,13 +466,19 @@ def test_navigate_to_resolves_via_alias_before_title_search(tmp_path):
     session = MagicMock()
     session.is_open = True
     session.drain.return_value = ""
-    session.read_until_prompt.side_effect = [main_raw, "You go east.\n", guild_raw]
+    session.read_until_prompt.side_effect = [
+        main_raw, "You go south.\n", mid_raw, "You go east.\n", guild_raw,
+    ]
     Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
 
     result = registry.dispatch("navigate_to", {"destination": "guild of swordsmen"})
 
-    assert "swordsmen" in result.lower()
-    assert "1 moves" in result
+    # The 1-hop decoy also matches "guild of swordsmen" by substring, so a
+    # weaker assertion (e.g. just "swordsmen" in result) wouldn't tell the
+    # two rooms apart. The move count/path is what actually distinguishes
+    # "took the alias's 2-hop route" from "took route_by_title's 1-hop
+    # shortest-substring-match route".
+    assert result == "Arrived at 'guild of swordsmen' after 2 moves: south → east"
 
 
 def test_navigate_alias_add_resolves_current_room_and_persists(tmp_path):
