@@ -321,6 +321,7 @@ window.loadMap = async function loadMap() {
   if (!nodes.length) {
     status.textContent = 'No rooms mapped yet. Explore the MUD first.';
     d3.select('#map-svg').selectAll('*').remove();
+    document.getElementById('map-legend').innerHTML = '';
     nodeById = new Map();
     playersLayer = null;
     lastNodeCount = 0;
@@ -339,6 +340,23 @@ window.loadMap = async function loadMap() {
     n.x = p.x;
     n.y = p.y;
   }
+
+  const legend = document.getElementById('map-legend');
+  const zoneCounts = new Map();
+  for (const n of nodes) {
+    const key = n.zone_id;
+    if (!zoneCounts.has(key)) zoneCounts.set(key, { label: n.zone_label, color: n.zone_color, count: 0 });
+    zoneCounts.get(key).count += 1;
+  }
+  const zoneHtml = [...zoneCounts.values()]
+    .map(z => `<span class="legend-group"><span class="legend-swatch" style="background:${z.color}"></span>${escapeHtml(z.label)} (${z.count})</span>`)
+    .join('');
+  const edgeHtml = `
+    <span class="legend-group"><span class="legend-line" style="border-color:#444"></span>walked</span>
+    <span class="legend-group"><span class="legend-line inferred" style="border-color:#4a8"></span>known, never walked</span>
+    <span class="legend-group"><span class="legend-line inferred" style="border-color:#a84"></span>displaced or vertical</span>
+  `;
+  legend.innerHTML = zoneHtml + edgeHtml;
 
   const svg = d3.select('#map-svg');
   svg.selectAll('*').remove();
@@ -398,9 +416,17 @@ window.loadMap = async function loadMap() {
   g.append('g').selectAll('line').data(drawLinks).join('line')
     .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
-    .attr('stroke', d => VERTICAL.has((d.direction || '').toLowerCase()) ? '#a84' : '#444')
+    .attr('stroke', d => {
+      const dir = (d.direction || '').toLowerCase();
+      if (VERTICAL.has(dir)) return '#a84';
+      return d.kind === 'inferred' ? '#4a8' : '#444';
+    })
     .attr('stroke-width', 1.5)
-    .attr('stroke-dasharray', d => VERTICAL.has((d.direction || '').toLowerCase()) ? '4,3' : null);
+    .attr('stroke-dasharray', d => {
+      const dir = (d.direction || '').toLowerCase();
+      if (VERTICAL.has(dir)) return '4,3';
+      return d.kind === 'inferred' ? '3,3' : null;
+    });
 
   g.append('g').selectAll('text.link-label').data(drawLinks).join('text')
     .attr('class', 'link-label')
@@ -414,7 +440,7 @@ window.loadMap = async function loadMap() {
     .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
 
-  const RECT_W = 110, RECT_H = 30;
+  const RECT_W = 110, RECT_H = 54;
 
   const nodeGroup = g.append('g').selectAll('g.room-node').data(nodes).join('g')
     .attr('class', 'room-node')
@@ -432,7 +458,8 @@ window.loadMap = async function loadMap() {
   nodeGroup.append('rect')
     .attr('width', RECT_W).attr('height', RECT_H)
     .attr('rx', 4)
-    .attr('fill', '#1e3a5f').attr('stroke', '#4af').attr('stroke-width', 1.5);
+    .attr('fill', d => d.zone_color || '#1e3a5f')
+    .attr('stroke', '#4af').attr('stroke-width', 1.5);
 
   nodeGroup.append('text')
     .attr('x', RECT_W / 2).attr('y', RECT_H / 2)
@@ -440,6 +467,29 @@ window.loadMap = async function loadMap() {
     .attr('fill', '#aaa').attr('font-size', 11).attr('font-family', 'monospace')
     .attr('stroke', '#181818').attr('stroke-width', 2).attr('paint-order', 'stroke fill')
     .text(d => shortRoomLabel(d.title));
+
+  nodeGroup.filter(d => d.unwalked > 0).append('text')
+    .attr('x', RECT_W / 2).attr('y', RECT_H / 2 + 14)
+    .attr('text-anchor', 'middle').attr('class', 'room-node-chip')
+    .attr('stroke', '#181818').attr('stroke-width', 2).attr('paint-order', 'stroke fill')
+    .text(d => `${d.unwalked} unwalked`);
+
+  nodeGroup.filter(d => (d.npc_count + d.item_count) > 0).append('text')
+    .attr('x', RECT_W / 2).attr('y', RECT_H / 2 + 26)
+    .attr('text-anchor', 'middle').attr('class', 'room-node-chip')
+    .attr('stroke', '#181818').attr('stroke-width', 2).attr('paint-order', 'stroke fill')
+    .text(d => {
+      const parts = [];
+      if (d.npc_count) parts.push(`${d.npc_count} npc${d.npc_count === 1 ? '' : 's'}`);
+      if (d.item_count) parts.push(`${d.item_count} item${d.item_count === 1 ? '' : 's'}`);
+      return parts.join(', ');
+    });
+
+  nodeGroup.filter(d => d.aliases && d.aliases.length).append('text')
+    .attr('x', RECT_W / 2).attr('y', RECT_H / 2 + 38)
+    .attr('text-anchor', 'middle').attr('class', 'room-node-alias')
+    .attr('stroke', '#181818').attr('stroke-width', 2).attr('paint-order', 'stroke fill')
+    .text(d => `→ ${shortRoomLabel(d.aliases[0])}`);
 
   nodeGroup.append('title').text(d => d.title);
 
