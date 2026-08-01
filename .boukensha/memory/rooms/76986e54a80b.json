@@ -1,0 +1,13 @@
+{
+  "title": "The Reading Room",
+  "description": "You are in a small, simple room which is mostly empty, save a few wooden desks and benches.  To the east you hear the bustle of the Temple of Midgaard, a sharp contrast to the relative quiet of this peaceful room.",
+  "exits": {
+    "east": null
+  },
+  "npcs": [],
+  "items": [
+    "A strange device labeled \"teleporter\" was left here.",
+    "A large bulletin board is mounted on a wall here.",
+    "This saleswoman is laden with gadgets and gizmos that are outrageously priced."
+  ]
+}

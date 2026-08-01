@@ -6,5 +6,8 @@
     "west": null
   },
   "npcs": [],
-  "items": []
+  "items": [
+    "A creepy little crawling thing is scuttling along the floor at your feet.",
+    "Someone's little pet dragon has gotten loose, and is sniffing about here."
+  ]
 }

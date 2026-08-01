@@ -1,6 +1,6 @@
-current_goal: Go to the newbie zone
+current_goal: Opem the door to the east and go in there. Try to fight anyone you find.
 hp_flee_threshold: 5
-last_updated: '2026-08-01T17:14:16.598545+00:00'
+last_updated: '2026-08-01T18:41:53.323005+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -14,7 +14,8 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Focus shift entirely to grinding EXP/Combat. Current target location is 'Entrance
-  To The Newbie Zone'. Need at least one enemy encounter to begin fighting.
-priority: fight
+notes: Local exploration in A Nexus is blocked or exhausted. Reorienting to resume
+  wilderness combat search along previous successful path (the route leading north
+  from The Temple Of Midgaard).
+priority: explore
 status: active

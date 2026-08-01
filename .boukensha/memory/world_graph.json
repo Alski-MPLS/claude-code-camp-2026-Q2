@@ -438,6 +438,10 @@
     {
       "title": "A Turn In The Passage",
       "id": "fcf6b1914bdb"
+    },
+    {
+      "title": "The Reading Room",
+      "id": "76986e54a80b"
     }
   ],
   "edges": [
@@ -597,7 +601,7 @@
       "target": "dac20e1bcea5"
     },
     {
-      "direction": "down",
+      "direction": "south",
       "source": "bad80c25f808",
       "target": "45991aa22d38"
     },
@@ -605,6 +609,11 @@
       "direction": "east",
       "source": "bad80c25f808",
       "target": "c70a48f67c1f"
+    },
+    {
+      "direction": "west",
+      "source": "bad80c25f808",
+      "target": "76986e54a80b"
     },
     {
       "direction": "north",
@@ -1565,6 +1574,11 @@
       "direction": "east",
       "source": "fcf6b1914bdb",
       "target": "81ddf8883187"
+    },
+    {
+      "direction": "east",
+      "source": "76986e54a80b",
+      "target": "bad80c25f808"
     }
   ]
 }

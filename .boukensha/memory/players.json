@@ -1,9 +1,9 @@
 {
   "dummy": {
-    "room_hash": "45991aa22d38",
-    "title": "The Temple Square",
-    "updated_at": "2026-08-01T17:14:33.680653+00:00",
-    "prev_room_hash": "bad80c25f808",
+    "room_hash": "eebae29193e3",
+    "title": "A Narrow Passage",
+    "updated_at": "2026-08-01T18:42:11.054592+00:00",
+    "prev_room_hash": "afbf5a4c5714",
     "stats": {
       "hp": 37,
       "max_hp": 37,
