@@ -64,14 +64,16 @@ def create_dashboard_app(
         mem = RoomMemory(memory_path)
         aliases = RoomAliases(memory_path)
 
+        rooms = {n: (mem.get(n) or {}) for n in nx_g.nodes}
+
         frontier = node_frontier(g, mem)
         alias_map = node_aliases(aliases)
         zones = assign_zones(g)
-        edge_kinds = classify_edges(g, mem)
+        edge_kinds = classify_edges(g, rooms)
 
         nodes = []
         for n, attrs in nx_g.nodes(data=True):
-            room = mem.get(n) or {}
+            room = rooms[n]
             zone = zones.get(n, {"zone_id": 0, "zone_label": "Zone 0", "zone_color": "#3a5f8a"})
             nodes.append({
                 "id": n,

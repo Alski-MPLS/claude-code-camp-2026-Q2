@@ -27,15 +27,15 @@ def test_classify_edges_walked_vs_inferred(tmp_path):
     # the reverse edge entirely, which is not what we're testing.
     graph.add_edge(hash_a, hash_b, "north")
 
-    classification = classify_edges(graph, mem)
+    rooms = {hash_a: mem.get(hash_a), hash_b: mem.get(hash_b)}
+    classification = classify_edges(graph, rooms)
     assert classification[(hash_a, hash_b)] == "walked"
     assert classification[(hash_b, hash_a)] == "inferred"
 
 
 def test_classify_edges_empty_graph(tmp_path):
     graph = WorldGraph(tmp_path)
-    mem = RoomMemory(tmp_path)
-    assert classify_edges(graph, mem) == {}
+    assert classify_edges(graph, {}) == {}
 
 
 def test_node_frontier_counts_unmapped_known_exits(tmp_path):

@@ -3,8 +3,9 @@
 // There is no free axis left for up/down (vertical MUD levels), so those
 // connections are drawn as short dashed diagonals instead of moving the
 // room to a new grid cell.
-const GRID = 220;
+const GRID = 260;
 const ROOM_LABEL_MAX = 15;
+const RECT_W = 110, RECT_H = 96;
 
 function shortRoomLabel(title) {
   return title.length > ROOM_LABEL_MAX ? title.slice(0, ROOM_LABEL_MAX - 1) + '…' : title;
@@ -177,7 +178,7 @@ function renderPlayers(players) {
     group.forEach((p, i) => {
       const color = colorForPlayer(p.name);
       const starX = node.x + (i - (group.length - 1) / 2) * 28;
-      const starY = node.y - 24;
+      const starY = node.y - RECT_H / 2 - 9;
       // Stagger name labels between two rows so 2+ characters in the same
       // room don't render their names on top of each other.
       const nameY = starY - 12 - (i % 2) * 12;
@@ -210,12 +211,12 @@ function renderPlayers(players) {
     const toNode = nodeById.get(p.room_hash);
     if (!fromNode || !toNode) continue;
 
-    // Shorten arrow to stop at destination rect edge (half-width = 55, half-height = 15)
+    // Shorten arrow to stop at destination rect edge (half-width = RECT_W/2, half-height = RECT_H/2)
     const dx = toNode.x - fromNode.x;
     const dy = toNode.y - fromNode.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
     // Offset from center by the rect half-diagonal projected onto the direction
-    const halfW = 55, halfH = 15;
+    const halfW = RECT_W / 2, halfH = RECT_H / 2;
     const offset = Math.min(halfW / Math.abs(dx / dist || 1e-9), halfH / Math.abs(dy / dist || 1e-9), dist * 0.5);
     const endX = toNode.x - (dx / dist) * offset;
     const endY = toNode.y - (dy / dist) * offset;
@@ -353,8 +354,8 @@ window.loadMap = async function loadMap() {
     .join('');
   const edgeHtml = `
     <span class="legend-group"><span class="legend-line" style="border-color:#444"></span>walked</span>
-    <span class="legend-group"><span class="legend-line inferred" style="border-color:#4a8"></span>known, never walked</span>
-    <span class="legend-group"><span class="legend-line inferred" style="border-color:#a84"></span>displaced or vertical</span>
+    <span class="legend-group"><span class="legend-line inferred" style="border-color:#4a8"></span>inferred (unconfirmed reverse exit)</span>
+    <span class="legend-group"><span class="legend-line inferred" style="border-color:#a84"></span>up / down (vertical)</span>
   `;
   legend.innerHTML = zoneHtml + edgeHtml;
 
@@ -439,8 +440,6 @@ window.loadMap = async function loadMap() {
     .attr('x', d => (d.source.x + d.target.x) / 2)
     .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
-
-  const RECT_W = 110, RECT_H = 96;
 
   const nodeGroup = g.append('g').selectAll('g.room-node').data(nodes).join('g')
     .attr('class', 'room-node')

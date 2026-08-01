@@ -21,15 +21,19 @@ _ZONE_PALETTE = [
 ]
 
 
-def classify_edges(graph: WorldGraph, mem: RoomMemory) -> dict[tuple[str, str], str]:
+def classify_edges(graph: WorldGraph, rooms: dict[str, dict]) -> dict[tuple[str, str], str]:
     """For every edge (u, v, direction) in the graph: "walked" if `direction`
     is among the source room's own recorded exits (the agent actually saw
     and walked it), else "inferred" (WorldGraph.add_edge auto-filled the
-    opposite direction of some other walked edge)."""
+    opposite direction of some other walked edge).
+
+    `rooms` is a pre-fetched mapping of room_hash -> room dict (as returned
+    by RoomMemory.get), so callers with many edges per room avoid re-reading
+    the same room file from disk once per outgoing edge."""
     result: dict[tuple[str, str], str] = {}
     for u, v, data in graph.graph.edges(data=True):
         direction = data.get("direction")
-        room = mem.get(u)
+        room = rooms.get(u)
         known_exits = set((room or {}).get("exits") or {})
         result[(u, v)] = "walked" if direction in known_exits else "inferred"
     return result
