@@ -440,7 +440,7 @@ window.loadMap = async function loadMap() {
     .attr('y', d => (d.source.y + d.target.y) / 2 - 6)
     .text(d => d.direction);
 
-  const RECT_W = 110, RECT_H = 74;
+  const RECT_W = 110, RECT_H = 96;
 
   const nodeGroup = g.append('g').selectAll('g.room-node').data(nodes).join('g')
     .attr('class', 'room-node')
