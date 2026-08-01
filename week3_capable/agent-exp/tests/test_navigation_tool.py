@@ -415,3 +415,143 @@ def test_navigate_to_aborts_when_a_move_lands_in_an_unexpected_room(tmp_path):
     assert "east" not in sent
     # The graph should have self-corrected: A's real north neighbor is D, not B.
     assert graph.get_neighbors(aaa).get("north") == ddd
+
+
+def test_navigate_to_resolves_via_alias_before_title_search(tmp_path):
+    """An aliased destination must resolve directly through the alias store,
+    bypassing the ambiguous word-overlap title search entirely — this is
+    what lets a term like 'guild of swordsmen' stop being ambiguous once
+    the agent has confirmed which guild it actually means."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    main_raw = "Main Street\n   A street.\n[ Exits: e ]\n"
+    guild_raw = "The Guild Of Swordsmen\n   A training hall.\n[ Exits: w ]\n"
+    main_hash, _ = mem.record(RoomParser.parse(main_raw))
+    guild_hash, _ = mem.record(RoomParser.parse(guild_raw))
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(main_hash, "Main Street")
+    graph.add_room("bbb", "The Entrance To The Clerics' Guild")
+    graph.add_room(guild_hash, "The Guild Of Swordsmen")
+    graph.add_edge(main_hash, "bbb", "west")
+    graph.add_edge(main_hash, guild_hash, "east")
+
+    RoomAliases(memory_dir).add("guild of swordsmen", guild_hash)
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.side_effect = [main_raw, "You go east.\n", guild_raw]
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_to", {"destination": "guild of swordsmen"})
+
+    assert "swordsmen" in result.lower()
+    assert "1 moves" in result
+
+
+def test_navigate_alias_add_resolves_current_room_and_persists(tmp_path):
+    """The common flow: the agent is already standing in the room it wants
+    to alias (having just reached it, e.g. via an exact-title navigate_to),
+    and calls navigate_alias_add with that exact title."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "The Bakery\n   Smells of fresh bread.\n[ Exits: s ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_alias_add", {"alias": "bakery", "destination": "The Bakery"})
+
+    assert "bakery" in result.lower()
+    aliases = RoomAliases(memory_dir)
+    room_hash = aliases.get("bakery")
+    assert room_hash is not None
+    assert graph.graph.nodes[room_hash]["title"] == "The Bakery"
+
+
+def test_navigate_alias_add_resolves_landmark_in_another_room(tmp_path):
+    """Aliasing must also work for a landmark inside a different, already
+    known room — not just the room the character currently stands in."""
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_memory import RoomMemory
+    from boukensha.memory.parser import RoomParser
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    mem = RoomMemory(memory_dir)
+
+    start_raw = "Main Street\n   A street.\n[ Exits: n ]\n"
+    square_raw = (
+        "The Temple Square\n   You are standing on the temple square.\n"
+        "[ Exits: s ]\n"
+        "A large fountain carved from blue-streaked marble is here, bubbling merrily.\n"
+    )
+    start_room = RoomParser.parse(start_raw)
+    square_room = RoomParser.parse(square_raw)
+    start_hash, _ = mem.record(start_room)
+    square_hash, _ = mem.record(square_room)
+
+    graph = WorldGraph(memory_dir)
+    graph.add_room(start_hash, "Main Street")
+    graph.add_room(square_hash, "The Temple Square")
+    graph.add_edge(start_hash, square_hash, "north")
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = start_raw
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("navigate_alias_add", {"alias": "fountain", "destination": "fountain"})
+
+    assert "temple square" in result.lower()
+    assert RoomAliases(memory_dir).get("fountain") == square_hash
+
+
+def test_navigate_alias_add_reports_failure_when_destination_unresolvable(tmp_path):
+    from boukensha.tools.navigation import Navigation
+    from boukensha.registry import Registry
+    from boukensha.context import Context
+    from boukensha.tasks.player import Player
+    from boukensha.memory.room_aliases import RoomAliases
+
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+
+    registry = Registry(Context(task=Player, system="sys"))
+    session = MagicMock()
+    session.is_open = True
+    session.drain.return_value = ""
+    session.read_until_prompt.return_value = "Main Street\n   A street.\n[ Exits: n ]\n"
+    Navigation.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch(
+        "navigate_alias_add", {"alias": "newbie zone", "destination": "The Newbie Zone Entrance"}
+    )
+
+    assert "could not resolve" in result.lower()
+    assert RoomAliases(memory_dir).get("newbie zone") is None

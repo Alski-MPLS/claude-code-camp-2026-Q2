@@ -10,6 +10,7 @@ from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.world_graph import WorldGraph
 from boukensha.memory.pathfinder import Pathfinder, Route, partial_word_matches, text_matches, word_overlap_matches
 from boukensha.memory.player_tracker import PlayerTracker
+from boukensha.memory.room_aliases import RoomAliases
 from ._walk import walk_route
 
 if TYPE_CHECKING:
@@ -35,6 +36,7 @@ class Navigation:
         if world_graph is None:
             graph.load()
         tracker = PlayerTracker(memory_dir)
+        aliases = RoomAliases(memory_dir)
 
         def _current_room_hash() -> str | None:
             """Send 'look' and return the hash of the current room.
@@ -116,8 +118,22 @@ class Navigation:
             if world_graph is None:
                 graph.load()
             pf = Pathfinder(graph)
-            route = pf.route_by_title(start_hash, destination)
+            route: Route | None = None
             landmark_room: str | None = None
+            alias_hash = aliases.get(destination)
+            if alias_hash and graph.has_room(alias_hash):
+                route = pf.route_to(start_hash, alias_hash)
+                if route is None:
+                    title = graph.graph.nodes[alias_hash].get("title", destination)
+                    return (
+                        f"'{destination}' is aliased to the known room '{title}', "
+                        f"but no walkable path there is currently known from here — "
+                        f"likely a one-way passage that was only ever walked in the "
+                        f"other direction. Call explore() to find another route out "
+                        f"rather than retrying navigate_to with the same destination."
+                    )
+            if route is None:
+                route = pf.route_by_title(start_hash, destination)
             haystacks = _landmark_haystacks()
             if route is None:
                 found = _route_by_landmark(pf, start_hash, destination, haystacks)
@@ -164,6 +180,32 @@ class Navigation:
                 return outcome.message + " Call navigate_to again to replan."
             return f"Arrived at {dest_desc} after {len(path)} moves: {' → '.join(path)}"
 
+        def _navigate_alias_add(alias: str, destination: str, **_: Any) -> str:
+            if not session.is_open:
+                return "error: not connected"
+            start_hash = _current_room_hash()
+            if start_hash is None:
+                return "error: could not determine current room"
+            if world_graph is None:
+                graph.load()
+            pf = Pathfinder(graph)
+            route = pf.route_by_title(start_hash, destination)
+            if route is None:
+                haystacks = _landmark_haystacks()
+                found = _route_by_landmark(pf, start_hash, destination, haystacks)
+                if found is not None:
+                    route, _landmark_room = found
+            if route is None or not route.nodes:
+                return (
+                    f"Could not resolve '{destination}' to a known room to alias — "
+                    f"navigate_to it successfully first, then retry navigate_alias_add "
+                    f"with its exact title."
+                )
+            room_hash = route.nodes[-1]
+            aliases.add(alias, room_hash)
+            title = graph.graph.nodes[room_hash].get("title", destination)
+            return f"Remembered: '{alias}' now resolves directly to '{title}'."
+
         registry.tool(
             "navigate_to",
             description=(
@@ -183,4 +225,32 @@ class Navigation:
                 },
             },
             block=_navigate_to,
+        )
+
+        registry.tool(
+            "navigate_alias_add",
+            description=(
+                "Remember that a shorthand term (e.g. 'bakery', 'your guild', "
+                "'the newbie zone') refers to a specific already-known room, so "
+                "future navigate_to calls with that term resolve directly instead "
+                "of failing or matching ambiguously. Call this once you've "
+                "confirmed the exact room — e.g. after navigate_to succeeded "
+                "using the room's exact title, or while standing in the room the "
+                "shorthand refers to."
+            ),
+            parameters={
+                "alias": {
+                    "type": "string",
+                    "description": "The shorthand term to remember (case-insensitive), e.g. 'bakery'",
+                },
+                "destination": {
+                    "type": "string",
+                    "description": (
+                        "The exact room title (or a landmark/item/npc mentioned inside "
+                        "a room) identifying which room the alias refers to — same "
+                        "matching rules as navigate_to's destination"
+                    ),
+                },
+            },
+            block=_navigate_alias_add,
         )
