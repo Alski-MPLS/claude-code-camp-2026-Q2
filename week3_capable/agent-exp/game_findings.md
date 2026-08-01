@@ -68,6 +68,32 @@ landed).
   `tests/test_navigation_tool.py::test_navigate_to_finds_landmark_mentioned_inside_a_room`,
   `tests/test_navigation_tool.py::test_navigate_to_still_prefers_a_title_match_over_landmark_search`.
 
+- **A destination that shares no vocabulary at all with any mapped room's
+  title/description/items/npcs had no way to resolve.** Found live: "go
+  find the bakery" (and similarly "go train at your guild," "go find the
+  newbie zone") failed outright with a flat "No known path... Explore more
+  of the area first," even when the agent itself already knew — from its
+  own memory of the session, or by recognizing the real title in a list —
+  exactly which room was meant. Two related problems: the room's real
+  title/text might share literally no word with the term used, so no
+  substring/word-overlap/near-miss match existed to suggest anything; and
+  even when a match *did* exist, a generic shared word (e.g. "guild"
+  matching every guild in the game — the exact bug `word_overlap_matches`
+  was written to prevent) could pick the wrong one. Fixed two ways: (1)
+  when `navigate_to` finds no match at all, it now lists every currently
+  known room title instead of a dead end, so the agent's own reasoning
+  (not string matching) can identify the right one and retry with the
+  exact title; (2) a new `navigate_alias_add(alias, destination)` tool lets
+  the agent persist that resolution once confirmed — `bakery -> <room
+  hash>` — via a new `RoomAliases` store (`.boukensha/memory/
+  room_aliases.json`), which `navigate_to` now checks *before* title/
+  landmark matching, so a learned alias both resolves instantly and
+  permanently bypasses any ambiguous word-overlap match for that term. See
+  `memory/room_aliases.py`, `tools/navigation.py` (`_navigate_to`,
+  `_navigate_alias_add`). Tests: `tests/test_room_aliases.py`,
+  `tests/test_navigation_tool.py::test_navigate_to_resolves_via_alias_before_title_search`,
+  `tests/test_navigation_tool.py::test_navigate_to_lists_all_known_titles_when_nothing_matches_at_all`.
+
 - **Some passages are one-way.** Found live: walking south from The Bakery
   into The General Store got an auto-inferred "north back to the Bakery"
   edge (the assumed-bidirectional heuristic added earlier), but the General
