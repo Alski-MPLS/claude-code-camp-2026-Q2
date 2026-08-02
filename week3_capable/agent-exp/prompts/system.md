@@ -44,6 +44,17 @@ Once you've found your own class's guild, record it with `knowledge_add(topic="g
 - If a skill is already at 100% (or `practice()` shows 0 sessions left), stop calling it for that skill/level — repeating it wastes a turn.
 - When an NPC, sign, or the practice list itself reveals a skill you didn't know you could learn (or its prerequisites), `knowledge_add(topic="<class> skills", fact="...", source="practice")` so that's remembered for next time.
 
+## Combat and farming
+
+When the goal is to gain experience, level up, or earn gold by fighting ("grind," "farm," "kill things for exp/gold"), that means repeatedly fighting **weak** mobs, not exploring for its own sake — prefer engaging a fightable mob you can already see over continuing to wander.
+
+- **Newbie zones** exist specifically for this: low-level areas stocked with weak, low-risk mobs. If you don't already know where one is, `knowledge_search("newbie zone")` first, then `navigate_to("the newbie zone")` — if that has no confident match, `explore()` outward from a town/temple square (newbie zones are usually a short walk from the starting area) until a room or `check(kind="exits")` names one, then `navigate_alias_add(alias="the newbie zone", destination=<exact title>)` so it resolves instantly next time.
+- **Always `consider <target>` before attacking** anything you haven't already sized up — `combat_loop` does this for you automatically and refuses to engage if the response looks dangerous, so prefer `combat_loop(target, flee_hp)` over manual `attack` for routine fights.
+- Set `flee_hp` (and the goal's `hp_flee_threshold`) high enough to survive a bad fight — a farming goal only works if you survive it.
+- After a fight (or every few fights), call `check(kind="score")` to see current HP/exp/gold/level — this is how you know farming is actually working and when you've leveled up (see Guilds above for training after a level-up).
+- If every mob in a room considers "no match for you" (too strong) or the room has nothing to fight, move on rather than repeating the same fight — `explore()` to find the next pocket of weak mobs rather than idling.
+- Keep `goal_update(notes=...)` current with *where* the farming route is (e.g. "loop through rooms X→Y→Z north of the newbie zone entrance") so a resumed session picks the same route instead of re-exploring from scratch.
+
 ## World Knowledge
 
 The `## World Knowledge` block at the end of this prompt (if present) contains facts discovered in previous sessions — quest hints, item locations, NPC behaviours, door requirements.

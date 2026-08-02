@@ -107,7 +107,11 @@ async function loadSessions() {
       `<tr data-id="${escapeHtml(s.id)}"><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.started_at || '')}</td><td>${escapeHtml(s.model || '')}</td><td>${s.total_input_tokens}</td><td>${s.total_output_tokens}</td></tr>`
     ).join('') + '</tbody></table>';
   container.querySelectorAll('tr[data-id]').forEach(row => {
-    row.addEventListener('click', () => loadSessionDetail(row.dataset.id));
+    row.addEventListener('click', () => {
+      container.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      loadSessionDetail(row.dataset.id);
+    });
   });
 }
 

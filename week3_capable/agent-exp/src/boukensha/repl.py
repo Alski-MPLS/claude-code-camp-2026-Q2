@@ -20,6 +20,27 @@ PROMPT = "boukensha> "
 
 AUTO_CONTINUE_DIRECTIVE = "continue toward the current goal"
 
+# Phrases that mean "keep doing what you were doing" rather than "here is a
+# new goal" — matched case-insensitively against the whole (stripped,
+# trailing-punctuation-free) input. Without this, typing e.g. "continue" to
+# resume a session overwrites current_goal with that literal word, discarding
+# whatever specific direction was on disk.
+_RESUME_PHRASES: frozenset[str] = frozenset({
+    "continue",
+    "resume",
+    "keep going",
+    "proceed",
+    "continue working on the current goal",
+    "continue toward the current goal",
+    "continue the current goal",
+    "continue with the current goal",
+    "keep working on the current goal",
+})
+
+
+def _is_resume_phrase(text: str) -> bool:
+    return text.strip().rstrip(".!").lower() in _RESUME_PHRASES
+
 HELP = """\
 Commands:
   /quiet   suppress logging output
@@ -179,17 +200,27 @@ class Repl:
             self._logger.turn(n=self._turn)
 
         # A genuinely new instruction from the user — as opposed to this
-        # method recursing on itself with AUTO_CONTINUE_DIRECTIVE — always
-        # supersedes whatever goal is on disk. Without this, a stale goal
-        # left over from a previous session (or a prior task the model never
-        # marked completed/paused) stays "active", and if this new turn runs
-        # out of iterations before the model calls goal_update itself, the
+        # method recursing on itself with AUTO_CONTINUE_DIRECTIVE, or a
+        # human typing a resume phrase like "continue" — always supersedes
+        # whatever goal is on disk. Without this, a stale goal left over
+        # from a previous session (or a prior task the model never marked
+        # completed/paused) stays "active", and if this new turn runs out
+        # of iterations before the model calls goal_update itself, the
         # auto-continue below resumes it with "continue toward the current
         # goal" — which then resolves to the OLD goal, silently overriding
         # what the user just asked for.
-        if user_input != AUTO_CONTINUE_DIRECTIVE and self._goals_dir:
+        #
+        # Resume phrases are deliberately exempted from the overwrite: they
+        # carry no new direction, so writing them into current_goal verbatim
+        # would destroy whatever specific goal/notes were already on disk.
+        # They still reactivate a paused/completed goal via status="active".
+        if self._goals_dir and user_input != AUTO_CONTINUE_DIRECTIVE:
             from .goals.goal_manager import GoalManager
-            GoalManager(self._goals_dir).update(current_goal=user_input, status="active")
+            gm = GoalManager(self._goals_dir)
+            if _is_resume_phrase(user_input):
+                gm.update(status="active")
+            else:
+                gm.update(current_goal=user_input, status="active")
 
         self._context.add_message("user", user_input)
 

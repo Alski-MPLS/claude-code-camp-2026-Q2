@@ -90,11 +90,24 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
   margin: 0;
 }
 #goals-content { background: #1a1a1a; padding: 12px; border-radius: 6px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+#sessions-split { display: flex; gap: 12px; flex: 1; min-height: 0; }
+#sessions-list { flex: 1; overflow-y: auto; min-width: 0; }
 #sessions-list table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #sessions-list th, #sessions-list td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #333; }
-#sessions-list th { color: #888; }
+#sessions-list th { color: #888; position: sticky; top: 0; background: #111; }
 #sessions-list tr:hover td { background: #1e1e1e; cursor: pointer; }
-#session-transcript { margin-top: 16px; }
+#sessions-list tr.selected td { background: #223; }
+#session-transcript {
+  width: 420px;
+  flex-shrink: 0;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #888;
+}
 .entry-user { color: #4af; margin: 8px 0 4px; }
 .entry-assistant { color: #fff; margin: 4px 0 8px; }
 .entry-tool { color: #8f8; font-size: 12px; margin: 2px 0; }
