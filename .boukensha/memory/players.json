@@ -1,17 +1,17 @@
 {
   "dummy": {
-    "room_hash": "eebae29193e3",
-    "title": "A Narrow Passage",
-    "updated_at": "2026-08-01T18:42:11.054592+00:00",
-    "prev_room_hash": "afbf5a4c5714",
+    "room_hash": "9a2e0d053ec1",
+    "title": "Another Corner",
+    "updated_at": "2026-08-02T14:26:53.326921+00:00",
+    "prev_room_hash": "d875e614ed9a",
     "stats": {
       "hp": 37,
       "max_hp": 37,
       "mana": 100,
       "max_mana": 100,
-      "move": 87,
+      "move": 64,
       "max_move": 87
     },
-    "stats_updated_at": "2026-08-01T17:07:11.688397+00:00"
+    "stats_updated_at": "2026-08-02T14:21:41.244029+00:00"
   }
 }

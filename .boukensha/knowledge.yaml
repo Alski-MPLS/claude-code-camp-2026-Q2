@@ -4,3 +4,10 @@
   source: Market Square / Main Street
   timestamp: '2026-07-29T22:02:04.991922+00:00'
   topic: Guild of Swordsmen location
+- fact: 'The Entrance To The Newbie Zone is already mapped and has a saved navigate_to
+    alias "the newbie zone" — just call navigate_to("the newbie zone") directly,
+    do not manually walk or call explore(). Full walking route if ever needed: from
+    Behind The Temple Altar go north, north, then east.'
+  source: world_graph / room_aliases
+  timestamp: '2026-08-02T14:10:00.000000+00:00'
+  topic: Newbie zone location

@@ -1,6 +1,12 @@
-current_goal: Opem the door to the east and go in there. Try to fight anyone you find.
+current_goal: Farm experience and gold on weak mobs. Start by calling navigate_to("The
+  Dirty Hallway") — already mapped, one call gets you there. Fight whatever's there
+  with combat_loop. Once that area is quiet, push further into the zone (e.g. through
+  A Nexus) using explore(max_hops=4) rather than plain explore() — plain explore()
+  searches the whole map and can walk you all the way back to town once the nearby
+  area is fully mapped; max_hops keeps it local. Keep goal_update(notes=...) current
+  with your farming route as you go.
 hp_flee_threshold: 5
-last_updated: '2026-08-01T18:41:53.323005+00:00'
+last_updated: '2026-08-02T14:27:20.782087+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room
@@ -14,8 +20,10 @@ mud_basics: '- Use ''score'' to check HP/mana/moves
   - ''flee'' to escape combat
 
   '
-notes: Local exploration in A Nexus is blocked or exhausted. Reorienting to resume
-  wilderness combat search along previous successful path (the route leading north
-  from The Temple Of Midgaard).
+notes: 'Killed first mob (a creepy crawler) in The Dirty Hallway, 10 gold looted.
+  Known-good farming spot: navigate_to("The Dirty Hallway"). The path from town (Great
+  Field Of Midgaard -> Entrance To The Newbie Zone -> The Beginning Of The Passage
+  -> The Dirty Hallway) is fully mapped — use explore(max_hops=4) to push further
+  in without risking a walk back to town.'
 priority: explore
 status: active

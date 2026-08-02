@@ -19,7 +19,7 @@ At this point, the technical goal is to continue building out the agent to make 
 - Figured out how to get Claude Code to watch the player and give Claude instructions to help troublehshoot. The agent is using a local LLM through Ollama so it's interesting that I'm using two different models now to play and troubleshoot. 
 - Had it finally fix the "sessions" tab in the browsers. 
 - Claude Code is actively making changes to the program as it observes the play through while I give it additional instructions. 
-- Claude found this -- "That's the small model hallucinating a generic name again ("newbie monster" isn't real content) rather than reading the room — correctly rejected since nothing's actually there. This is normal small-model judgment noise, not a bug in the fixes. The two structural issues you flagged (backtracking to town, and blocked combat) are holding up well through this whole run. I'll keep the monitor running passively and only interrupt if something concerning shows up."
+- Claude found this -- "That's the small model hallucinating a generic name again ("newbie monster" isn't real content) rather than reading the room — correctly rejected since nothing's actually there. This is normal small-model judgment noise, not a bug in the fixes. The two structural issues you flagged (backtracking to town, and blocked combat) are holding up well through this whole run. I'll keep the monitor running passively and only interrupt if something concerning shows up.". I'm using Gemma4:e4b at this time and running on my MACBOOK AIR 5M. 
 
 
 ## Where the program stands now.
