@@ -6,7 +6,7 @@ current_goal: Farm experience and gold on weak mobs. Start by calling navigate_t
   area is fully mapped; max_hops keeps it local. Keep goal_update(notes=...) current
   with your farming route as you go.
 hp_flee_threshold: 5
-last_updated: '2026-08-02T14:27:20.782087+00:00'
+last_updated: '2026-08-02T15:12:16.467786+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room

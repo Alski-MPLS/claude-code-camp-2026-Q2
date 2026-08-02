@@ -308,6 +308,27 @@ def _match_npc(target: str, npcs: list[str]) -> str | None:
     return None
 
 
+def _sustenance_advisory(stats: dict[str, int | bool]) -> str:
+    """Hunger/thirst are just flavor lines buried in raw `score` output —
+    nothing else in the codebase reads them. This surfaces them as an
+    explicit, actionable note appended to score's result (not a hard gate;
+    unlike combat or a dead body, going hungry/thirsty for a while isn't
+    an immediate failure) so the model actually notices and acts instead of
+    needing to remember to re-read the score text carefully."""
+    hungry = bool(stats.get("hungry"))
+    thirsty = bool(stats.get("thirsty"))
+    if not hungry and not thirsty:
+        return ""
+    need = "hungry and thirsty" if hungry and thirsty else ("hungry" if hungry else "thirsty")
+    action = "eat and drink something" if hungry and thirsty else ("eat something" if hungry else "drink something")
+    return (
+        f"\n\n[Sustenance] You are {need}. Plan to {action} soon — navigate_to a known "
+        "food/drink source (e.g. a bakery, or a fountain via consume_item(item=\"fountain\", "
+        "mode=\"drink\")) and consume_item to actually eat/drink. Not urgent enough to interrupt "
+        "a fight in progress, but don't let it go unaddressed for many turns in a row."
+    )
+
+
 def _no_living_target_message(target: str, npcs: list[str]) -> str:
     here = ", ".join(npcs) if npcs else "nothing living — only items (possibly a corpse) or nothing at all"
     return (
@@ -430,10 +451,12 @@ class Mud:
 
         def _check_and_record(kind: str) -> str:
             raw = _check_info(session, kind)
-            if tracker is not None and kind.strip().lower() == "score" and not raw.startswith("error:"):
+            if kind.strip().lower() == "score" and not raw.startswith("error:"):
                 stats = PlayerStats.parse_score(raw)
                 if stats:
-                    tracker.update_stats(name, stats)
+                    if tracker is not None:
+                        tracker.update_stats(name, stats)
+                    raw += _sustenance_advisory(stats)
             return raw
 
         registry.tool(

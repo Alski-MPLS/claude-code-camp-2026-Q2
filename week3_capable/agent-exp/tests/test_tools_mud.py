@@ -473,6 +473,7 @@ def test_check_score_persists_stats_to_player_tracker(tmp_path):
         "hp": 20, "max_hp": 20,
         "mana": 100, "max_mana": 100,
         "move": 85, "max_move": 85,
+        "hungry": False, "thirsty": False,
     }
 
 
@@ -505,6 +506,40 @@ def test_check_score_without_memory_dir_does_not_crash():
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
     result = registry.dispatch("check", {"kind": "score"})
     assert "20(20) hit" in result
+
+
+def test_check_score_appends_sustenance_advisory_when_hungry_and_thirsty():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 34(37) hit, 100(100) mana and 86(87) movement points.\n"
+        "You are standing.\n"
+        "You are hungry.\n"
+        "You are thirsty. > "
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Sustenance]" in result
+    assert "hungry and thirsty" in result
+
+
+def test_check_score_omits_sustenance_advisory_when_neither():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 37(37) hit, 100(100) mana and 87(87) movement points. > "
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Sustenance]" not in result
 
 
 def test_door_open_with_direction_sends_open_door_direction():

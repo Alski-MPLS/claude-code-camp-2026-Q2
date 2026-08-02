@@ -8,8 +8,8 @@
     "west": null,
     "down": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "An automatic teller machine has been installed in the wall here."
-  ]
+  ],
+  "items": []
 }

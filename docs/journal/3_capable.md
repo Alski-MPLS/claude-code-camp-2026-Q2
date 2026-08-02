@@ -10,16 +10,20 @@ At this point, the technical goal is to continue building out the agent to make 
 - How to explore.
 
 ## Technical Uncertainty
-[todo]
+Still dealing with strange behaviors that I keep trying to fix. I think it could be the model I'm using and will need to test that out. Just not sure yet how to do that. The agent can find the bakery and knows how to eat. I doesn't go back when it gets hungary. It's not able to learn except what it should care about. So, it sees everything in a room but it can't reason what it could use in the future. That could be more tokens to use but I'm not sure.
 
 ## Technical Hypothesis
+Will continue to push for troubleshooting this program and watch the agent as it finds new environments and items. I will have to become more familiar with the game and how to play it. I know that we spent a week just going over the play style and the details but if this was for a company, I would think that much of that would be documented and could be ingested prior to diving deep into the agent build. It would have been great to have access to this 2 or 3 weeks prior to the launch of the boot camp so we would have just played it and build this knowledge prior to the start. 
 
 ## Technical Observations
 - I copied the week 2 agent into week 3 and will continue to make changes there.
 - Figured out how to get Claude Code to watch the player and give Claude instructions to help troublehshoot. The agent is using a local LLM through Ollama so it's interesting that I'm using two different models now to play and troubleshoot. 
 - Had it finally fix the "sessions" tab in the browsers. 
 - Claude Code is actively making changes to the program as it observes the play through while I give it additional instructions. 
-- Claude found this -- "That's the small model hallucinating a generic name again ("newbie monster" isn't real content) rather than reading the room — correctly rejected since nothing's actually there. This is normal small-model judgment noise, not a bug in the fixes. The two structural issues you flagged (backtracking to town, and blocked combat) are holding up well through this whole run. I'll keep the monitor running passively and only interrupt if something concerning shows up.". I'm using Gemma4:e4b at this time and running on my MACBOOK AIR 5M. 
+- Claude found this -- "That's the small model hallucinating a generic name again ("newbie monster" isn't real content) rather than reading the room — correctly rejected since nothing's actually there. This is normal small-model judgment noise, not a bug in the fixes. The two structural issues you flagged (backtracking to town, and blocked combat) are holding up well through this whole run. I'll keep the monitor running passively and only interrupt if something concerning shows up.". I'm using Gemma4:e4b at this time and running on my MACBOOK AIR 5M. From Claude:
+    - qwen3:30b (already in your settings.yaml as a commented option) — it's a MoE model (30B total, ~3B active per token), so it stays fast despite the size, and the larger total capacity should meaningfully cut down the "attacks a name it made up" behavior. Roughly 18-20GB at Ollama's default quant, leaving headroom for macOS/Docker/the dashboard.
+    - qwen3:8b — smaller step up, safer on RAM/speed if 30b feels sluggish, still much better at tool use than gemma4:e4b.
+
 
 
 ## Where the program stands now.

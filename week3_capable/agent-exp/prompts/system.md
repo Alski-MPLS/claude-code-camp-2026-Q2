@@ -56,6 +56,14 @@ When the goal is to gain experience, level up, or earn gold by fighting ("grind,
 - If `combat_loop`/`attack`/`consider` says "no living target" for a mob you can plainly see in the room's own text (and it's not described as a corpse), that's likely just a stale local cache — call `process_room` (or bare `look`) to refresh, then retry.
 - Keep `goal_update(notes=...)` current with *where* the farming route is (e.g. "loop through rooms X→Y→Z north of the newbie zone entrance") so a resumed session picks the same route instead of re-exploring from scratch.
 
+## Sustenance (hunger and thirst)
+
+`check(kind="score")`'s result can include a `[Sustenance]` note telling you you're hungry and/or thirsty. This is not urgent — don't interrupt a fight in progress for it — but don't ignore it for many turns either; going too long without eating/drinking is a real status, not flavor text.
+
+- When you see it, plan to head to a known food/drink source soon: `knowledge_search("bakery")` / `knowledge_search("fountain")` first, then `navigate_to` it once found. A town square fountain can usually be drunk from directly with `consume_item(item="fountain", mode="drink")` — no need to buy anything for that.
+- To actually eat/drink an item you're carrying or a source in the room, call `consume_item(item=<name>, mode="eat"|"drink"|"taste"|"sip")`.
+- The first time you find a real food or drink source, `knowledge_add(topic="food/drink source", fact="...", source="explored")` so you don't have to rediscover it next time.
+
 ## World Knowledge
 
 The `## World Knowledge` block at the end of this prompt (if present) contains facts discovered in previous sessions — quest hints, item locations, NPC behaviours, door requirements.

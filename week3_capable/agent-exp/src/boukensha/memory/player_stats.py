@@ -9,10 +9,15 @@ _SCORE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# CircleMUD only prints these lines when the condition is true — there's no
+# "You are not hungry." counterpart, so absence means fine, not unknown.
+_HUNGRY_RE = re.compile(r"You are hungry\.", re.IGNORECASE)
+_THIRSTY_RE = re.compile(r"You are thirsty\.", re.IGNORECASE)
+
 
 class PlayerStats:
     @staticmethod
-    def parse_score(text: str) -> dict[str, int] | None:
+    def parse_score(text: str) -> dict[str, int | bool] | None:
         m = _SCORE_RE.search(text)
         if not m:
             return None
@@ -21,4 +26,6 @@ class PlayerStats:
             "hp": hp, "max_hp": max_hp,
             "mana": mana, "max_mana": max_mana,
             "move": move, "max_move": max_move,
+            "hungry": bool(_HUNGRY_RE.search(text)),
+            "thirsty": bool(_THIRSTY_RE.search(text)),
         }

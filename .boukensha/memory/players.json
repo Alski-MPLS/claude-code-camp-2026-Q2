@@ -1,17 +1,17 @@
 {
   "dummy": {
-    "room_hash": "9a2e0d053ec1",
-    "title": "Another Corner",
-    "updated_at": "2026-08-02T14:26:53.326921+00:00",
-    "prev_room_hash": "d875e614ed9a",
+    "room_hash": "c1f58ff84f1e",
+    "title": "A Bright Hallway",
+    "updated_at": "2026-08-02T15:19:47.480824+00:00",
+    "prev_room_hash": "42df891e10d7",
     "stats": {
-      "hp": 37,
+      "hp": 34,
       "max_hp": 37,
       "mana": 100,
       "max_mana": 100,
-      "move": 64,
+      "move": 86,
       "max_move": 87
     },
-    "stats_updated_at": "2026-08-02T14:21:41.244029+00:00"
+    "stats_updated_at": "2026-08-02T15:12:55.380961+00:00"
   }
 }
