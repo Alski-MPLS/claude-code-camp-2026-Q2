@@ -208,3 +208,42 @@ def test_explore_reports_fully_mapped_area(tmp_path):
     assert "fully mapped" in result.lower()
     sent = [c.args[0] for c in session.send_command.call_args_list]
     assert sent == ["look"]
+
+
+def test_explore_max_hops_refuses_to_teleport_far_for_frontier(tmp_path):
+    """The real-world bug this guards against: once the area right around
+    the agent is fully mapped, an unrestricted explore() can walk it all
+    the way back to a distant already-visited hub (e.g. town) just because
+    that happens to have the globally-nearest leftover unwalked exit. With
+    max_hops set, explore() must refuse to make that long walk and say so,
+    rather than silently doing it."""
+    memory_dir = tmp_path / "memory"
+    graph = WorldGraph(memory_dir)
+    mem = RoomMemory(memory_dir)
+
+    # Room A (start) --north--> Room B --north--> Room C, which still has
+    # an unwalked "east" exit. A and B are each other's only known exit and
+    # are both fully mapped (no frontier there).
+    a_room = RoomParser.parse("Room A\n   Desc A.\n[ Exits: n ]\n")
+    a_hash, _ = mem.record(a_room)
+    graph.add_room(a_hash, "Room A")
+
+    b_room = RoomParser.parse("Room B\n   Desc B.\n[ Exits: n s ]\n")
+    b_hash, _ = mem.record(b_room)
+    graph.add_room(b_hash, "Room B")
+    graph.add_edge(a_hash, b_hash, "north")
+
+    c_room = RoomParser.parse("Room C\n   Desc C.\n[ Exits: e s ]\n")
+    c_hash, _ = mem.record(c_room)
+    graph.add_room(c_hash, "Room C")
+    graph.add_edge(b_hash, c_hash, "north")
+
+    registry = _make_registry()
+    session = _make_session("Room A\n   Desc A.\n[ Exits: n ]\n")
+    Exploration.register(registry, session=session, memory_dir=memory_dir, world_graph=graph)
+
+    result = registry.dispatch("explore", {"max_hops": 1})
+
+    assert "no unexplored exit within 1 hop" in result.lower()
+    sent = [c.args[0] for c in session.send_command.call_args_list]
+    assert sent == ["look"]  # only looked around, never walked toward Room C

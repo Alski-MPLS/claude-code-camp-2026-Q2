@@ -84,12 +84,20 @@ class RoomParser:
                     npcs.append(stripped)
                 elif re.match(r"^[A-Z]", stripped):
                     # Custom mob long-descriptions and item lines both just
-                    # end in "...here." with no reliable marker; short lines
-                    # are more likely a plain mob name than item flavor text.
-                    if len(stripped.split()) <= 4:
-                        npcs.append(stripped)
-                    else:
-                        items.append(stripped)
+                    # end in "...here." with no reliable marker, and a
+                    # word-count split doesn't work: real mobs routinely get
+                    # long flavor-text descriptions too (e.g. "A creepy
+                    # little crawling thing is scuttling along the floor at
+                    # your feet."). Default to npcs — the same reasoning as
+                    # the "is here." branch above: a combat-safety consumer
+                    # of npcs[] must not miss a real mob just because its
+                    # description is long. Misclassifying a genuinely static
+                    # item as an npc only costs a harmless rejected
+                    # `consider`/`attack` from the live game; the reverse
+                    # (a real mob filed under items) makes it permanently
+                    # unattackable through these tools, since nothing else
+                    # ever queries the live game to check.
+                    npcs.append(stripped)
 
         description = " ".join(l for l in desc_lines if l)
 

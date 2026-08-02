@@ -282,7 +282,7 @@ def test_navigate_to_finds_landmark_mentioned_inside_a_room(tmp_path):
     square_room = RoomParser.parse(square_raw)
     start_hash, _ = mem.record(start_room)
     square_hash, _ = mem.record(square_room)
-    assert "fountain" in square_room["items"][0].lower()
+    assert "fountain" in (square_room["items"] + square_room["npcs"])[0].lower()
 
     graph = WorldGraph(memory_dir)
     graph.add_room(start_hash, "Main Street")

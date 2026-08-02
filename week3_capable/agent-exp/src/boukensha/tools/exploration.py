@@ -77,9 +77,21 @@ class Exploration:
                 last_direction_ref[0] = None
             return h
 
-        def _nearest_frontier(start_hash: str) -> tuple[Route, str, str] | None:
+        def _nearest_frontier(start_hash: str, max_hops: int | None = None) -> tuple[Route, str, str] | None:
             """The closest (room, direction) where a known exit has no
-            corresponding edge in the graph yet and isn't marked blocked."""
+            corresponding edge in the graph yet and isn't marked blocked.
+
+            Search is global across the whole known map by design — this is
+            what makes explore() a cheap "map everything" tool without the
+            LLM having to plan routes itself. The tradeoff: once the area
+            right around the current position is fully mapped, "nearest"
+            can jump to some leftover unexplored exit anywhere else already
+            visited (e.g. back near a hub like a town square), which reads
+            as backtracking when the actual intent was "push further out
+            from here." ``max_hops`` lets a caller opt into a local-only
+            search for that case, at the cost of possibly reporting nothing
+            found even though the map has frontier elsewhere.
+            """
             pf = Pathfinder(graph)
             best: tuple[Route, str, str] | None = None
             for node in list(graph.graph.nodes):
@@ -96,11 +108,13 @@ class Exploration:
                 route = pf.route_to(start_hash, node)
                 if route is None:
                     continue
+                if max_hops is not None and len(route.directions) > max_hops:
+                    continue
                 if best is None or len(route.directions) < len(best[0].directions):
                     best = (route, node, unblocked[0])
             return best
 
-        def _explore(**_: Any) -> str:
+        def _explore(max_hops: int | None = None, **_: Any) -> str:
             if not session.is_open:
                 return "error: not connected"
             if world_graph is None:
@@ -109,8 +123,17 @@ class Exploration:
             if start_hash is None:
                 return "error: could not determine current room"
 
-            found = _nearest_frontier(start_hash)
+            found = _nearest_frontier(start_hash, max_hops)
             if found is None:
+                if max_hops is not None:
+                    return (
+                        f"No unexplored exit within {max_hops} hop(s) of here — "
+                        "the immediate area is fully mapped. Call explore() again "
+                        "without max_hops to search the whole known map (this may "
+                        "route you somewhere far away, including back near "
+                        "already-visited hubs), or navigate_to a specific known "
+                        "room/landmark instead."
+                    )
                 return (
                     "No unexplored exits reachable — this area appears fully "
                     "mapped, or every remaining exit is already marked blocked."
@@ -206,14 +229,32 @@ class Exploration:
             "explore",
             description=(
                 "Find the nearest room with a known-but-unwalked exit and go "
-                "investigate it — no need to specify a destination. Skips "
-                "exits already confirmed to be locked/blocked, and refuses "
-                "to walk into a dark room (marks it blocked instead) rather "
-                "than risk getting stuck somewhere it can't see. Use this "
-                "whenever asked to explore, map the area, or find something "
-                "whose location isn't known yet. Call repeatedly to keep "
-                "expanding the map outward."
+                "investigate it — no need to specify a destination. The search "
+                "is GLOBAL across the whole known map, not just nearby: once the "
+                "area right around you is fully mapped, the 'nearest' unwalked "
+                "exit anywhere can be back near an already-visited hub (e.g. "
+                "town), which will walk you all the way back there — that is "
+                "expected behavior for 'map everything', not a bug, but it is "
+                "almost never what you want when you're trying to push further "
+                "out from your current spot (e.g. deeper into a dungeon/zone "
+                "to find more mobs). For that, pass max_hops (e.g. 3-5) to "
+                "restrict the search to nearby unexplored exits only — it will "
+                "report nothing found rather than teleport you back to a hub. "
+                "Skips exits already confirmed to be locked/blocked, and "
+                "refuses to walk into a dark room (marks it blocked instead) "
+                "rather than risk getting stuck somewhere it can't see. Call "
+                "repeatedly to keep expanding the map outward."
             ),
-            parameters={},
+            parameters={
+                "max_hops": {
+                    "type": "integer",
+                    "description": (
+                        "Only consider unwalked exits reachable within this many "
+                        "moves of your current room. Omit for the default "
+                        "whole-map search (can route you far away, including "
+                        "back near already-mapped hubs)."
+                    ),
+                },
+            },
             block=_explore,
         )

@@ -8,7 +8,7 @@ dashboard.
 
 | Component | Location | Responsibility |
 |---|---|---|
-| **`RoomParser`** | `src/boukensha/memory/parser.py` | Pure function: raw MUD `look` text → structured dict (title, description, exits, npcs, items). Skips leading zone-banner/failure-message lines (anything ending in `.`/`!`/`?`) to find the real title, so e.g. "This zone is above the level of most zones..." or "Alas, you cannot go that way..." never gets recorded as a fake room. Files corpses ("... is lying here.") as items, not npcs, regardless of name length. |
+| **`RoomParser`** | `src/boukensha/memory/parser.py` | Pure function: raw MUD `look` text → structured dict (title, description, exits, npcs, items). Skips leading zone-banner/failure-message lines (anything ending in `.`/`!`/`?`) to find the real title, so e.g. "This zone is above the level of most zones..." or "Alas, you cannot go that way..." never gets recorded as a fake room. Files corpses ("... is lying here.") as items, not npcs, regardless of name length. Any other ambiguous line (a mob's custom flavor-text description, which doesn't match the plain "X is here." format) now defaults to npc rather than item — it used to default to item past 4 words, which silently made longer-described mobs permanently unattackable since nothing else ever re-checks the live game. |
 | **`RoomMemory`** | `src/boukensha/memory/room_memory.py` | Reads/writes `.boukensha/memory/rooms/{hash}.json`; hash = `sha256(title + "\n" + desc)[:12]` |
 | **`WorldGraph`** | `src/boukensha/memory/world_graph.py` | NetworkX DiGraph of rooms connected by exit edges; persisted to `.boukensha/memory/world_graph.json`. `add_edge()` drops any stale same-direction edge to a different room before recording the new one, and — only when no real edge already claims that direction on the far side, and only when it doesn't contradict the destination's own known exits — infers the reverse edge too, so a room only ever approached from one side is still pathfinding-reachable. |
 | **`Pathfinder`** | `src/boukensha/memory/pathfinder.py` | Dijkstra shortest path over `WorldGraph`. Returns a `Route` (directions + the expected room hash after each step, for drift detection). `route_by_title()` matches by substring first, then falls back to all-significant-words-must-match overlap (`word_overlap_matches`) to avoid a generic shared word — e.g. "guild" — matching the wrong room; when multiple rooms match, picks whichever has the shortest real route. |
@@ -26,7 +26,7 @@ dashboard.
 | **`_walk` (`walk_route`)** | `src/boukensha/tools/_walk.py` | Shared step-by-step route walker used by both `navigate_to` and `explore`. Executes a `Route` one move at a time and stops the instant reality stops matching the plan — never blindly finishes a multi-step route against a room the character isn't actually in anymore. Returns a `WalkOutcome` (`arrived` / `blocked` / `drifted` / `lost`), self-healing the graph with the edge actually observed on `drifted`. |
 | **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step. Checks a learned alias first (`RoomAliases`), then matches room titles, then falls back to searching every mapped room's description/items/npcs (a landmark like "the fountain"); disambiguates multiple matches by shortest route. When nothing matches at all, its error message lists every currently known room title so the agent can retry with the exact one and then call `navigate_alias_add` to remember it — rather than a flat "no known path" dead end. Distinguishes "known room but unreachable" (one-way passage) from "no match" (with near-miss suggestions or the full title list) so the LLM gets an actionable message. |
 | **`navigate_alias_add` tool** | `src/boukensha/tools/navigation.py` | Resolves a `destination` the same way `navigate_to` does (title, then landmark search, tie-broken by distance from the current room) and persists `alias -> room_hash` via `RoomAliases`. Called by the agent once it has confirmed which room a fuzzy shorthand ("bakery," "your guild") actually refers to, so future `navigate_to` calls with that shorthand resolve directly. |
-| **`explore` tool** | `src/boukensha/tools/exploration.py` | Finds the nearest room with a known-but-unwalked exit (seen in a `look`'s `[ Exits: ]` line but with no graph edge yet), routes there via `Pathfinder`/`walk_route`, then probes the frontier exit itself — peeks before moving to avoid walking blind into a dark room, retries a closed (not locked) door once, and marks the exit blocked via `BlockedExits` if it still doesn't yield. No destination needed; call repeatedly to expand the map outward. |
+| **`explore` tool** | `src/boukensha/tools/exploration.py` | Finds the nearest room with a known-but-unwalked exit (seen in a `look`'s `[ Exits: ]` line but with no graph edge yet), routes there via `Pathfinder`/`walk_route`, then probes the frontier exit itself — peeks before moving to avoid walking blind into a dark room, retries a closed (not locked) door once, and marks the exit blocked via `BlockedExits` if it still doesn't yield. No destination needed; call repeatedly to expand the map outward. The frontier search is global by default, which used to mean once the nearby area was fully mapped, "nearest" could jump all the way back to a leftover unwalked exit near a hub like town. Optional `max_hops` caps the search radius so it reports nothing found instead of walking back to town. |
 | **`process_room` tool** | `src/boukensha/tools/room_processor.py` | Parses current room, diffs vs memory; returns only new/changed info to LLM |
 | **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions. Hard-refuses to engage a target that isn't a currently-known living NPC in the room (catches "fighting" a corpse or a name that's simply not there), and separately refuses (regardless of the first check) if its own `consider` call comes back matching a danger-phrase list (e.g. "Do you feel lucky, punk?") — both gates skippable only via explicit `force=true`. On a kill, auto-loots the corpse (`auto_loot=true` by default) and folds the loot result into the response. |
 | **`attack` / `consider` / `skill_strike`** | `src/boukensha/tools/mud.py` | Gated the same way as `combat_loop`: refuse a target that isn't in the shared "known NPCs in this room" list, populated by every `move`/bare `look`. `skill_strike`'s `rescue`/`assist` are exempt (they target a player, not an npc). |
@@ -242,6 +242,15 @@ the character somewhere it can't see. A door that doesn't budge gets one
 blocked (`BlockedExits`, with a reason) so `explore()` skips it on future
 calls instead of retrying forever.
 
+**Frontier search is global by default.** The nearest-frontier scan runs
+over every mapped room, not just nearby ones, so once the local area is
+fully mapped, "nearest" can jump to a leftover unwalked exit back near an
+already-visited hub (e.g. town) — this is the correct behavior for "map the
+whole world," but reads as backtracking when the actual intent is "push
+further out from here." `max_hops` opts into a local-only search: it
+restricts candidates to routes within N hops and reports nothing found
+rather than walking back to a hub.
+
 **`WorldGraph` reverse-edge inference:** edges are only ever recorded in the
 direction actually walked, but CircleMUD exits are almost always
 bidirectional. `add_edge()` fills in the reverse edge automatically —
@@ -268,7 +277,12 @@ with an explicit override:
    npcs, regardless of name length) or an unrelated/absent name refuses
    immediately with a message listing what's actually in the room, instead
    of sending a doomed command and relaying back the MUD's cryptic
-   "Consider killing who?"/"That player is not here."
+   "Consider killing who?"/"That player is not here." This gate is only as
+   good as `RoomParser`'s npc/item split — a mob with a long custom
+   description used to be misfiled as an item, making it permanently
+   unattackable through this gate even though it was actually alive (see
+   `RoomParser` above); `force=true` was the only way through until the
+   classifier itself got fixed.
 2. **Danger gate** (`combat_loop` only) — always runs `consider` itself
    first (regardless of whether the caller already did), and refuses if the
    response matches a known "you will lose badly" phrase (e.g. "Do you feel
@@ -371,7 +385,7 @@ defaulting each to reason `"blocked"`.
 | **Map** | `GET /api/map` + `GET /api/players` → world_graph.json + players.json | Pull on tab load + auto-refresh every 3s |
 | **Waterfall** | SSE event stream (iteration/tool_call/tool_result phases) | Push — builds rows as events arrive |
 | **Goals** | `GET /api/goal` → current.yaml | Pull on tab load + auto-refresh every 5s |
-| **Sessions** | `GET /api/sessions` → .boukensha/sessions/*.jsonl | Pull — replaces Ruby log_viz |
+| **Sessions** | `GET /api/sessions` + `GET /api/sessions/<id>` → .boukensha/sessions/*.jsonl | Pull — replaces Ruby log_viz. List and transcript render side by side (list panel + fixed transcript panel), so picking a session doesn't require scrolling past however many session files exist to see its detail. |
 
 **Map tab layout:** rooms are placed on a fixed compass grid (north = up,
 east = right, etc.) rather than a force-directed simulation, so "north of"
