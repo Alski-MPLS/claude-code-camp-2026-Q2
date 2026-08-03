@@ -20,8 +20,10 @@ dashboard.
 | **`CombatMonitor`** | `src/boukensha/goals/combat_monitor.py` | Stateless: checks HP vs threshold; returns flee directive if needed |
 | **`EventBus`** | `src/boukensha/dashboard/event_bus.py` | Thread-safe queue; `Logger` publishes structured events; SSE endpoint consumes |
 | **`Dashboard`** | `src/boukensha/dashboard/app.py` | Flask app — Overview (default), Live, Map, Waterfall, Goals, Sessions tabs; SSE feed; static compass-grid map with player position markers |
-| **`PlayerTracker`** | `src/boukensha/memory/player_tracker.py` | Reads/writes `.boukensha/memory/players.json`; tracks each character's room position (current + previous) and last-known stats |
+| **`PlayerTracker`** | `src/boukensha/memory/player_tracker.py` | Reads/writes `.boukensha/memory/players.json`; tracks each character's room position (current + previous), last-known stats, and now the current equipment loadout (`update_equipment(name, slots)`) |
 | **`PlayerStats`** | `src/boukensha/memory/player_stats.py` | Pure function: parses the MUD `score` command's raw text into `{hp, max_hp, mana, max_mana, move, max_move}` |
+| **`equipment_parser`** | `src/boukensha/memory/equipment_parser.py` | Pure functions: `parse_equipment()` turns `check equipment` output into `{slot: item}` (a shared canonical slot-key table maps every CircleMUD wear-location variant — `worn on finger`, `worn about body`, `wielded`/`wield`, `held`/`hold`, etc. — to one key, so this and `parse_identify()` never disagree on a slot); `parse_identify()` turns `identify` spell/scroll output into `{name, wear_slot, affects}` (AC/hitroll/damroll/stat mods, filtering the `TAKE` wear-bit CircleMUD sets on almost everything). `_item_lookup_key()` strips magic-item flag suffixes (`(Glowing)`, `..(Yellow Aura)`) so an equipped item's listing name still matches its identified stats. |
+| **`ItemStatsStore`** | `src/boukensha/memory/item_stats.py` | Reads/writes `.boukensha/memory/item_stats.yaml`; world-scoped (shared across characters, since an item's stats aren't player-specific) cache of identified item stats, keyed by item name |
 | **`world_stats`** | `src/boukensha/memory/world_stats.py` | `frontier_stats()`/`entity_stats()` — aggregate known-vs-mapped exits and unique mobs/objects across every recorded room, for the Overview tab |
 | **`_walk` (`walk_route`)** | `src/boukensha/tools/_walk.py` | Shared step-by-step route walker used by both `navigate_to` and `explore`. Executes a `Route` one move at a time and stops the instant reality stops matching the plan — never blindly finishes a multi-step route against a room the character isn't actually in anymore. Returns a `WalkOutcome` (`arrived` / `blocked` / `drifted` / `lost`), self-healing the graph with the edge actually observed on `drifted`. |
 | **`navigate_to` tool** | `src/boukensha/tools/navigation.py` | Python-only pathfinding + move execution; no LLM per step. Checks a learned alias first (`RoomAliases`), then matches room titles, then falls back to searching every mapped room's description/items/npcs (a landmark like "the fountain"); disambiguates multiple matches by shortest route. When nothing matches at all, its error message lists every currently known room title so the agent can retry with the exact one and then call `navigate_alias_add` to remember it — rather than a flat "no known path" dead end. Distinguishes "known room but unreachable" (one-way passage) from "no match" (with near-miss suggestions or the full title list) so the LLM gets an actionable message. |
@@ -30,6 +32,7 @@ dashboard.
 | **`process_room` tool** | `src/boukensha/tools/room_processor.py` | Parses current room, diffs vs memory; returns only new/changed info to LLM |
 | **`combat_loop` tool** | `src/boukensha/tools/combat.py` | Python fight loop; calls LLM only for skill decisions. Hard-refuses to engage a target that isn't a currently-known living NPC in the room (catches "fighting" a corpse or a name that's simply not there), and separately refuses (regardless of the first check) if its own `consider` call comes back matching a danger-phrase list (e.g. "Do you feel lucky, punk?") — both gates skippable only via explicit `force=true`. On a kill, auto-loots the corpse (`auto_loot=true` by default) and folds the loot result into the response. |
 | **`attack` / `consider` / `skill_strike`** | `src/boukensha/tools/mud.py` | Gated the same way as `combat_loop`: refuse a target that isn't in the shared "known NPCs in this room" list, populated by every `move`/bare `look`. `skill_strike`'s `rescue`/`assist` are exempt (they target a player, not an npc). |
+| **`check(kind="equipment")` / `cast_spell` / `use_magic_item`** | `src/boukensha/tools/mud.py` | `check(kind="equipment")` parses the current loadout via `equipment_parser.parse_equipment()` and persists it via `PlayerTracker.update_equipment()`. `cast_spell`/`use_magic_item` route their raw result through `_record_identify_if_present()`, which detects an `identify` result via `parse_identify()`, saves the item's stats to `ItemStatsStore`, and — only when the wear slot is occupied by another previously-identified item — appends an `[Equipment]` advisory comparing the two (`_equipment_upgrade_advisory()`; `_affects_score()` treats AC and saving-throw affects as lower-is-better, everything else as higher-is-better) and suggesting `equip_item(...)` with the article stripped and the correct `wear`/`wield` action for the slot. Advisory only — no auto-equip; the LLM decides. |
 | **`door` tool** | `src/boukensha/tools/mud.py` | Open/close/lock/unlock a door or container. A direction target (e.g. `north`) sends `<action> door <direction>`, matching what the MUD's door syntax actually expects; a named target sends `<action> <target>` directly. |
 | **`knowledge_add` / `knowledge_search` tools** | `src/boukensha/tools/knowledge.py` | Agent calls `knowledge_add` to persist a discovered fact; `knowledge_search` for keyword lookup across all stored facts |
 | **`build_knowledge_section`** | `src/boukensha/_knowledge_injection.py` | Formats stored entries into a `## World Knowledge` block (≤2000-token cap) appended to the system prompt at startup |
@@ -73,6 +76,7 @@ flowchart TB
         PLAYERFILE[".boukensha/memory/\nplayers.json"]
         GOALFILE[".boukensha/goals/\ncurrent.yaml"]
         KNOWFILE[".boukensha/\nknowledge.yaml"]
+        ITEMSTATSFILE[".boukensha/memory/\nitem_stats.yaml"]
     end
 
     subgraph core["boukensha agent core"]
@@ -90,8 +94,10 @@ flowchart TB
         PATHFIND["Pathfinder\nDijkstra + Route\ntitle/landmark matching"]
         BLOCKED["BlockedExits\nlocked/dark exits, with reason"]
         DARK["darkness.is_dark_room()"]
-        PLAYERTRACK["PlayerTracker\nposition + stats"]
+        PLAYERTRACK["PlayerTracker\nposition + stats + equipment"]
         WSTATS["world_stats\nfrontier_stats / entity_stats"]
+        EQUIPPARSE["equipment_parser\nparse_equipment / parse_identify\n(pure, no LLM)"]
+        ITEMSTATS["ItemStatsStore\nidentified item stats\n(world-scoped)"]
     end
 
     subgraph goals["Goal subsystem"]
@@ -162,6 +168,12 @@ flowchart TB
     PLAYERTRACK <--> PLAYERFILE
     WSTATS --> WGRAPH
     WSTATS --> ROOMEMEM
+    AGENT -->|"check(kind=equipment)"| EQUIPPARSE
+    AGENT -->|"cast_spell / use_magic_item\n(identify)"| EQUIPPARSE
+    EQUIPPARSE -->|"parse_equipment() slots"| PLAYERTRACK
+    EQUIPPARSE -->|"parse_identify() affects"| ITEMSTATS
+    ITEMSTATS <--> ITEMSTATSFILE
+    ITEMSTATS -->|"[Equipment] upgrade advisory"| AGENT
 
     LOGGER -->|"publish"| SSE
     SSE --> LIVETAB
@@ -174,7 +186,7 @@ flowchart TB
 
     classDef input fill:#e8f0fe,stroke:#4a7ad4;
     classDef output fill:#e6f7e6,stroke:#3a9a3a;
-    class USER,MUD,MEMFILES,PLAYERFILE,GOALFILE,KNOWFILE input;
+    class USER,MUD,MEMFILES,PLAYERFILE,GOALFILE,KNOWFILE,ITEMSTATSFILE input;
     class OVERVIEWTAB,LIVETAB,MAPTAB,WFTAB,GOALTAB,SESTAB output;
 ```
 
@@ -297,6 +309,55 @@ manually first instead.
 
 ---
 
+## Equipment Tracking & Upgrade Advisories
+
+Two pure parsers in `equipment_parser.py` turn raw MUD text into structured
+data, following the same "no LLM, fully unit-testable" shape as
+`RoomParser`/`PlayerStats`:
+
+- **`parse_equipment(text)`** — `check(kind="equipment")` output → `{slot:
+  item}`.
+- **`parse_identify(text)`** — `identify` spell/scroll output (reached via
+  the existing `cast_spell`/`use_magic_item` tools — no dedicated tool was
+  added) → `{name, wear_slot, affects}`, where `affects` holds AC, hitroll,
+  damroll, and stat mods.
+
+Both route wear-location names through one shared canonical-slot table
+(`finger`, `body`, `head`, `about` — for a cloak, distinct from `body` —
+`waist`, `neck`, `wrist`, `wield`, `hold`, `light`, `shield`, ...), so a slot
+parsed from an equipment listing always matches the same slot parsed from an
+`identify` result. `parse_identify` also strips CircleMUD's near-universal
+`TAKE` wear-bit before reading the real slot, since `sprintbit` prints every
+set bit space-separated and `TAKE` is set on almost every wearable item.
+
+**Storage** mirrors the existing split between player-scoped and
+world-scoped state: `PlayerTracker.update_equipment()` persists the current
+loadout per character (like `update_stats`); `ItemStatsStore` persists
+identified item stats world-scoped, since an item's stats don't depend on
+who's wearing it — the same reasoning as `KnowledgeManager`.
+
+**The upgrade advisory** fires only when both sides of a comparison are
+known: identifying an item whose wear slot is currently occupied by another
+item that was *also* previously identified. `_affects_score()` sums the
+affects, negating AC and any `saving*` stat (lower is better for both,
+same as AC in CircleMUD) so a single score ranks every affect consistently.
+When the new item scores higher, an `[Equipment]` advisory is appended to
+the tool result — informational only, suggesting `equip_item(item=...,
+action="wear"|"wield")` with the leading article stripped (CircleMUD parses
+`a`/`an`/`the` as noise) and `..(flag)` suffixes stripped from the currently
+worn item's name before the stats lookup (so a `(Glowing)` ring still
+matches its identified stats). The agent decides whether to act on it —
+there is no auto-equip.
+
+**Known limitation:** CircleMUD has real dual-slot categories (two ring
+fingers, two wrists, two neck slots) that all collapse to one canonical key
+(`finger`, `wrist`, `neck`) in the current tracker — wearing a second item
+in an already-occupied dual slot silently overwrites the first in
+`PlayerTracker`'s stored loadout. Noted in `game_findings.md`, not yet
+fixed (would need a list-per-slot representation).
+
+---
+
 ## Goal File Schema
 
 `.boukensha/goals/current.yaml`:
@@ -351,6 +412,31 @@ mud_basics: |
 **System prompt injection:** At startup, `KnowledgeManager.read_all()` (newest first) is passed to `build_knowledge_section()`, which formats entries up to a ~2000-token cap as a `## World Knowledge` block appended to the system prompt. Entries beyond the cap remain searchable via `knowledge_search`.
 
 **Scope:** World-scoped — shared across all characters and playthroughs. The file is excluded from git (`.gitignore`) since it is runtime state.
+
+---
+
+## Item Stats File Schema
+
+`.boukensha/memory/item_stats.yaml`:
+
+```yaml
+a gold ring:
+  wear_slot: finger
+  affects:
+    ac: -10
+    hitroll: 2
+  timestamp: 2026-08-03T00:00:00Z
+
+a long sword:
+  wear_slot: wield
+  affects:
+    hitroll: 1
+  timestamp: 2026-08-03T00:00:00Z
+```
+
+Keyed by lowercased item name (`ItemStatsStore` normalizes case on read and
+write). **Scope:** World-scoped, same as `knowledge.yaml` — an item's stats
+don't depend on which character identified it.
 
 ---
 
@@ -431,10 +517,12 @@ agent-exp/
 │   │   ├── pathfinder.py              # Pathfinder, Route, title/landmark matching
 │   │   ├── blocked_exits.py           # BlockedExits
 │   │   ├── darkness.py                # is_dark_room()
-│   │   ├── player_tracker.py          # PlayerTracker (position + stats)
+│   │   ├── player_tracker.py          # PlayerTracker (position + stats + equipment)
 │   │   ├── player_stats.py            # PlayerStats.parse_score()
 │   │   ├── world_stats.py             # frontier_stats() / entity_stats()
-│   │   └── knowledge.py               # KnowledgeManager
+│   │   ├── knowledge.py               # KnowledgeManager
+│   │   ├── equipment_parser.py        # parse_equipment() / parse_identify()
+│   │   └── item_stats.py              # ItemStatsStore
 │   ├── goals/
 │   │   ├── __init__.py
 │   │   ├── goal_manager.py            # GoalManager
@@ -476,6 +564,8 @@ agent-exp/
     ├── test_player_tracker.py
     ├── test_player_stats.py
     ├── test_world_stats.py
+    ├── test_equipment_parser.py
+    ├── test_item_stats.py
     ├── test_dashboard_api.py
     ├── test_knowledge_manager.py
     ├── test_tools_knowledge.py

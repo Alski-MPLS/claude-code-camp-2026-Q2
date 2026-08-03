@@ -44,6 +44,8 @@ Will continue to push for troubleshooting this program and watch the agent as it
 - Added some more funds to the API and gave claude more instructions around training, ATM funds, sleeping/resting, etc. By using Haiku and then watching it with Claude Code, the character was able to level up to 4, find a tourch and find where the minatour was located. It knew not to engage and to continue to level up. I also gave it instructions to start looking closer at rooms that had "unique" areas and to start reasoning through some of what is found. Seems to be working well now. Just need to help it along at times.
 - Cost is good now also. 
 - I needed to specify that a BANK is really an ATM. But, it did find a key and figured out how to use it (or where it can't use it). 
+- It found a blob and died.  
+- Will start adding some of these sessions to the plans area to keep track of these activities. 
 
 
 
@@ -56,6 +58,8 @@ Will continue to push for troubleshooting this program and watch the agent as it
 - Combat got its own safety layer too - it won't attack something that isn't actually in the room, and it won't attack something it's going to lose to, unless I force it.
 - The dashboard is just a Flask app reading the same memory files everything else writes to - map, overview, live feed, goals, sessions, all pulling from the same source of truth.
 - Watched a live play session with Claude Code this week and found two real bugs in that combat/exploration layer, not just bad LLM judgment: RoomParser was filing any mob with a long custom description as an "item" instead of an "npc," which silently made it unattackable - and explore()'s frontier search is global across the whole map, so once the nearby area's fully mapped it'll happily walk you all the way back to town for some leftover unexplored exit there instead of pushing further into a dungeon. Fixed the parser's default and gave explore() an optional max_hops so it can be told to stay local.
+- Added equipment tracking. Two new pure parsers (same "no LLM" shape as RoomParser/PlayerStats) turn `check equipment` and `identify` spell/scroll output into structured data - what's worn in every slot, and what AC/hitroll/damroll/stat bonuses an identified item actually has. Reused the existing cast_spell/use_magic_item tools for identify instead of adding a new one. Loadout gets stored per character; identified item stats get stored world-scoped (shared across characters, like the knowledge file) since an item's stats aren't tied to who's wearing it.
+- The interesting part was a bug that only showed up once everything was wired together: the equipment-listing parser and the identify-output parser each invented their own names for the same wear slots (one said "worn around neck," the other said "neck"), so the upgrade advisory silently never fired for most slots even though every individual piece had its own passing tests. Had to build one shared slot-name table both parsers go through. Good reminder that testing pieces in isolation doesn't catch this kind - needed an end-to-end test that actually pipes one parser's output into the other's input.
 
 ### Data Flow
 - User (me) gives it a goal -> agent loop decides which tool to call -> tool talks to the MUD -> result gets parsed and saved to memory before it ever goes back to the LLM.
@@ -64,6 +68,7 @@ Will continue to push for troubleshooting this program and watch the agent as it
 - If a planned route doesn't match reality (wrong room, blocked move) it stops immediately and fixes the map instead of blindly continuing - that was a big source of the "confused" behavior earlier.
 - All of this gets logged to JSONL as it happens, which is what feeds the live tab, waterfall, and sessions viewer in the dashboard - sessions viewer now shows the list and transcript side by side instead of stacked, so clicking a session doesn't mean scrolling past hundreds of rows to see it.
 - Also caught a REPL bug where typing "continue" to resume a session was overwriting the actual goal text with the literal word "continue" - fixed so a resume phrase just reactivates the existing goal instead of replacing it.
+- Equipment now flows through the same "parse -> save -> only bother the LLM if something's actionable" pattern as everything else: checking equipment or identifying an item updates memory silently, and the agent only sees a message ("[Equipment] this ring beats what's in your finger slot") when there's actually a decision worth making - it still has to decide whether to wear it, nothing gets auto-equipped for it.
 
 
 ## Technical Conclusions
