@@ -5,15 +5,15 @@ The Temple Square
    You are in the middle of a large open square in the middle of the
    city. Around you, citizens going about their daily business. To the
    north is the imposing Temple of Midgaard.
-Exits: north, east, south, west
+[ Exits: n e s w ]
 A dog is here.
-A loaf of bread is here.
+A loaf of bread is lying here.
 """
 
 MINIMAL_LOOK = """\
 A Dark Corridor
    A narrow passage.
-Exits: north
+[ Exits: n ]
 """
 
 NO_EXITS_LOOK = """\
