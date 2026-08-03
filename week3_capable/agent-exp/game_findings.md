@@ -8,16 +8,36 @@ landed).
 
 ## Open
 
-- **No equipment/light-source tracking yet.** `explore()` now refuses to walk
-  into a room it detects as dark (see Implemented below) instead of blindly
+- **No light-source tracking yet.** `explore()` now refuses to walk into a
+  room it detects as dark (see Implemented below) instead of blindly
   entering it, but it has no way to check whether the agent is actually
   carrying a lit torch/lantern before deciding to retry a dark exit — it just
   marks the exit blocked and leaves it blocked until someone calls
-  `BlockedExits.unmark()`. Next step: a way to check current light-source
-  state (e.g. via `check equipment`) and auto-retry dark-marked exits once
-  one is equipped.
+  `BlockedExits.unmark()`. Equipment slots are now tracked (see Implemented
+  below), so this is a matter of reading the `light` slot from
+  `PlayerTracker`'s stored equipment, not adding new tracking. Next step:
+  wire that check into `explore()`'s dark-exit retry path.
 
 ## Implemented
+
+- **Equipment quality tracking and upgrade advisories.** The agent now
+  parses `check(kind="equipment")` output into per-slot loadout data
+  (`memory/equipment_parser.py:parse_equipment`), persisted via
+  `PlayerTracker.update_equipment`. Casting/reciting `identify` (via the
+  existing `cast_spell`/`use_magic_item` tools) is parsed by
+  `parse_identify` into AC/hitroll/damroll/stat-mod affects, saved
+  world-scoped in `memory/item_stats.py:ItemStatsStore`, and — when both the
+  newly identified item and whatever currently occupies its wear slot have
+  known stats — an `[Equipment]` advisory is appended to the tool result
+  suggesting `equip_item` when the new item scores higher. See
+  `tools/mud.py` (`_record_identify_if_present`,
+  `_equipment_upgrade_advisory`). Tests: `tests/test_equipment_parser.py`,
+  `tests/test_item_stats.py`, `tests/test_tools_mud.py`.
+
+  Caveat: `parse_identify`'s regexes are built against the stock CircleMUD
+  `identify` output format, unverified against this server's actual output
+  — first live `identify` cast after deployment should confirm the format
+  matches, and this note should be updated (or the regexes fixed) if not.
 
 - **process_room hid a room's items/npcs on every revisit after the
   first.** Found live in the same fountain incident: `process_room` only
