@@ -5,7 +5,7 @@ current_goal: 'Before continuing to farm: navigate_to your guild entrance hall (
   then shop(action=''buy'', args=...). You''re still fighting bare-skinned with no
   equipment. Do this before continuing to farm the newbie zone.'
 hp_flee_threshold: 10
-last_updated: '2026-08-03T18:23:19.762682+00:00'
+last_updated: '2026-08-03T18:24:34.069938+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
 
   - Use ''look'' to describe current room
