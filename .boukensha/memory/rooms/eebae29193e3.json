@@ -2,8 +2,13 @@
   "title": "A Narrow Passage",
   "description": "The thin passage is plain and undecorated, but still clean.  It ends abruptly to the south at a small oak door, behind which you hear movement...",
   "exits": {
-    "north": null
+    "north": null,
+    "south": null
   },
-  "npcs": [],
-  "items": []
+  "npcs": [
+    "A newbie is here, and he looks quite sure of himself."
+  ],
+  "items": [
+    "The corpse of the zombiefied newbie is lying here."
+  ]
 }

@@ -5,10 +5,7 @@
     "south": null
   },
   "npcs": [
-    "A cityguard stands here."
-  ],
-  "items": [
-    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
     "The cryogenicist is here, playing with a canister of liquid nitrogen."
-  ]
+  ],
+  "items": []
 }

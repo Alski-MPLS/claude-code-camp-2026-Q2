@@ -23,6 +23,24 @@ Will continue to push for troubleshooting this program and watch the agent as it
 - Claude found this -- "That's the small model hallucinating a generic name again ("newbie monster" isn't real content) rather than reading the room — correctly rejected since nothing's actually there. This is normal small-model judgment noise, not a bug in the fixes. The two structural issues you flagged (backtracking to town, and blocked combat) are holding up well through this whole run. I'll keep the monitor running passively and only interrupt if something concerning shows up.". I'm using Gemma4:e4b at this time and running on my MACBOOK AIR 5M. From Claude:
     - qwen3:30b (already in your settings.yaml as a commented option) — it's a MoE model (30B total, ~3B active per token), so it stays fast despite the size, and the larger total capacity should meaningfully cut down the "attacks a name it made up" behavior. Roughly 18-20GB at Ollama's default quant, leaving headroom for macOS/Docker/the dashboard.
     - qwen3:8b — smaller step up, safer on RAM/speed if 30b feels sluggish, still much better at tool use than gemma4:e4b.
+- This seems to be the best method to continue to build out and update the agent. I have Qwen3.30b running locally as the main LLM. I have claude code starting the app and watching the performance of the environment and providing me updates. I'm letting it run by giving Claude some instructions and I will occasionally provide input and allow certain tools to be used. I've made more progress this way then the last week. I just have to watch the tokens outside of the program.
+    - Claude is just watching the program run and determines whether the code is acting according to my instructions or if it needs to be tweaked. As an example, It noticed that monsters would disappear. I mentioned that they can move and it recommended a fix while the underlying agent was running. 
+- Downgraded to a smaller model due to thermal issues on my laptop. This is causing the agent to run slower and miss attacking wandering monsters. I guess I'll have to live with that for now or move to Claude API to test it out in small spurts. The model is using a more efficient attack program when it starts but it's not enough at this point. I had Claude run some comparisons.
+    Comparing the two runs:
+    - qwen3:30b: individual reasoning steps averaged ~33s/iteration, completed all its iterations cleanly, no timeouts.
+    - qwen3:14b: most steps ran 40-55s, but iteration 23 exceeded 120s and killed the whole turn.
+    - Going to change the timeout to 300 seconds and retry it. 
+- Character made it to level 3. MAC is a bit warm <grin>. Going to add a "score" tab in the dashboard.
+- Ran it with Haiku 4.5 using the API as a comparison. It not only found food to eat at the bakery, it then proceeded to kill 2 monsters and gain more gold and experience. It also used $1.70 due to input tokens. I'm asking claude to review and help come up with a fix. What Claude found.
+    Why it was happening:
+        - Every one of the 25+ tool-calling iterations per turn resent the entire system prompt, all 47 tool schemas, and the full growing conversation history — all at full input-token price
+        - Prompt caching: Not enabled was confirmed right there in your Anthropic console screenshot
+        - 98% of the $1.70 spent ($1.66) was input tokens (1.66M in vs. only 8K out) — almost pure re-transmission cost, not actual generation
+
+    The fix (src/boukensha/backends/anthropic.py, committed as ab42fb1):
+        - System prompt marked cacheable (static for the whole session)
+        - Last tool definition marked cacheable (caches the entire 47-tool schema block, also static)
+        - Last content block of the newest message marked cacheable each turn, so the growing history gets reused instead of rebilled
 
 
 

@@ -5,10 +5,10 @@
     "north": null,
     "down": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "An automatic teller machine has been installed in the wall here.",
     "An oozing green gelatinous blob is here, sucking in bits of debris.",
     "A receptionist is standing behind the counter here, smiling at you."
-  ]
+  ],
+  "items": []
 }

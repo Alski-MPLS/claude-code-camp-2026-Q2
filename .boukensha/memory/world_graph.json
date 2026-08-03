@@ -497,6 +497,11 @@
     },
     {
       "direction": "east",
+      "source": "9a2e0d053ec1",
+      "target": "f4ff7b68dc47"
+    },
+    {
+      "direction": "east",
       "source": "d480fb26c4c8",
       "target": "9a2e0d053ec1"
     },
@@ -1499,6 +1504,11 @@
       "direction": "down",
       "source": "f4ff7b68dc47",
       "target": "497d3aa74336"
+    },
+    {
+      "direction": "west",
+      "source": "f4ff7b68dc47",
+      "target": "9a2e0d053ec1"
     },
     {
       "direction": "up",

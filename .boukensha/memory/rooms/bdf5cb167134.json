@@ -7,6 +7,9 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
+  "npcs": [
+    "An oozing green gelatinous blob is here, sucking in bits of debris.",
+    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble."
+  ],
   "items": []
 }

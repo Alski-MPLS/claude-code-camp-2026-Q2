@@ -5,9 +5,8 @@
     "west": null
   },
   "npcs": [
-    "A singing, happy Drunk."
-  ],
-  "items": [
+    "A singing, happy Drunk.",
     "A bartender watches you calmly, while he skillfully mixes a drink."
-  ]
+  ],
+  "items": []
 }

@@ -7,9 +7,8 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "A large fountain carved from blue-streaked marble is here, bubbling merrily.",
-    "A janitor is walking around, cleaning up."
-  ]
+  "npcs": [
+    "A large fountain carved from blue-streaked marble is here, bubbling merrily."
+  ],
+  "items": []
 }

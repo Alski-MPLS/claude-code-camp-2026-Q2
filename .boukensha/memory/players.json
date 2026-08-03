@@ -1,17 +1,24 @@
 {
   "dummy": {
-    "room_hash": "c1f58ff84f1e",
-    "title": "A Bright Hallway",
-    "updated_at": "2026-08-02T15:19:47.480824+00:00",
-    "prev_room_hash": "42df891e10d7",
+    "room_hash": "afbf5a4c5714",
+    "title": "The South Stairs",
+    "updated_at": "2026-08-03T00:41:11.825913+00:00",
+    "prev_room_hash": "e8e65f74ab3a",
     "stats": {
-      "hp": 34,
-      "max_hp": 37,
+      "hp": 50,
+      "max_hp": 50,
       "mana": 100,
       "max_mana": 100,
-      "move": 86,
-      "max_move": 87
+      "move": 88,
+      "max_move": 88,
+      "hungry": false,
+      "thirsty": false,
+      "title": "Dummy the Sentry",
+      "level": 3,
+      "exp": 7291,
+      "gold": 183,
+      "exp_to_next": 709
     },
-    "stats_updated_at": "2026-08-02T15:12:55.380961+00:00"
+    "stats_updated_at": "2026-08-03T00:51:55.343179+00:00"
   }
 }

@@ -1,12 +1,6 @@
-current_goal: Farm experience and gold on weak mobs. Start by calling navigate_to("The
-  Dirty Hallway") — already mapped, one call gets you there. Fight whatever's there
-  with combat_loop. Once that area is quiet, push further into the zone (e.g. through
-  A Nexus) using explore(max_hops=4) rather than plain explore() — plain explore()
-  searches the whole map and can walk you all the way back to town once the nearby
-  area is fully mapped; max_hops keeps it local. Keep goal_update(notes=...) current
-  with your farming route as you go.
+current_goal: Just call check(kind='score'). Nothing else.
 hp_flee_threshold: 5
-last_updated: '2026-08-02T15:12:16.467786+00:00'
+last_updated: '2026-08-03T00:51:54.280402+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves
 
   - Use ''look'' to describe current room

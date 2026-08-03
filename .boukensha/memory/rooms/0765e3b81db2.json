@@ -4,8 +4,8 @@
   "exits": {
     "south": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "The baker looks at you calmly, wiping flour from his face with one hand."
-  ]
+  ],
+  "items": []
 }
