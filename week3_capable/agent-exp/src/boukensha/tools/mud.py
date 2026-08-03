@@ -329,6 +329,19 @@ def _sustenance_advisory(stats: dict[str, int | bool]) -> str:
     )
 
 
+def _level_up_advisory(previous_level: int, stats: dict[str, int | str | bool]) -> str:
+    level = stats.get("level")
+    title = stats.get("title", "")
+    title_part = f" ({title})" if title else ""
+    return (
+        f"\n\n[Level up!] You are now level {level}{title_part} — up from level "
+        f"{previous_level}. Consider finding a guildmaster and using practice to "
+        "train any new skills before continuing to farm. If you haven't located "
+        "a guildmaster yet, explore toward one; navigate_to it once it's mapped. "
+        "Not urgent enough to interrupt a fight in progress."
+    )
+
+
 def _no_living_target_message(target: str, npcs: list[str]) -> str:
     here = ", ".join(npcs) if npcs else "nothing living — only items (possibly a corpse) or nothing at all"
     return (
@@ -454,9 +467,19 @@ class Mud:
             if kind.strip().lower() == "score" and not raw.startswith("error:"):
                 stats = PlayerStats.parse_score(raw)
                 if stats:
+                    previous_level = None
                     if tracker is not None:
+                        previous = (tracker.read_all().get(name) or {}).get("stats") or {}
+                        previous_level = previous.get("level")
                         tracker.update_stats(name, stats)
                     raw += _sustenance_advisory(stats)
+                    new_level = stats.get("level")
+                    if (
+                        previous_level is not None
+                        and new_level is not None
+                        and new_level > previous_level
+                    ):
+                        raw += _level_up_advisory(previous_level, stats)
             return raw
 
         registry.tool(

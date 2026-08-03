@@ -542,6 +542,79 @@ def test_check_score_omits_sustenance_advisory_when_neither():
     assert "[Sustenance]" not in result
 
 
+def test_check_score_appends_level_up_advisory_when_level_increased(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    PlayerTracker(tmp_path).update_stats("Tester", {
+        "hp": 37, "max_hp": 37, "mana": 100, "max_mana": 100,
+        "move": 87, "max_move": 87, "hungry": False, "thirsty": False,
+        "level": 2, "title": "Dummy the Recruit",
+    })
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 50(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "You have 5829 exp, 130 gold coins, and 0 questpoints.\n"
+        "You need 2171 exp to reach your next level.\n"
+        "This ranks you as Dummy the Sentry (level 3). > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Level up!]" in result
+    assert "level 3" in result
+    assert "Dummy the Sentry" in result
+    assert "level 2" in result  # mentions the previous level
+
+
+def test_check_score_omits_level_up_advisory_on_first_ever_check(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 20(20) hit, 100(100) mana and 85(85) movement points.\n"
+        "This ranks you as Dummy the Recruit (level 2). > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Level up!]" not in result
+
+
+def test_check_score_omits_level_up_advisory_when_level_unchanged(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    PlayerTracker(tmp_path).update_stats("Tester", {
+        "hp": 37, "max_hp": 37, "mana": 100, "max_mana": 100,
+        "move": 87, "max_move": 87, "hungry": False, "thirsty": False,
+        "level": 3, "title": "Dummy the Sentry",
+    })
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 45(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "This ranks you as Dummy the Sentry (level 3). > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Level up!]" not in result
+
+
 def test_door_open_with_direction_sends_open_door_direction():
     registry = _make_registry()
     mock_session = MagicMock()
