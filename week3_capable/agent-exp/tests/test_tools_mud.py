@@ -806,7 +806,7 @@ def test_check_equipment_persists_slots_to_player_tracker(tmp_path):
     data = PlayerTracker(tmp_path).read_all()
     assert data["Tester"]["equipment"] == {
         "finger": "a gold ring",
-        "wielded": "a long sword",
+        "wield": "a long sword",
     }
 
 
@@ -821,7 +821,11 @@ def test_check_equipment_without_memory_dir_does_not_crash():
     assert "a long sword" in result
 
 
-def test_check_equipment_with_no_items_worn_does_not_crash(tmp_path):
+def test_check_equipment_with_no_items_worn_records_empty_loadout(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    # A previously recorded loadout must be cleared, not left stale.
+    PlayerTracker(tmp_path).update_equipment("Tester", {"finger": "a gold ring"})
+
     registry = _make_registry()
     mock_session = MagicMock()
     mock_session.is_open = True
@@ -832,14 +836,32 @@ def test_check_equipment_with_no_items_worn_does_not_crash(tmp_path):
     )
     result = registry.dispatch("check", {"kind": "equipment"})
     assert "nothing" in result
+    assert PlayerTracker(tmp_path).read_all()["Tester"]["equipment"] == {}
+
+
+def test_check_non_equipment_output_does_not_clobber_recorded_loadout(tmp_path):
     from boukensha.memory.player_tracker import PlayerTracker
-    assert PlayerTracker(tmp_path).read_all() == {}
+    PlayerTracker(tmp_path).update_equipment("Tester", {"finger": "a gold ring"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Huh?!?\n> "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "equipment"})
+    assert PlayerTracker(tmp_path).read_all()["Tester"]["equipment"] == {
+        "finger": "a gold ring"
+    }
 
 
 def _identify_output(name: str, wear_slot: str | None, affects: dict[str, int]) -> str:
     lines = [f"Object '{name}', Item type: WORN"]
     if wear_slot:
-        lines.append(f"This item can be worn on: {wear_slot.upper()}")
+        # Real sprintbit output always leads with TAKE for takeable items.
+        lines.append(f"This item can be worn on: TAKE {wear_slot.upper()}")
     lines.append("Can affect you as :")
     for k, v in affects.items():
         lines.append(f"   Affects: {k.upper()} By {v}")
@@ -876,10 +898,15 @@ def test_cast_spell_non_identify_result_does_not_touch_item_stats(tmp_path):
         registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
     )
 
-    registry.dispatch("cast_spell", {"spell": "magic missile", "target": "rat"})
+    result = registry.dispatch("cast_spell", {"spell": "magic missile", "target": "rat"})
 
     from boukensha.memory.item_stats import ItemStatsStore
     assert ItemStatsStore(tmp_path).read_all() == {}
+
+    # Byte-identical pass-through: _record_identify_if_present must not alter
+    # ordinary spell output at all (beyond _send's own prompt stripping).
+    from boukensha.tools.mud import _strip_vitals_prompt
+    assert result == _strip_vitals_prompt("You failed to concentrate. > ")
 
 
 def test_use_magic_item_identify_appends_upgrade_advisory_when_slot_occupied(tmp_path):
@@ -985,9 +1012,9 @@ def test_use_magic_item_identify_weapon_upgrade_advisory_suggests_wield_not_wear
     from boukensha.memory.player_tracker import PlayerTracker
 
     ItemStatsStore(tmp_path).save(
-        "a rusty sword", {"wear_slot": "wielded", "affects": {"hitroll": 0}}
+        "a rusty sword", {"wear_slot": "wield", "affects": {"hitroll": 0}}
     )
-    PlayerTracker(tmp_path).update_equipment("Tester", {"wielded": "a rusty sword"})
+    PlayerTracker(tmp_path).update_equipment("Tester", {"wield": "a rusty sword"})
 
     registry = _make_registry()
     mock_session = MagicMock()
@@ -1066,6 +1093,122 @@ def test_use_magic_item_identify_appends_advisory_for_better_saving_throw(tmp_pa
 
     assert "[Equipment]" in result
     assert "a warded cloak" in result
+
+
+def test_end_to_end_equipment_check_then_two_identifies_fires_advisory_for_neck(tmp_path):
+    """Full real path: check(equipment) -> identify worn item -> identify better item.
+
+    Nothing is seeded directly into the tracker or the item store: the slot key
+    the advisory looks up has to come out of parse_equipment and match what
+    parse_identify produces for the same slot. 'neck' is deliberately chosen —
+    the equipment listing calls it "worn around neck" while identify calls it
+    "TAKE NECK", which is exactly the mismatch that used to silence advisories.
+    """
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    # 1. Real 'equipment' output — including a magic-flag suffix on the worn item.
+    mock_session.read_until_prompt.return_value = (
+        "You are using:\n"
+        "<worn around neck>    a plain amulet ..(Yellow Aura)\n"
+        "<worn on body>        a suit of leather armor\n"
+        "> "
+    )
+    registry.dispatch("check", {"kind": "equipment"})
+
+    # 2. Identify the amulet that's actually worn, so its stats get recorded.
+    mock_session.read_until_prompt.return_value = (
+        "Object 'a plain amulet', Item type: WORN\n"
+        "This item can be worn on: TAKE NECK\n"
+        "Can affect you as :\n"
+        "   Affects: AC By -2\n"
+        " > "
+    )
+    registry.dispatch("cast_spell", {"spell": "identify", "target": "plain amulet"})
+
+    # 3. Identify a strictly better neck item — the advisory must fire.
+    mock_session.read_until_prompt.return_value = (
+        "Object 'an emerald amulet', Item type: WORN\n"
+        "This item can be worn on: TAKE NECK\n"
+        "Can affect you as :\n"
+        "   Affects: AC By -12\n"
+        "   Affects: HITROLL By 2\n"
+        " > "
+    )
+    result = registry.dispatch(
+        "use_magic_item",
+        {"item": "scroll of identify", "mode": "recite", "target_args": "emerald amulet"},
+    )
+
+    assert "[Equipment]" in result
+    assert "an emerald amulet" in result
+    assert "neck" in result
+    assert "a plain amulet" in result
+    # Suggestion uses the bare keyword (no article); prose keeps the full name.
+    assert "equip_item(item='emerald amulet', action=\"wear\")" in result
+
+
+def test_end_to_end_equipment_advisory_for_about_slot(tmp_path):
+    """Same full path for 'about' — must not be confused with the 'body' slot."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    mock_session.read_until_prompt.return_value = (
+        "You are using:\n"
+        "<worn on body>        a suit of plate mail\n"
+        "<worn about body>     a tattered cloak\n"
+        "> "
+    )
+    registry.dispatch("check", {"kind": "equipment"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    assert PlayerTracker(tmp_path).read_all()["Tester"]["equipment"] == {
+        "body": "a suit of plate mail",
+        "about": "a tattered cloak",
+    }
+
+    mock_session.read_until_prompt.return_value = (
+        "Object 'a tattered cloak', Item type: WORN\n"
+        "This item can be worn on: TAKE ABOUT\n"
+        "Can affect you as :\n"
+        "   Affects: AC By -1\n"
+        " > "
+    )
+    registry.dispatch("cast_spell", {"spell": "identify", "target": "tattered cloak"})
+
+    mock_session.read_until_prompt.return_value = (
+        "Object 'a velvet cloak', Item type: WORN\n"
+        "This item can be worn on: TAKE ABOUT\n"
+        "Can affect you as :\n"
+        "   Affects: AC By -8\n"
+        " > "
+    )
+    result = registry.dispatch("cast_spell", {"spell": "identify", "target": "velvet cloak"})
+
+    assert "[Equipment]" in result
+    assert "about" in result
+    assert "a tattered cloak" in result
+
+
+def test_upgrade_advisory_suggestion_strips_leading_article(tmp_path):
+    from boukensha.tools.mud import _strip_article
+
+    assert _strip_article("a gold ring") == "gold ring"
+    assert _strip_article("an emerald amulet") == "emerald amulet"
+    assert _strip_article("The Sword of Fate") == "Sword of Fate"
+    assert _strip_article("Excalibur") == "Excalibur"
+    # 'anvil' must not lose its first three letters.
+    assert _strip_article("anvil of doom") == "anvil of doom"
 
 
 def test_identify_without_memory_dir_does_not_crash():

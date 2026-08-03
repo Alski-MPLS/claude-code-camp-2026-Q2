@@ -34,6 +34,22 @@ landed).
   `_equipment_upgrade_advisory`). Tests: `tests/test_equipment_parser.py`,
   `tests/test_item_stats.py`, `tests/test_tools_mud.py`.
 
+  Both parsers normalize wear locations through one canonical slot table
+  (`equipment_parser._CANONICAL_SLOTS` / `canonical_slot`), derived from
+  `ObjectWear` and `MobEquipSlot` in the week0 world parser's `constants.py`,
+  so `<worn around neck>` from the equipment listing and `TAKE NECK` from
+  `identify` both resolve to `neck`.
+
+  Open item — dual-slot categories collapse. CircleMUD has genuinely paired
+  slots (`RING_R`/`RING_L`, `NECK_1`/`NECK_2`, `WRIST_R`/`WRIST_L`) that print
+  the identical `<worn on finger>` / `<worn around neck>` / `<worn around
+  wrist>` label. Because the canonical table maps both members to one key,
+  `parse_equipment` records only one item per category (last one wins), and an
+  upgrade advisory for those slots compares against whichever ring/amulet/
+  bracelet was listed second. Wearing two rings is normal play, not an edge
+  case — fixing it properly needs a list-per-slot representation in
+  `PlayerTracker`, which is out of scope for the current pass.
+
   Caveat: `parse_identify`'s regexes are built against the stock CircleMUD
   `identify` output format, unverified against this server's actual output
   — first live `identify` cast after deployment should confirm the format

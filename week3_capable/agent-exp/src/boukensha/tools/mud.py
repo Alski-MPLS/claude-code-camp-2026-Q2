@@ -65,7 +65,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
-from boukensha.memory.equipment_parser import parse_equipment, parse_identify
+from boukensha.memory.equipment_parser import _item_lookup_key, parse_equipment, parse_identify
 from boukensha.memory.item_stats import ItemStatsStore
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
@@ -362,6 +362,15 @@ def _affects_score(affects: dict[str, int]) -> int:
     return sum(-v if k == "ac" or k.startswith("saving") else v for k, v in affects.items())
 
 
+_ARTICLE_RE = re.compile(r"^(?:an?|the)\s+", re.IGNORECASE)
+
+
+def _strip_article(name: str) -> str:
+    """Drop a leading 'a '/'an '/'the ' — CircleMUD treats articles as noise
+    words, so 'wear a gold ring' won't match; the bare keyword will."""
+    return _ARTICLE_RE.sub("", name.strip())
+
+
 def _equipment_upgrade_advisory(
     parsed: dict, item_stats: "ItemStatsStore", tracker: "PlayerTracker | None", name: str
 ) -> str:
@@ -372,7 +381,9 @@ def _equipment_upgrade_advisory(
         return ""
 
     current_slots = (tracker.read_all().get(name) or {}).get("equipment") or {}
-    current_item = current_slots.get(slot)
+    # The equipment listing appends magic flags ("..(Yellow Aura)", "(Glowing)")
+    # to worn item names; ItemStatsStore is keyed by identify's clean name.
+    current_item = _item_lookup_key(current_slots.get(slot) or "")
     if not current_item or current_item.strip().lower() == parsed["name"].strip().lower():
         return ""
 
@@ -385,11 +396,12 @@ def _equipment_upgrade_advisory(
     if _affects_score(new_affects) <= _affects_score(current_affects):
         return ""
 
-    action = "wield" if slot == "wielded" else "wear"
+    action = "wield" if slot == "wield" else "wear"
+    keyword = _strip_article(parsed["name"])
     return (
         f"\n\n[Equipment] '{parsed['name']}' ({_format_affects(new_affects)}) is stronger "
         f"than what's currently worn in your {slot} slot ('{current_item}', "
-        f"{_format_affects(current_affects)}). Consider equip_item(item={parsed['name']!r}, "
+        f"{_format_affects(current_affects)}). Consider equip_item(item={keyword!r}, "
         f'action="{action}").'
     )
 
@@ -544,7 +556,10 @@ class Mud:
                         raw += _level_up_advisory(previous_level, stats)
             elif k == "equipment" and not raw.startswith("error:"):
                 slots = parse_equipment(raw)
-                if slots and tracker is not None:
+                # `{}` means "this IS equipment output and nothing is worn" —
+                # record it so a stripped-down loadout clears the old snapshot.
+                # `None` means the text wasn't equipment output at all.
+                if slots is not None and tracker is not None:
                     tracker.update_equipment(name, slots)
             return raw
 
