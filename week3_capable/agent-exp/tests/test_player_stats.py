@@ -47,3 +47,34 @@ def test_parse_score_returns_none_for_unrelated_text():
 
 def test_parse_score_returns_none_for_empty_string():
     assert PlayerStats.parse_score("") is None
+
+
+def test_parse_score_extracts_level_title_exp_and_gold():
+    text = (
+        "You are 17 years old.\n"
+        "You have 50(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "Your armor class is 29/10, and your alignment is 164.\n"
+        "You have 5829 exp, 130 gold coins, and 0 questpoints.\n"
+        "You need 2171 exp to reach your next level.\n"
+        "You have earned 0 quest points.\n"
+        "You have completed 0 quests, and you are not on a quest at the moment.\n"
+        "You have been playing for 0 days and 3 hours.\n"
+        "This ranks you as Dummy the Sentry (level 3).\n"
+        "You are standing.\n"
+    )
+    stats = PlayerStats.parse_score(text)
+    assert stats["level"] == 3
+    assert stats["title"] == "Dummy the Sentry"
+    assert stats["exp"] == 5829
+    assert stats["exp_to_next"] == 2171
+    assert stats["gold"] == 130
+
+
+def test_parse_score_omits_level_fields_when_lines_absent():
+    text = "You have 37(37) hit, 100(100) mana and 87(87) movement points.\n"
+    stats = PlayerStats.parse_score(text)
+    assert "level" not in stats
+    assert "title" not in stats
+    assert "exp" not in stats
+    assert "exp_to_next" not in stats
+    assert "gold" not in stats
