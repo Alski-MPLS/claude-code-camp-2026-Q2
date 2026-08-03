@@ -834,3 +834,160 @@ def test_check_equipment_with_no_items_worn_does_not_crash(tmp_path):
     assert "nothing" in result
     from boukensha.memory.player_tracker import PlayerTracker
     assert PlayerTracker(tmp_path).read_all() == {}
+
+
+def _identify_output(name: str, wear_slot: str | None, affects: dict[str, int]) -> str:
+    lines = [f"Object '{name}', Item type: WORN"]
+    if wear_slot:
+        lines.append(f"This item can be worn on: {wear_slot.upper()}")
+    lines.append("Can affect you as :")
+    for k, v in affects.items():
+        lines.append(f"   Affects: {k.upper()} By {v}")
+    return "\n".join(lines) + " > "
+
+
+def test_cast_spell_identify_saves_item_stats(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10, "hitroll": 2}
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    registry.dispatch("cast_spell", {"spell": "identify", "target": "gold ring"})
+
+    from boukensha.memory.item_stats import ItemStatsStore
+    saved = ItemStatsStore(tmp_path).get("a gold ring")
+    assert saved["wear_slot"] == "finger"
+    assert saved["affects"] == {"ac": -10, "hitroll": 2}
+
+
+def test_cast_spell_non_identify_result_does_not_touch_item_stats(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You failed to concentrate. > "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    registry.dispatch("cast_spell", {"spell": "magic missile", "target": "rat"})
+
+    from boukensha.memory.item_stats import ItemStatsStore
+    assert ItemStatsStore(tmp_path).read_all() == {}
+
+
+def test_use_magic_item_identify_appends_upgrade_advisory_when_slot_occupied(tmp_path):
+    from boukensha.memory.item_stats import ItemStatsStore
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    ItemStatsStore(tmp_path).save(
+        "a copper ring", {"wear_slot": "finger", "affects": {"ac": -2, "hitroll": 0}}
+    )
+    PlayerTracker(tmp_path).update_equipment("Tester", {"finger": "a copper ring"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10, "hitroll": 2}
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item", {"item": "scroll of identify", "mode": "recite", "target_args": "gold ring"}
+    )
+
+    assert "[Equipment]" in result
+    assert "a gold ring" in result
+    assert "finger" in result
+    assert "a copper ring" in result
+
+
+def test_use_magic_item_identify_omits_advisory_when_slot_empty(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10, "hitroll": 2}
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item", {"item": "scroll of identify", "mode": "recite", "target_args": "gold ring"}
+    )
+
+    assert "[Equipment]" not in result
+
+
+def test_use_magic_item_identify_omits_advisory_when_current_item_never_identified(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    PlayerTracker(tmp_path).update_equipment("Tester", {"finger": "a mystery ring"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10, "hitroll": 2}
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item", {"item": "scroll of identify", "mode": "recite", "target_args": "gold ring"}
+    )
+
+    assert "[Equipment]" not in result
+
+
+def test_use_magic_item_identify_omits_advisory_when_new_item_not_better(tmp_path):
+    from boukensha.memory.item_stats import ItemStatsStore
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    ItemStatsStore(tmp_path).save(
+        "a platinum ring", {"wear_slot": "finger", "affects": {"ac": -20, "hitroll": 5}}
+    )
+    PlayerTracker(tmp_path).update_equipment("Tester", {"finger": "a platinum ring"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10, "hitroll": 2}
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item", {"item": "scroll of identify", "mode": "recite", "target_args": "gold ring"}
+    )
+
+    assert "[Equipment]" not in result
+
+
+def test_identify_without_memory_dir_does_not_crash():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = _identify_output(
+        "a gold ring", "finger", {"ac": -10}
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("cast_spell", {"spell": "identify", "target": "gold ring"})
+    assert "a gold ring" in result

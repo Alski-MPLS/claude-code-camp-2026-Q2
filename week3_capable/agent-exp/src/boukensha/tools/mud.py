@@ -65,7 +65,8 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
-from boukensha.memory.equipment_parser import parse_equipment
+from boukensha.memory.equipment_parser import parse_equipment, parse_identify
+from boukensha.memory.item_stats import ItemStatsStore
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
 from boukensha.memory.room_memory import RoomMemory
@@ -345,6 +346,51 @@ def _level_up_advisory(previous_level: int, stats: dict[str, int | str | bool]) 
     )
 
 
+def _format_affects(affects: dict[str, int]) -> str:
+    if not affects:
+        return "no known bonuses"
+    ordered = sorted(affects.items(), key=lambda kv: (kv[0] != "ac", kv[0]))
+    return ", ".join(f"{k.upper()} {v:+d}" for k, v in ordered)
+
+
+def _affects_score(affects: dict[str, int]) -> int:
+    # Lower AC is better in CircleMUD; every other tracked affect (hitroll,
+    # damroll, stat mods) is better when higher — negate AC so a single sum
+    # ranks both consistently.
+    return sum(-v if k == "ac" else v for k, v in affects.items())
+
+
+def _equipment_upgrade_advisory(
+    parsed: dict, item_stats: "ItemStatsStore", tracker: "PlayerTracker | None", name: str
+) -> str:
+    item_stats.save(parsed["name"], {"wear_slot": parsed["wear_slot"], "affects": parsed["affects"]})
+
+    slot = parsed["wear_slot"]
+    if not slot or tracker is None:
+        return ""
+
+    current_slots = (tracker.read_all().get(name) or {}).get("equipment") or {}
+    current_item = current_slots.get(slot)
+    if not current_item or current_item.strip().lower() == parsed["name"].strip().lower():
+        return ""
+
+    current_stats = item_stats.get(current_item)
+    if not current_stats:
+        return ""
+
+    new_affects = parsed["affects"]
+    current_affects = current_stats.get("affects") or {}
+    if _affects_score(new_affects) <= _affects_score(current_affects):
+        return ""
+
+    return (
+        f"\n\n[Equipment] '{parsed['name']}' ({_format_affects(new_affects)}) is stronger "
+        f"than what's currently worn in your {slot} slot ('{current_item}', "
+        f"{_format_affects(current_affects)}). Consider equip_item(item={parsed['name']!r}, "
+        f"action=\"wear\")."
+    )
+
+
 def _no_living_target_message(target: str, npcs: list[str]) -> str:
     here = ", ".join(npcs) if npcs else "nothing living — only items (possibly a corpse) or nothing at all"
     return (
@@ -391,6 +437,7 @@ class Mud:
         mem = RoomMemory(memory_dir) if memory_dir is not None else None
         graph = world_graph if (memory_dir is not None and world_graph is not None) else None
         tracker = PlayerTracker(memory_dir) if memory_dir is not None else None
+        item_stats = ItemStatsStore(memory_dir) if memory_dir is not None else None
         _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
         # Wrapped in a single-slot list (like _prev above) so process_room —
         # a different registrar entirely — can share and update the same
@@ -436,6 +483,14 @@ class Mud:
                 room = RoomParser.parse(raw)
                 if room["title"]:
                     _npcs[0] = room.get("npcs", [])
+            return raw
+
+        def _record_identify_if_present(raw: str) -> str:
+            if raw.startswith("error:"):
+                return raw
+            parsed = parse_identify(raw)
+            if parsed and item_stats is not None:
+                raw += _equipment_upgrade_advisory(parsed, item_stats, tracker, name)
             return raw
 
         # ── Perception ────────────────────────────────────────────────────────
@@ -794,8 +849,8 @@ class Mud:
                 "spell":  {"type": "string", "description": "Full spell name (e.g. 'cure light wounds', 'magic missile')"},
                 "target": {"type": "string", "description": "Target mob, player, or object (optional)"},
             },
-            block=lambda spell, target=None, **_: _guard(session) or _send(
-                session, f"cast '{spell}' {target}" if target else f"cast '{spell}'"
+            block=lambda spell, target=None, **_: _guard(session) or _record_identify_if_present(
+                _send(session, f"cast '{spell}' {target}" if target else f"cast '{spell}'")
             ),
         )
 
@@ -807,7 +862,9 @@ class Mud:
                 "mode":        {"type": "string", "description": "quaff | recite | use"},
                 "target_args": {"type": "string", "description": "Optional target arguments (e.g. mob name for a wand)"},
             },
-            block=lambda item, mode, target_args=None, **_: _use_magic_item(session, item, mode, target_args),
+            block=lambda item, mode, target_args=None, **_: _record_identify_if_present(
+                _use_magic_item(session, item, mode, target_args)
+            ),
         )
 
         # ── Utility ───────────────────────────────────────────────────────────
