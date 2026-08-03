@@ -120,3 +120,19 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
 .overview-player .overview-card-value { font-size: 15px; font-weight: normal; line-height: 1.5; }
 .overview-location { color: #888; font-size: 12px; margin-top: 6px; }
 .overview-empty { color: #888; font-size: 13px; }
+
+.score-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 16px; margin-bottom: 12px; max-width: 420px; }
+.score-card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.score-card-name { color: #fff; font-size: 16px; font-weight: bold; }
+.score-card-level { color: #4af; font-size: 13px; }
+.score-bar-row { margin-bottom: 8px; }
+.score-bar-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; display: flex; justify-content: space-between; }
+.score-bar-track { background: #222; border-radius: 4px; height: 8px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 4px; }
+.score-bar-fill.hp { background: #f66; }
+.score-bar-fill.mana { background: #6af; }
+.score-bar-fill.move { background: #6f6; }
+.score-bar-fill.exp { background: #fa4; }
+.score-exp-row { color: #ccc; font-size: 12px; margin-top: 10px; }
+.score-gold { color: #fd4; font-size: 12px; margin-top: 4px; }
+.score-flags { color: #f96; font-size: 12px; margin-top: 8px; }

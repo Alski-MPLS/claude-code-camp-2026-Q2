@@ -14,6 +14,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'overview') loadOverview();
+    if (btn.dataset.tab === 'score') loadScore();
     if (btn.dataset.tab === 'map') window.loadMap && window.loadMap();
     if (btn.dataset.tab === 'goals') loadGoals();
     if (btn.dataset.tab === 'sessions') loadSessions();
@@ -46,6 +47,17 @@ es.onmessage = e => {
     const mapTab = document.getElementById('tab-map');
     if (mapTab && mapTab.classList.contains('active')) {
       window.loadMap && window.loadMap();
+    }
+  }
+
+  // Refresh the Score tab whenever a `check` call resolves (covers score,
+  // but also harmless to refresh on inventory/equipment/etc. checks — the
+  // underlying /api/players data only changes when it was actually a score
+  // check, so a no-op refresh is cheap and simpler than inspecting args).
+  if (event.phase === 'tool_result' && event.name === 'check') {
+    const scoreTab = document.getElementById('tab-score');
+    if (scoreTab && scoreTab.classList.contains('active')) {
+      loadScore();
     }
   }
 };
@@ -88,6 +100,54 @@ async function loadOverview() {
 }
 
 loadOverview();
+
+// Score tab
+function scoreBar(label, value, max, cls) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return `<div class="score-bar-row">
+    <div class="score-bar-label"><span>${escapeHtml(label)}</span><span>${value}/${max}</span></div>
+    <div class="score-bar-track"><div class="score-bar-fill ${cls}" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+async function loadScore() {
+  const el = document.getElementById('score-cards');
+  const r = await fetch('/api/players');
+  const players = await r.json();
+  if (!players.length) {
+    el.innerHTML = '<p class="overview-empty">No players tracked yet.</p>';
+    return;
+  }
+  el.innerHTML = players.map(p => {
+    const s = p.stats || {};
+    if (!('hp' in s)) {
+      return `<div class="score-card">
+        <div class="score-card-header"><span class="score-card-name">${escapeHtml(p.name)}</span></div>
+        <p class="overview-empty">Stats not yet checked (no score command run).</p>
+      </div>`;
+    }
+    const levelPart = 'level' in s
+      ? `Level ${s.level}${s.title ? ' — ' + escapeHtml(s.title) : ''}`
+      : 'Level unknown';
+    const flags = [];
+    if (s.hungry) flags.push('hungry');
+    if (s.thirsty) flags.push('thirsty');
+    return `<div class="score-card">
+      <div class="score-card-header">
+        <span class="score-card-name">${escapeHtml(p.name)}</span>
+        <span class="score-card-level">${levelPart}</span>
+      </div>
+      ${scoreBar('HP', s.hp, s.max_hp, 'hp')}
+      ${scoreBar('Mana', s.mana, s.max_mana, 'mana')}
+      ${scoreBar('Move', s.move, s.max_move, 'move')}
+      ${'exp' in s && 'exp_to_next' in s
+        ? `<div class="score-exp-row">${s.exp} exp — ${s.exp_to_next} to next level</div>`
+        : ''}
+      ${'gold' in s ? `<div class="score-gold">${s.gold} gold</div>` : ''}
+      ${flags.length ? `<div class="score-flags">${flags.join(', ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
 
 // Goals tab
 async function loadGoals() {
