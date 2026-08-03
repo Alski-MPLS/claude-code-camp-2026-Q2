@@ -37,6 +37,16 @@ class PlayerTracker:
         }
         self._write(data)
 
+    def update_equipment(self, name: str, slots: dict[str, str]) -> None:
+        data = self.read_all()
+        existing = data.get(name, {})
+        data[name] = {
+            **existing,
+            "equipment": slots,
+            "equipment_updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._write(data)
+
     def read_all(self) -> dict[str, Any]:
         if not self._path.exists():
             return {}

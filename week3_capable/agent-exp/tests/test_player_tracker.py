@@ -89,3 +89,30 @@ def test_update_preserves_existing_stats(tmp_path):
     data = tracker.read_all()
     assert data["Hero"]["stats"] == {"hp": 20, "max_hp": 20}
     assert data["Hero"]["room_hash"] == "abc123"
+
+
+def test_update_equipment_records_slots_for_new_player(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_equipment("Hero", {"finger": "a gold ring", "wielded": "a long sword"})
+    data = tracker.read_all()
+    assert data["Hero"]["equipment"] == {"finger": "a gold ring", "wielded": "a long sword"}
+    assert "equipment_updated_at" in data["Hero"]
+
+
+def test_update_equipment_preserves_existing_position_and_stats(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Hero", "abc123", "Temple Square")
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20})
+    tracker.update_equipment("Hero", {"finger": "a gold ring"})
+    data = tracker.read_all()
+    assert data["Hero"]["room_hash"] == "abc123"
+    assert data["Hero"]["stats"]["hp"] == 20
+    assert data["Hero"]["equipment"] == {"finger": "a gold ring"}
+
+
+def test_update_equipment_overwrites_previous_loadout(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_equipment("Hero", {"finger": "a copper ring"})
+    tracker.update_equipment("Hero", {"finger": "a gold ring"})
+    data = tracker.read_all()
+    assert data["Hero"]["equipment"] == {"finger": "a gold ring"}
