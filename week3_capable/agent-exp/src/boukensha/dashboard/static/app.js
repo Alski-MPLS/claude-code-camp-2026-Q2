@@ -23,12 +23,33 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // SSE live feed
 const log = document.getElementById('live-log');
+const liveTotalsEl = document.getElementById('live-totals');
+const liveTotals = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
+
+function responseUsageLabel(event) {
+  const parts = [];
+  if (event.input_tokens != null) parts.push(`in: ${event.input_tokens}`);
+  if (event.output_tokens != null) parts.push(`out: ${event.output_tokens}`);
+  const u = event.usage || {};
+  if (u.cache_read_input_tokens) parts.push(`cache-read: ${u.cache_read_input_tokens}`);
+  if (u.cache_creation_input_tokens) parts.push(`cache-write: ${u.cache_creation_input_tokens}`);
+  if (event.cost_usd != null) parts.push(`$${event.cost_usd.toFixed(6)}`);
+  return parts.length ? ' (' + parts.join(', ') + ')' : '';
+}
+
 const es = new EventSource('/events');
 es.onmessage = e => {
   const event = JSON.parse(e.data);
   const div = document.createElement('div');
   div.className = 'phase-' + event.phase;
-  if (event.phase === 'response') div.textContent = '[response] ' + event.text;
+  if (event.phase === 'response') {
+    div.textContent = '[response] ' + event.text + responseUsageLabel(event);
+    liveTotals.inputTokens += event.input_tokens || 0;
+    liveTotals.outputTokens += event.output_tokens || 0;
+    liveTotals.costUsd += event.cost_usd || 0;
+    liveTotalsEl.textContent =
+      `in: ${liveTotals.inputTokens} · out: ${liveTotals.outputTokens} · $${liveTotals.costUsd.toFixed(6)}`;
+  }
   else if (event.phase === 'tool_call') div.textContent = '[tool] → ' + event.name + '(' + JSON.stringify(event.args || {}) + ')';
   else if (event.phase === 'tool_result') div.textContent = '[result] ' + (event.result || '');
   else if (event.phase === 'compaction') div.textContent = '[compacted — ' + event.dropped + ' messages dropped]';

@@ -5,6 +5,7 @@ body { font-family: monospace; background: #111; color: #ccc; height: 100vh; dis
 .tab-btn.active { color: #fff; border-bottom: 2px solid #4af; }
 .tab-pane { display: none; flex: 1; overflow: auto; padding: 12px; }
 .tab-pane.active { display: flex; flex-direction: column; }
+#live-totals { padding: 6px 2px; font-size: 12px; color: #888; min-height: 18px; }
 #live-log { flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
 #live-log .phase-tool_call { color: #4af; }
 #live-log .phase-tool_result { color: #8f8; }
