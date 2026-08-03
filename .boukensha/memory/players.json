@@ -1,9 +1,9 @@
 {
   "dummy": {
-    "room_hash": "d875e614ed9a",
-    "title": "More Of The Hallway",
-    "updated_at": "2026-08-03T18:25:19.663598+00:00",
-    "prev_room_hash": "57d37dcd93ba",
+    "room_hash": "52abdb69ab4d",
+    "title": "The Entrance Hall To The Guild Of Swordsmen",
+    "updated_at": "2026-08-03T18:27:24.967251+00:00",
+    "prev_room_hash": "f55aecc816a1",
     "stats": {
       "hp": 66,
       "max_hp": 66,
@@ -19,6 +19,6 @@
       "gold": 146,
       "exp_to_next": 3979
     },
-    "stats_updated_at": "2026-08-03T18:25:00.561737+00:00"
+    "stats_updated_at": "2026-08-03T18:28:32.670459+00:00"
   }
 }

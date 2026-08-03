@@ -1,11 +1,7 @@
-current_goal: 'Before continuing to farm: navigate_to your guild entrance hall (The
-  Entrance Hall To The Guild Of Swordsmen) where you already know there''s an ATM,
-  call bank(action=''balance'') to see what you have banked, withdraw it with bank(action=''withdraw'',
-  amount=...), then find a weapon/armor shop and buy basic starter gear with shop(action=''list'')
-  then shop(action=''buy'', args=...). You''re still fighting bare-skinned with no
-  equipment. Do this before continuing to farm the newbie zone.'
+current_goal: Reach level 5 by farming weak newbie mobs; then continue farming toward
+  level 7+ for Minotaur attempt
 hp_flee_threshold: 10
-last_updated: '2026-08-03T18:24:34.069938+00:00'
+last_updated: '2026-08-03T18:28:38.780532+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
 
   - Use ''look'' to describe current room
@@ -17,14 +13,13 @@ mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
   - ''kill <target>'' to attack
 
   - ''flee'' to escape combat'
-notes: 'Known-good farming spot: navigate_to("The Dirty Hallway"). The path from town
-  (Great Field Of Midgaard -> Entrance To The Newbie Zone -> The Beginning Of The
-  Passage -> The Dirty Hallway) is fully mapped — use explore(max_hops=4) to push
-  further in without risking a walk back to town. Raised hp_flee_threshold from 5
-  to 25 — 5 was too low to survive a bad fight. New this session: bank tool for gold
-  deposits, and prompt guidance for light sources, noting interesting details, and
-  the level-7+ Minotaur goal.
-
-  '
-priority: normal
-status: active
+notes: 'Level 4, 12021/15720 exp (need 3979 more for level 5). Gold: 146 coins. HP/movement
+  fully recovered. Resting at Guild of Swordsmen entrance. FARMING LOOP ESTABLISHED:
+  (1) Newbie Alchemist (Alchemist''s Room) ~1315 exp/kill, (2) Newbie Guard (A Small
+  Room) ~487 exp/kill, (3) Baby dragon (The Dirty Hallway) ~754 exp/kill. All mobs
+  respawn. Access route: From guild, navigate to Alchemist''s Room or Small Room in
+  newbie zone west of town. Equipped with full armor set (breast plate, shield, cap,
+  boots, gloves, sleeves, cape, belt, wristguards, rings, candle) + small sword (wielded)
+  + metal staff (held). Ready to resume farming when session resumes.'
+priority: fight
+status: paused
