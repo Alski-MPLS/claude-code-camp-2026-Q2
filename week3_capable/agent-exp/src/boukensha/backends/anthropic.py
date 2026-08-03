@@ -9,6 +9,23 @@ from typing import Any
 from .base import Base
 
 
+def _with_cache_control(content: Any) -> Any:
+    """Attach a cache_control breakpoint to the last content block.
+
+    ``content`` is either a plain string (simple text turns) or a list of
+    content blocks (tool_use / tool_result turns). The Anthropic API only
+    accepts cache_control on block dicts, so a bare string is first wrapped
+    into a single text block.
+    """
+    if isinstance(content, str):
+        return [{"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}]
+    if isinstance(content, list) and content:
+        blocks = list(content)
+        blocks[-1] = {**blocks[-1], "cache_control": {"type": "ephemeral"}}
+        return blocks
+    return content
+
+
 class Anthropic(Base):
     BASE_URL = "https://api.anthropic.com/v1/messages"
     MODELS: dict[str, dict[str, Any]] = {
@@ -56,10 +73,18 @@ class Anthropic(Base):
                 )
             else:
                 result.append({"role": msg.role, "content": msg.content})
+        # Mark a fresh cache breakpoint at the tail of the conversation each
+        # turn. Everything before this point was already sent (and cached)
+        # on a prior iteration of the same agent loop, so this lets the API
+        # reuse that prefix at the ~10%-of-input-price cache-read rate
+        # instead of re-billing the whole growing history at full price on
+        # every single tool-calling round.
+        if result:
+            result[-1] = {**result[-1], "content": _with_cache_control(result[-1]["content"])}
         return result
 
     def to_tools(self, tools: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
+        result = [
             {
                 "name": tool.name,
                 "description": tool.description,
@@ -71,11 +96,21 @@ class Anthropic(Base):
             }
             for tool in tools.values()
         ]
+        # Tool definitions are identical on every call for the life of the
+        # session — caching the last one caches the whole preceding block.
+        if result:
+            result[-1] = {**result[-1], "cache_control": {"type": "ephemeral"}}
+        return result
 
     def to_payload(self, context: Any, *, max_output_tokens: int = 1024, tools: list | None = None) -> dict[str, Any]:
         return {
             "model": self.model,
-            "system": context.system,
+            # The system prompt is static for the whole session — caching
+            # it means it's billed at full price once, then at the cheap
+            # cache-read rate on every subsequent iteration and turn.
+            "system": [
+                {"type": "text", "text": context.system, "cache_control": {"type": "ephemeral"}}
+            ] if context.system else context.system,
             "max_tokens": max_output_tokens,
             "tools": tools if tools is not None else self.to_tools(context.tools),
             "messages": self.to_messages(context.messages),
