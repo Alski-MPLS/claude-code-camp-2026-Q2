@@ -46,6 +46,11 @@ class Ollama(Base):
             "cost_per_million": {"input": 0.0, "output": 0.0},
             "usage_unit": "local_compute",
         },
+        "qwen3:14b": {
+            "context_window": 128_000,
+            "cost_per_million": {"input": 0.0, "output": 0.0},
+            "usage_unit": "local_compute",
+        },
         "qwen3:8b": {
             "context_window": 40_000,
             "cost_per_million": {"input": 0.0, "output": 0.0},

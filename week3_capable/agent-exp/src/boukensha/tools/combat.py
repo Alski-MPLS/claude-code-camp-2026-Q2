@@ -17,6 +17,20 @@ if TYPE_CHECKING:
 _HP_RE = re.compile(r"(\d+)/(\d+)H", re.IGNORECASE)
 _DEAD_PATTERNS = ["is dead!", "you receive", "experience points"]
 
+# Generic diku/circle-family combat-round text. Used to detect that a fight
+# is still actually happening — a target that flees or wanders off mid-fight
+# often doesn't trigger any of the other end-of-combat checks (no "is dead",
+# no HP-threshold flee, and servers don't always print an explicit
+# "you stop fighting"/"no one is fighting" line), so the loop would otherwise
+# spin all the way to max_rounds waiting on a fight that already ended.
+_COMBAT_ACTIVITY_PATTERNS = [
+    "you hit", "you miss", "you kick", "you punch", "you claw", "you bite",
+    "you sting", "you clobber", "you slash", "you pierce",
+    "hits you", "misses you", "bites you", "claws you", "stings you",
+    "you parry", "parries", "dodge",
+]
+_QUIET_ROUND_LIMIT = 3
+
 # CircleMUD/tbaMUD-family 'consider' responses for a wildly outmatched
 # opponent. Wording varies per server, so this is a heuristic substring
 # match, not an exhaustive list — extend it if a server uses other phrasing.
@@ -104,6 +118,7 @@ class Combat:
 
             rounds = 0
             max_rounds = 30
+            quiet_rounds = 0
 
             while rounds < max_rounds:
                 rounds += 1
@@ -130,6 +145,21 @@ class Combat:
                 # Check if we're no longer in combat
                 if "you stop fighting" in response_lower or "no one is fighting" in response_lower:
                     return f"Combat ended after {rounds} round(s)."
+
+                # No sign of an actual exchange this round (no hit/miss/dodge
+                # text either way) — after a few of these in a row, the
+                # target most likely fled or wandered off mid-fight. Bail
+                # out early instead of spinning to max_rounds.
+                if any(p in response_lower for p in _COMBAT_ACTIVITY_PATTERNS):
+                    quiet_rounds = 0
+                else:
+                    quiet_rounds += 1
+                    if quiet_rounds >= _QUIET_ROUND_LIMIT:
+                        return (
+                            f"No combat activity for {quiet_rounds} rounds after attacking "
+                            f"'{target}' — it likely fled or wandered off. Re-check the room "
+                            "with look/consider before trying again."
+                        )
 
                 time.sleep(0.5)
                 response = session.read_until_prompt(timeout=3.0)

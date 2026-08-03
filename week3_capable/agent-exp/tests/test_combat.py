@@ -134,6 +134,33 @@ def test_combat_loop_auto_loots_corpse_after_kill(tmp_path):
     assert sent == ["consider rat", "kill rat", "get all corpse"]
 
 
+def test_combat_loop_bails_early_when_target_wanders_off_mid_fight(tmp_path):
+    """Real-world bug: a mob flees/wanders mid-fight without printing
+    "you stop fighting" or "no one is fighting". The loop must not spin
+    all the way to max_rounds waiting on a fight that already ended."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "This will be a piece of cake.\n",  # consider
+        "You hit the crawling thing hard!\n34/37H 86/87V> ",  # kill (round 1, real hit)
+        "34/37H 86/87V> ",  # round 2: quiet (target already gone)
+        "34/37H 86/87V> ",  # round 3: quiet
+        "34/37H 86/87V> ",  # round 4: quiet -> bail
+    ]
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["a crawling thing"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "crawling thing"})
+
+    assert "likely fled or wandered off" in result
+    # bailed after the quiet-round limit, not after all 30 rounds
+    assert mock_session.read_until_prompt.call_count == 5
+
+
 def test_combat_loop_auto_loot_false_skips_looting(tmp_path):
     registry = _make_registry()
     mock_session = MagicMock()
