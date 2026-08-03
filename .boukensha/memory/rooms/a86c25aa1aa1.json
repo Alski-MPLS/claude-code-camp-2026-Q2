@@ -6,9 +6,8 @@
     "west": null
   },
   "npcs": [
+    "A large, sociable bulletin board is mounted on a wall here.",
     "A waiter is here."
   ],
-  "items": [
-    "A large, sociable bulletin board is mounted on a wall here."
-  ]
+  "items": []
 }

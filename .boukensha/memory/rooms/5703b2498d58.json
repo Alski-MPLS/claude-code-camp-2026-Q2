@@ -4,9 +4,9 @@
   "exits": {
     "north": null
   },
-  "npcs": [],
-  "items": [
-    "An odif yltsaeb is here, walking backwards.",
+  "npcs": [
+    "A pair of leather sleeves is lying on the ground.",
     "An armorer stands here displaying his new (and previously owned) armors."
-  ]
+  ],
+  "items": []
 }

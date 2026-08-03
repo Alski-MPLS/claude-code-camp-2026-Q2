@@ -5,9 +5,11 @@
     "north": null,
     "east": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "An automatic teller machine has been installed in the wall here.",
+    "An oozing green gelatinous blob is here, sucking in bits of debris.",
+    "A cityguard stands here.",
     "A knight is guarding the entrance."
-  ]
+  ],
+  "items": []
 }

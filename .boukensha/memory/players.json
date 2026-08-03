@@ -1,24 +1,24 @@
 {
   "dummy": {
-    "room_hash": "afbf5a4c5714",
-    "title": "The South Stairs",
-    "updated_at": "2026-08-03T00:41:11.825913+00:00",
-    "prev_room_hash": "e8e65f74ab3a",
+    "room_hash": "57d37dcd93ba",
+    "title": "A Nexus",
+    "updated_at": "2026-08-03T18:24:05.862348+00:00",
+    "prev_room_hash": "d875e614ed9a",
     "stats": {
-      "hp": 50,
-      "max_hp": 50,
+      "hp": 66,
+      "max_hp": 66,
       "mana": 100,
       "max_mana": 100,
-      "move": 88,
-      "max_move": 88,
+      "move": 89,
+      "max_move": 89,
       "hungry": false,
       "thirsty": false,
-      "title": "Dummy the Sentry",
-      "level": 3,
-      "exp": 7291,
-      "gold": 183,
-      "exp_to_next": 709
+      "title": "Dummy the Fighter",
+      "level": 4,
+      "exp": 11267,
+      "gold": 96,
+      "exp_to_next": 4733
     },
-    "stats_updated_at": "2026-08-03T00:51:55.343179+00:00"
+    "stats_updated_at": "2026-08-03T18:23:48.867850+00:00"
   }
 }

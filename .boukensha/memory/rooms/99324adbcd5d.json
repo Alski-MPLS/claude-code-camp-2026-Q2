@@ -1,0 +1,10 @@
+{
+  "title": "A Large Room",
+  "description": "The passage opens into a large oval room.  There really isn't much of interest here though.",
+  "exits": {
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

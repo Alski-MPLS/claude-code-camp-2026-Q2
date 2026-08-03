@@ -4,8 +4,8 @@
   "exits": {
     "west": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "A very kind and caring soul is here looking out for those who need it."
-  ]
+  ],
+  "items": []
 }

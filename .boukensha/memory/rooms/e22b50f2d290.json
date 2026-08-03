@@ -5,8 +5,8 @@
     "north": null,
     "down": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "Your guildmaster is standing here sharpening an axe."
-  ]
+  ],
+  "items": []
 }

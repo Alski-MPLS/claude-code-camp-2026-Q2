@@ -6,9 +6,8 @@
     "east": null
   },
   "npcs": [
+    "An automatic teller machine has been installed in the wall here.",
     "A cityguard stands here."
   ],
-  "items": [
-    "An automatic teller machine has been installed in the wall here."
-  ]
+  "items": []
 }

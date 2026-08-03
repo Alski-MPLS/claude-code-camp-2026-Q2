@@ -6,6 +6,8 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
+  "npcs": [
+    "The Great Minotaur is wondering just what you'll taste like."
+  ],
   "items": []
 }

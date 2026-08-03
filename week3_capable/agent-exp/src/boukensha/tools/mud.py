@@ -15,6 +15,7 @@ Tools registered (grouped by concern):
     look              — look at the room or a specific target
     examine           — examine something in detail
     check             — query self-info (score = HP/exp/gold/level, inventory, equipment, exits…)
+    wait              — pause real seconds so server-side regen ticks can actually happen
 
   Movement
     move              — go a compass direction or up/down
@@ -62,7 +63,7 @@ import socket
 import threading
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
@@ -103,6 +104,7 @@ _DROP_MODES    = {"drop", "donate", "junk"}
 _EQUIP_OPS     = {"wear", "wield", "hold", "grab", "remove"}
 _CONSUME_MODES = {"eat", "drink", "taste", "sip"}
 _SHOP_OPS      = {"buy", "sell", "list", "value", "offer"}
+_BANK_OPS      = {"deposit", "withdraw", "balance"}
 _DOOR_OPS      = {"open", "close", "lock", "unlock"}
 _PORTAL_OPS    = {"enter", "leave"}
 _INFO_SELF     = {
@@ -504,6 +506,25 @@ class Mud:
             block=lambda kind, **_: _check_and_record(kind),
         )
 
+        registry.tool(
+            "wait",
+            description=(
+                "Pause for real seconds so the MUD server's own clock can advance — use this "
+                "while resting/sleeping to let HP/mana/movement regen ticks actually happen. "
+                "Tool calls otherwise return near-instantly, so repeated check(kind='score') "
+                "calls in a row can show zero recovery simply because no real time has passed "
+                "on the server, not because regen is broken or you're stuck. After waiting, "
+                "automatically reports fresh score so you don't need a separate check call."
+            ),
+            parameters={
+                "seconds": {
+                    "type": "integer",
+                    "description": "How long to pause, in real seconds (default 30, max 90).",
+                },
+            },
+            block=lambda seconds=30, **_: _wait_and_check(session, seconds, _check_and_record),
+        )
+
         # ── Movement ──────────────────────────────────────────────────────────
 
         def _move_and_record(direction: str) -> str:
@@ -796,6 +817,20 @@ class Mud:
         )
 
         registry.tool(
+            "bank",
+            description=(
+                "Deposit, withdraw, or check gold via an automatic teller machine (ATM) "
+                "fixture built into the current room's wall — only works in a room whose "
+                "description mentions an ATM/teller machine; there is no separate bank room."
+            ),
+            parameters={
+                "action": {"type": "string", "description": "deposit | withdraw | balance"},
+                "amount": {"type": "integer", "description": "Gold amount (omit for balance)"},
+            },
+            block=lambda action, amount=None, **_: _bank(session, action, amount),
+        )
+
+        registry.tool(
             "practice",
             description="List your known skills at a guildmaster, or practice a specific skill.",
             parameters={
@@ -885,6 +920,15 @@ def _check_info(session: MudSession, kind: str) -> str:
     if err:
         return err
     return _send(session, kind.strip().lower())
+
+
+def _wait_and_check(session: MudSession, seconds: int, check_and_record: Callable[[str], str]) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    clamped = max(1, min(int(seconds), 90))
+    time.sleep(clamped)
+    return f"Waited {clamped}s.\n" + check_and_record("score")
 
 
 def _move(session: MudSession, direction: str) -> str:
@@ -1109,4 +1153,17 @@ def _shop(session: MudSession, action: str, args: str | None) -> str:
     cmd = action.strip().lower()
     if args:
         cmd += f" {args}"
+    return _send(session, cmd)
+
+
+def _bank(session: MudSession, action: str, amount: int | None) -> str:
+    err = _guard(session)
+    if err:
+        return err
+    err = _check_enum(action, _BANK_OPS, "action")
+    if err:
+        return err
+    cmd = action.strip().lower()
+    if cmd != "balance" and amount:
+        cmd += f" {amount}"
     return _send(session, cmd)

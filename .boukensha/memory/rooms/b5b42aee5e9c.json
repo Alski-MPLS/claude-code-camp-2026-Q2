@@ -6,10 +6,8 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble.",
-    "A beastly fido is mucking through the garbage looking for food here.",
+  "npcs": [
     "A beastly fido is mucking through the garbage looking for food here."
-  ]
+  ],
+  "items": []
 }

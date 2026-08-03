@@ -5,8 +5,8 @@
     "east": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "A beggar is here, asking for a few coins."
-  ]
+  ],
+  "items": []
 }

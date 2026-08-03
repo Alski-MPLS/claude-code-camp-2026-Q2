@@ -16,3 +16,26 @@
   source: explored
   timestamp: '2026-08-03T00:38:53.836677+00:00'
   topic: bakery location
+- fact: Torch (15g) and Lantern (76g) available at the General Store on Main Street
+    north of Market Square. Torch is the cheapest light source.
+  source: General Store / explored
+  timestamp: '2026-08-03T17:22:34.097144+00:00'
+  topic: light source
+- fact: 'The Red Room contains a portal (round red glow on the floor) that depicts
+    a dirt path through a field. When fleeing from a mob there, it transported me
+    to the Great Field Of Midgaard. Exits from Red Room: north, east, down.'
+  source: explored
+  timestamp: '2026-08-03T17:23:11.323839+00:00'
+  topic: red room portal
+- fact: 'A sign in the Alchemist''s Room warns: ''If you are below level 7 and alone,
+    or below level 4 then bugger off! Or else don''t blame me if you die...'' This
+    indicates dangerous mobs (likely the Minotaur) are down the dark stairway. Do
+    not attempt below level 7.'
+  source: sign in Alchemist's Room
+  timestamp: '2026-08-03T17:26:07.620871+00:00'
+  topic: minotaur danger level
+- fact: Automatic teller machine located in The Entrance Hall To The Guild Of Swordsmen.
+    Use bank(action='deposit'|'withdraw'|'balance', amount=...) to manage gold.
+  source: explored
+  timestamp: '2026-08-03T17:37:07.675666+00:00'
+  topic: ATM location

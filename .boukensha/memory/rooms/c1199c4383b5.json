@@ -4,8 +4,9 @@
   "exits": {
     "south": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
+    "A janitor is walking around, cleaning up.",
     "The head postmaster is standing here, waiting to help you with your mail."
-  ]
+  ],
+  "items": []
 }

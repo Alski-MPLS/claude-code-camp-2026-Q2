@@ -1,0 +1,12 @@
+{
+  "title": "Another Turn",
+  "description": "Hmmm... the passage turns south here.  You beginning to realize you can easily lose your bearings if you aren't careful, and you don't think you would like spending too much time here...",
+  "exits": {
+    "south": null,
+    "west": null
+  },
+  "npcs": [
+    "A funny little imp-like thing (a quasit perhaps?) is sneaking about here."
+  ],
+  "items": []
+}

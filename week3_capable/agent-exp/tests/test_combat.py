@@ -36,6 +36,30 @@ def test_combat_loop_refuses_a_dangerous_target(tmp_path):
     assert not any(s.startswith("kill") for s in sent)
 
 
+def test_combat_loop_refuses_stock_circlemud_top_danger_tier(tmp_path):
+    """Real-world near-death: stock CircleMUD's own most severe consider
+    responses ("Are you mad!?" / "You ARE mad!") for a wildly outmatched
+    opponent were missing from the danger list, letting a fight through
+    that dropped HP to -9 and wiped gold/inventory on the resulting death."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You size up the gelatinous blob.\nYou ARE mad!\n"
+    )
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["gelatinous blob"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "gelatinous blob"})
+
+    assert "Refused to attack" in result
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert not any(s.startswith("kill") for s in sent)
+
+
 def test_combat_loop_marks_goal_flee_when_refusing(tmp_path):
     from boukensha.goals.goal_manager import GoalManager
 
@@ -147,7 +171,8 @@ def test_combat_loop_bails_early_when_target_wanders_off_mid_fight(tmp_path):
         "You hit the crawling thing hard!\n34/37H 86/87V> ",  # kill (round 1, real hit)
         "34/37H 86/87V> ",  # round 2: quiet (target already gone)
         "34/37H 86/87V> ",  # round 3: quiet
-        "34/37H 86/87V> ",  # round 4: quiet -> bail
+        "34/37H 86/87V> ",  # round 4: quiet -> probe
+        "You don't see them here.\n34/37H 86/87V> ",  # probe: confirms truly gone
     ]
     Combat.register(
         registry, session=mock_session, goals_dir=tmp_path,
@@ -156,9 +181,38 @@ def test_combat_loop_bails_early_when_target_wanders_off_mid_fight(tmp_path):
 
     result = registry.dispatch("combat_loop", {"target": "crawling thing"})
 
-    assert "likely fled or wandered off" in result
-    # bailed after the quiet-round limit, not after all 30 rounds
-    assert mock_session.read_until_prompt.call_count == 5
+    assert "likely fled, died, or wandered off" in result
+    # bailed after the quiet-round limit + one confirming probe, not after all 30 rounds
+    assert mock_session.read_until_prompt.call_count == 6
+
+
+def test_combat_loop_does_not_bail_when_target_is_still_actually_fighting(tmp_path):
+    """Real-world bug: some mobs' round text doesn't match any of the known
+    hit/miss/dodge phrases, so the quiet-round heuristic alone would wrongly
+    conclude "fled" while the fight is still genuinely ongoing (confirmed by
+    the server's own "You're fighting the best you can!" reply to a repeat
+    kill). The loop must verify with a probe before believing the guess."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "The perfect match!\n",  # consider
+        "34/37H 86/87V> ",  # kill (round 1: unusual round text, no matched keyword)
+        "34/37H 86/87V> ",  # round 2: quiet
+        "34/37H 86/87V> ",  # round 3: quiet -> probe
+        "You're fighting the best you can!\n34/37H 86/87V> ",  # probe: still fighting
+        "You hit the newbie hard!\nIt is DEAD!!\nYou get experience points.\n34/37H 86/87V> ",
+    ]
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["a newbie"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "newbie", "auto_loot": False})
+
+    assert "Combat complete" in result
+    assert "newbie defeated" in result
 
 
 def test_combat_loop_auto_loot_false_skips_looting(tmp_path):

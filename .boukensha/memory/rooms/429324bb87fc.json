@@ -1,0 +1,10 @@
+{
+  "title": "A Large Room",
+  "description": "As you enter, you light glints of the wall to the east.  There appears to be words scrawled on the wall, and a crude picture.  To the west the room extends beyond the reach of your light, and the dark shadows make you paranoid... anything could be hiding there.  You are painfully aware of how exposed you are without walls around you.",
+  "exits": {
+    "north": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

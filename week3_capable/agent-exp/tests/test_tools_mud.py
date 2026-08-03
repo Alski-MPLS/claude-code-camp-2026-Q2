@@ -65,13 +65,13 @@ def test_mud_register_adds_expected_tools():
 
     expected = [
         "mud_connect", "mud_disconnect", "mud_status",
-        "look", "examine", "check",
+        "look", "examine", "check", "wait",
         "move", "flee", "set_position", "track", "door", "portal",
         "attack", "skill_strike", "consider",
         "say", "tell", "channel_say",
         "get_item", "drop_item", "put_item", "give_item", "equip_item", "consume_item", "pour_liquid",
         "cast_spell", "use_magic_item",
-        "shop", "practice", "save_character", "send_raw",
+        "shop", "bank", "practice", "save_character", "send_raw",
     ]
     for name in expected:
         assert registry.get(name) is not None, f"tool {name!r} not registered"
@@ -684,3 +684,103 @@ def test_door_lock_with_direction_sends_lock_door_direction():
 
     mock_session.send_command.assert_called_once_with("lock door north")
     assert "click" in result
+
+
+def test_bank_deposit_sends_deposit_amount():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You deposit 400 coins.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "deposit", "amount": 400})
+
+    mock_session.send_command.assert_called_once_with("deposit 400")
+    assert "deposit" in result
+
+
+def test_bank_withdraw_sends_withdraw_amount():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You withdraw 100 coins.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "withdraw", "amount": 100})
+
+    mock_session.send_command.assert_called_once_with("withdraw 100")
+    assert "withdraw" in result
+
+
+def test_bank_balance_ignores_amount():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Current balance: 200 coins.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "balance"})
+
+    mock_session.send_command.assert_called_once_with("balance")
+    assert "balance" in result
+
+
+def test_bank_rejects_invalid_action():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "rob"})
+
+    mock_session.send_command.assert_not_called()
+    assert "action" in result.lower()
+
+
+def test_wait_sleeps_real_seconds_then_reports_fresh_score():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 20(20) hit, 100(100) mana and 85(85) movement points. > "
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    with patch("boukensha.tools.mud.time.sleep") as mock_sleep:
+        result = registry.dispatch("wait", {"seconds": 30})
+
+    mock_sleep.assert_called_once_with(30)
+    mock_session.send_command.assert_called_once_with("score")
+    assert "Waited 30s" in result
+    assert "20(20) hit" in result
+
+
+def test_wait_clamps_seconds_to_a_sane_range():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You have 20(20) hit. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    with patch("boukensha.tools.mud.time.sleep") as mock_sleep:
+        registry.dispatch("wait", {"seconds": 9999})
+
+    mock_sleep.assert_called_once_with(90)
+
+
+def test_wait_returns_error_when_not_connected():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = False
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    with patch("boukensha.tools.mud.time.sleep") as mock_sleep:
+        result = registry.dispatch("wait", {"seconds": 10})
+
+    mock_sleep.assert_not_called()
+    assert "error" in result.lower()

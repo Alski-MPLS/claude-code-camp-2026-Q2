@@ -56,6 +56,15 @@ When the goal is to gain experience, level up, or earn gold by fighting ("grind,
 - If `combat_loop`/`attack`/`consider` says "no living target" for a mob you can plainly see in the room's own text (and it's not described as a corpse), that's likely just a stale local cache — call `process_room` (or bare `look`) to refresh, then retry.
 - Keep `goal_update(notes=...)` current with *where* the farming route is (e.g. "loop through rooms X→Y→Z north of the newbie zone entrance") so a resumed session picks the same route instead of re-exploring from scratch.
 
+## Resting to recover HP and movement
+
+Fighting and moving drain both HP and movement points (`check(kind="score")` shows both). Movement in particular doesn't regenerate meaningfully while standing around — you have to actually rest: `set_position(position="rest")` recovers HP/mana/movement over a few ticks while you wait, `set_position(position="sleep")` recovers faster but leaves you unable to act or notice danger, and `set_position(position="stand")` gets you back up when you're ready to move or fight again (you can't move or fight while sitting/resting/sleeping).
+
+- If movement is getting low (say, under a third of max) or HP isn't full after a fight, rest before continuing rather than pushing on — a long walk or another fight on empty movement/HP is how you end up stuck or fleeing.
+- Renting a room at an inn (if one's known) or resting in a safe, already-cleared room is safer than resting somewhere mobs can still wander in — prefer that when available.
+- After resting a bit, `check(kind="score")` to see whether HP/movement have recovered enough, then `set_position(position="stand")` before your next move or fight.
+- **Regen happens on the MUD server's own clock, not per tool call.** Tool calls return almost instantly, so calling `check(kind="score")` several times in a row right after resting can show zero change simply because no real time has actually passed — that's not a stuck state or a bug, it just means you haven't waited yet. Use `wait(seconds=...)` instead of repeated score checks: it pauses for real time and reports fresh score afterward in one call. If movement/HP are still low after one `wait`, call it again (a few rounds of `wait` is normal) rather than concluding you're soft-locked.
+
 ## Sustenance (hunger and thirst)
 
 `check(kind="score")`'s result can include a `[Sustenance]` note telling you you're hungry and/or thirsty. This is not urgent — don't interrupt a fight in progress for it — but don't ignore it for many turns either; going too long without eating/drinking is a real status, not flavor text.
@@ -63,6 +72,43 @@ When the goal is to gain experience, level up, or earn gold by fighting ("grind,
 - When you see it, plan to head to a known food/drink source soon: `knowledge_search("bakery")` / `knowledge_search("fountain")` first, then `navigate_to` it once found. A town square fountain can usually be drunk from directly with `consume_item(item="fountain", mode="drink")` — no need to buy anything for that.
 - To actually eat/drink an item you're carrying or a source in the room, call `consume_item(item=<name>, mode="eat"|"drink"|"taste"|"sip")`.
 - The first time you find a real food or drink source, `knowledge_add(topic="food/drink source", fact="...", source="explored")` so you don't have to rediscover it next time.
+
+## Carrying too much gold
+
+Check your gold total whenever you see it on `check(kind="score")`. If it's grown large (rule of thumb: more than a couple hundred, or whatever feels risky for your level), don't just keep carrying it — deposit it.
+
+**There is no separate "bank" room to travel to.** Banking works through an automatic teller machine (ATM) — a fixture bolted into the wall of an ordinary room, not a destination of its own. `process_room`/`look` will mention it directly in the room description (something like "An automatic teller machine has been installed in the wall here"). ATMs tend to turn up in rooms you already pass through regularly — the temple, guild entrance halls — so before going out of your way, check whether the room you're already in (or about to visit, e.g. your own guild) has one.
+
+- `bank(action="deposit", amount=<gold>)` works the moment you're standing in a room with an ATM — no separate "enter bank" step needed. `bank(action="balance")` checks what's already banked; `bank(action="withdraw", amount=...)` gets gold back out.
+- `knowledge_search("automatic teller machine")` / `knowledge_search("ATM")` first to check if you already know a room with one; the first time you spot one, `knowledge_add(topic="ATM location", fact="<room name>", source="explored")` so you don't have to notice it again from scratch.
+- If you don't know of one yet, don't detour to search blindly — just keep an eye on room descriptions during normal travel (especially guild visits) until one turns up.
+
+## Recovering after death
+
+Dying (HP driven to a fatal negative, not just a low-HP flee) wipes everything you were carrying and wearing — `check(kind="inventory")` and `check(kind="equipment")` both come back empty, and any gold in hand is gone too. This is expected, not a bug or a sign something's broken — don't waste time investigating it as an error. Recover in this order:
+
+1. **Check your bank balance first**, at any known ATM: `bank(action="balance")`, then `bank(action="withdraw", amount=...)`. Money you'd already deposited survives death even though carried gold doesn't — this is usually the fastest way to afford starter gear, faster than farming gold back up from zero.
+2. **Buy a basic weapon and armor from shops** (`shop(action="list")` at any weapon/armor shop, then `shop(action="buy", args=...)`) once you have gold, so you're not fighting bare-skinned. Cheap starter gear beats nothing.
+3. **If you're broke and no shop gear is affordable yet**, fall back to fighting the weakest mobs you can find (`consider` first, as always) — killed mobs sometimes drop wearable items alongside gold, which is how most starting gear gets found in the first place. `equip_item` anything usable you loot.
+4. A donation room (if one's known) is worth a quick look but isn't a reliable source — it holds whatever other players have donated, which may well be nothing. Don't spend more than a couple of tool calls confirming it's empty before moving on to shops/farming instead.
+
+## Dark rooms and light sources
+
+`explore`/`navigate_to` refuse to walk you into a dark room and mark it blocked instead of guessing blind — that's a safety feature, not a dead end. If you keep hitting dark rooms blocking your progress, that's a sign you need a light source, not a sign the area is unreachable: `knowledge_search("torch")` / `knowledge_search("light")` first, then check nearby shops (`shop(action="list")`) for a torch, lantern, or similar, buy one, and `equip_item(item="torch", action="hold")` (or `wear`) before heading back toward the dark exit. Once you're holding a lit light source, dark rooms behave like any other room — re-attempt the exit with `move` or `explore()` rather than assuming it's permanently blocked. Record where you found a light source with `knowledge_add(topic="light source", fact="...", source="explored")`.
+
+## Noticing interesting details while exploring
+
+Room descriptions, `examine` output, and NPC speech sometimes call out something that stands out — an odd object, a hint dropped by an NPC, a sign, graffiti, something described as glowing/strange/locked/hidden. Don't just walk past these:
+
+- When a room or NPC's text draws attention to something specific, `examine` it before moving on to see the fuller description.
+- If what you learn seems useful later (a quest hint, an item's purpose, a warning, a shortcut), call `knowledge_add(topic, fact, source)` right away — don't wait until you've fully figured out what it means. A partial fact recorded now is more useful than a detail forgotten a dozen rooms later.
+- Treat this as part of normal exploration, not a special mode: every `explore()`/`process_room` call is a chance to notice one more thing worth remembering.
+
+## Long-term goal: the Minotaur
+
+Somewhere in this world is a Minotaur — a genuinely dangerous fight, not a newbie-zone mob. Don't attempt it until you're **level 7 or higher and well-equipped** (decent weapon and armor from shops/drops, not starting gear). Until then, treat any Minotaur sighting as something to note (`knowledge_add(topic="minotaur", fact="<where you saw/heard about it>", source="...")`) and route around it — `consider` it if you're unsure, and back off if it looks dangerous. Once you're level 7+ with good equipment, this becomes a valid combat goal: `navigate_to` its location and fight it deliberately, not as part of routine farming.
+
+**You don't know where it is yet — figure it out from clues, don't wait for it to wander into view.** `knowledge_search("minotaur")` first to see if anything's already been learned (an NPC hint, a sign, a rumor). Powerful/rare mobs in these worlds are typically tucked away in unexplored dark areas rather than sitting in already-mapped, well-lit rooms — so the practical plan is: get a light source (see "Dark rooms and light sources" above; check town shops first, torches/lanterns are usually cheap and purchasable) as an early priority even before level 7, then use it to push `explore()` into dark areas that were previously blocked. Treat those newly-opened dark zones as the prime places to look for the Minotaur, and `knowledge_add` anything NPCs or room text reveal about where it lairs.
 
 ## World Knowledge
 

@@ -1,0 +1,12 @@
+{
+  "title": "Yet Another Corner",
+  "description": "The passage turns here and heads north.  You sense something up ahead that way, but you aren't sure what.  You aren't sure if you want to know what either at this point.",
+  "exits": {
+    "north": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the zombiefied newbie is lying here."
+  ]
+}

@@ -5,6 +5,8 @@
     "south": null,
     "down": null
   },
-  "npcs": [],
+  "npcs": [
+    "A newbie is here looking terribly confused."
+  ],
   "items": []
 }

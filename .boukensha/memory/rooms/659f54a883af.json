@@ -4,8 +4,8 @@
   "exits": {
     "south": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "A grocer stands at the counter, with a slightly impatient look on his face."
-  ]
+  ],
+  "items": []
 }

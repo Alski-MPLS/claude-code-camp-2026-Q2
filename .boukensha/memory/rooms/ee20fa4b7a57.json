@@ -7,10 +7,7 @@
     "west": null
   },
   "npcs": [
-    "A cityguard stands here."
-  ],
-  "items": [
-    "A mercenary is waiting for a job here.",
     "A mercenary is waiting for a job here."
-  ]
+  ],
+  "items": []
 }

@@ -5,8 +5,8 @@
     "east": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "The corpse of the clueless newbie is lying here."
-  ]
+  "npcs": [
+    "A newbie is here, and he looks quite sure of himself."
+  ],
+  "items": []
 }

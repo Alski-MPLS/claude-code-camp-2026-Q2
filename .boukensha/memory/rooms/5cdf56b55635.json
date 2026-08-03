@@ -1,0 +1,11 @@
+{
+  "title": "A Branching Passage",
+  "description": "The north-south passage branches to the east here.  There is a queer red glow coming from that way as well, along with a faint breeze.",
+  "exits": {
+    "north": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

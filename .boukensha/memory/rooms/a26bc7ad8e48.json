@@ -7,8 +7,8 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "A beastly fido is mucking through the garbage looking for food here."
-  ]
+  ],
+  "items": []
 }

@@ -3,12 +3,10 @@
   "description": "You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  Main Street leads east and Wall Road leads south from here.",
   "exits": {
     "east": null,
-    "south": null,
-    "west": null
+    "south": null
   },
-  "npcs": [],
-  "items": [
-    "A cityguard is here, guarding the gate.",
+  "npcs": [
     "A cityguard is here, guarding the gate."
-  ]
+  ],
+  "items": []
 }

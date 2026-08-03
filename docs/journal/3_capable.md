@@ -41,6 +41,9 @@ Will continue to push for troubleshooting this program and watch the agent as it
         - System prompt marked cacheable (static for the whole session)
         - Last tool definition marked cacheable (caches the entire 47-tool schema block, also static)
         - Last content block of the newest message marked cacheable each turn, so the growing history gets reused instead of rebilled
+- Added some more funds to the API and gave claude more instructions around training, ATM funds, sleeping/resting, etc. By using Haiku and then watching it with Claude Code, the character was able to level up to 4, find a tourch and find where the minatour was located. It knew not to engage and to continue to level up. I also gave it instructions to start looking closer at rooms that had "unique" areas and to start reasoning through some of what is found. Seems to be working well now. Just need to help it along at times.
+- Cost is good now also. 
+- I needed to specify that a BANK is really an ATM. But, it did find a key and figured out how to use it (or where it can't use it). 
 
 
 

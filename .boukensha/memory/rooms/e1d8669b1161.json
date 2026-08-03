@@ -1,0 +1,13 @@
+{
+  "title": "A Branch To The South",
+  "description": "The east-west passage branches of to the south here.  All around you is the odour of death.  Actually, the mold and fungus on the walls is doing great, but otherwise... well... you don't want to think about what else lives here.",
+  "exits": {
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [
+    "A funny little imp-like thing (a quasit perhaps?) is sneaking about here."
+  ],
+  "items": []
+}

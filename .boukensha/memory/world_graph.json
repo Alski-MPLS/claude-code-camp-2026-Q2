@@ -442,6 +442,58 @@
     {
       "title": "The Reading Room",
       "id": "76986e54a80b"
+    },
+    {
+      "title": "A Turn In The Passage",
+      "id": "2f21d0a14c01"
+    },
+    {
+      "title": "A Branch To The South",
+      "id": "e1d8669b1161"
+    },
+    {
+      "title": "Yet Another Corner",
+      "id": "291b4d949d93"
+    },
+    {
+      "title": "A Passage",
+      "id": "7cadb58763fc"
+    },
+    {
+      "title": "A Large Room",
+      "id": "99324adbcd5d"
+    },
+    {
+      "title": "A Long East-West Passage",
+      "id": "f9baa4ebce37"
+    },
+    {
+      "title": "A Corner In The Hallway",
+      "id": "81af1a4010b1"
+    },
+    {
+      "title": "Another Turn",
+      "id": "57f3ca014574"
+    },
+    {
+      "title": "A Branching Passage",
+      "id": "5cdf56b55635"
+    },
+    {
+      "title": "The Red Room",
+      "id": "d325f7be13c2"
+    },
+    {
+      "title": "A Large Room",
+      "id": "5b80edb35607"
+    },
+    {
+      "title": "A Large Room",
+      "id": "429324bb87fc"
+    },
+    {
+      "title": "A Small Room",
+      "id": "6d55de2203fc"
     }
   ],
   "edges": [
@@ -454,6 +506,11 @@
       "direction": "west",
       "source": "113bd65b27a4",
       "target": "2dd01a6ff88e"
+    },
+    {
+      "direction": "south",
+      "source": "113bd65b27a4",
+      "target": "6d55de2203fc"
     },
     {
       "direction": "west",
@@ -484,6 +541,11 @@
       "direction": "south",
       "source": "d875e614ed9a",
       "target": "9a2e0d053ec1"
+    },
+    {
+      "direction": "west",
+      "source": "d875e614ed9a",
+      "target": "6d55de2203fc"
     },
     {
       "direction": "north",
@@ -1522,6 +1584,16 @@
     },
     {
       "direction": "south",
+      "source": "497d3aa74336",
+      "target": "2f21d0a14c01"
+    },
+    {
+      "direction": "west",
+      "source": "497d3aa74336",
+      "target": "7cadb58763fc"
+    },
+    {
+      "direction": "south",
       "source": "99220f8905b3",
       "target": "497d3aa74336"
     },
@@ -1529,6 +1601,16 @@
       "direction": "east",
       "source": "99220f8905b3",
       "target": "5549e7b6cd6f"
+    },
+    {
+      "direction": "west",
+      "source": "99220f8905b3",
+      "target": "f9baa4ebce37"
+    },
+    {
+      "direction": "north",
+      "source": "99220f8905b3",
+      "target": "81af1a4010b1"
     },
     {
       "direction": "west",
@@ -1581,6 +1663,11 @@
       "target": "54587228eeff"
     },
     {
+      "direction": "north",
+      "source": "38cabe275812",
+      "target": "5cdf56b55635"
+    },
+    {
       "direction": "east",
       "source": "fcf6b1914bdb",
       "target": "81ddf8883187"
@@ -1589,6 +1676,146 @@
       "direction": "east",
       "source": "76986e54a80b",
       "target": "bad80c25f808"
+    },
+    {
+      "direction": "north",
+      "source": "2f21d0a14c01",
+      "target": "497d3aa74336"
+    },
+    {
+      "direction": "east",
+      "source": "2f21d0a14c01",
+      "target": "e1d8669b1161"
+    },
+    {
+      "direction": "west",
+      "source": "e1d8669b1161",
+      "target": "2f21d0a14c01"
+    },
+    {
+      "direction": "east",
+      "source": "e1d8669b1161",
+      "target": "291b4d949d93"
+    },
+    {
+      "direction": "south",
+      "source": "e1d8669b1161",
+      "target": "429324bb87fc"
+    },
+    {
+      "direction": "west",
+      "source": "291b4d949d93",
+      "target": "e1d8669b1161"
+    },
+    {
+      "direction": "east",
+      "source": "7cadb58763fc",
+      "target": "497d3aa74336"
+    },
+    {
+      "direction": "north",
+      "source": "7cadb58763fc",
+      "target": "99324adbcd5d"
+    },
+    {
+      "direction": "south",
+      "source": "7cadb58763fc",
+      "target": "5b80edb35607"
+    },
+    {
+      "direction": "south",
+      "source": "99324adbcd5d",
+      "target": "7cadb58763fc"
+    },
+    {
+      "direction": "east",
+      "source": "99324adbcd5d",
+      "target": "f9baa4ebce37"
+    },
+    {
+      "direction": "west",
+      "source": "f9baa4ebce37",
+      "target": "99324adbcd5d"
+    },
+    {
+      "direction": "east",
+      "source": "f9baa4ebce37",
+      "target": "99220f8905b3"
+    },
+    {
+      "direction": "south",
+      "source": "81af1a4010b1",
+      "target": "99220f8905b3"
+    },
+    {
+      "direction": "east",
+      "source": "81af1a4010b1",
+      "target": "57f3ca014574"
+    },
+    {
+      "direction": "west",
+      "source": "57f3ca014574",
+      "target": "81af1a4010b1"
+    },
+    {
+      "direction": "south",
+      "source": "57f3ca014574",
+      "target": "5cdf56b55635"
+    },
+    {
+      "direction": "north",
+      "source": "5cdf56b55635",
+      "target": "57f3ca014574"
+    },
+    {
+      "direction": "south",
+      "source": "5cdf56b55635",
+      "target": "38cabe275812"
+    },
+    {
+      "direction": "west",
+      "source": "5cdf56b55635",
+      "target": "d325f7be13c2"
+    },
+    {
+      "direction": "east",
+      "source": "d325f7be13c2",
+      "target": "5cdf56b55635"
+    },
+    {
+      "direction": "down",
+      "source": "d325f7be13c2",
+      "target": "2e16758d7041"
+    },
+    {
+      "direction": "north",
+      "source": "5b80edb35607",
+      "target": "7cadb58763fc"
+    },
+    {
+      "direction": "east",
+      "source": "5b80edb35607",
+      "target": "429324bb87fc"
+    },
+    {
+      "direction": "west",
+      "source": "429324bb87fc",
+      "target": "5b80edb35607"
+    },
+    {
+      "direction": "north",
+      "source": "429324bb87fc",
+      "target": "e1d8669b1161"
+    },
+    {
+      "direction": "east",
+      "source": "6d55de2203fc",
+      "target": "d875e614ed9a"
+    },
+    {
+      "direction": "north",
+      "source": "6d55de2203fc",
+      "target": "113bd65b27a4"
     }
   ]
 }

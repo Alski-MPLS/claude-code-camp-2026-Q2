@@ -43,6 +43,11 @@ _DANGER_PATTERNS = [
     "no chance",
     "hopelessly outmatched",
     "far superior",
+    # Stock CircleMUD's own top two consider tiers ("Are you mad!?" / "You
+    # ARE mad!") for a wildly outmatched opponent — missing these let a
+    # near-death fight through the safety gate in practice (HP dropped to
+    # -9, gold and inventory wiped on the resulting death).
+    "mad!",
 ]
 
 
@@ -148,17 +153,38 @@ class Combat:
 
                 # No sign of an actual exchange this round (no hit/miss/dodge
                 # text either way) — after a few of these in a row, the
-                # target most likely fled or wandered off mid-fight. Bail
-                # out early instead of spinning to max_rounds.
+                # target most likely fled or wandered off mid-fight. Don't
+                # just guess, though: the activity-keyword list can't cover
+                # every server's round phrasing, so a genuinely ongoing
+                # fight can look "quiet" to it. Re-issue the attack and read
+                # the MUD's own unambiguous answer — CircleMUD-family servers
+                # reply "You're fighting the best you can!" to a repeated
+                # kill on a target you're still actively fighting, which is
+                # a reliable ground-truth signal this heuristic lacks.
                 if any(p in response_lower for p in _COMBAT_ACTIVITY_PATTERNS):
                     quiet_rounds = 0
                 else:
                     quiet_rounds += 1
                     if quiet_rounds >= _QUIET_ROUND_LIMIT:
+                        session.drain()
+                        session.send_command(f"kill {target}")
+                        probe = session.read_until_prompt()
+                        probe_lower = probe.lower()
+                        if "fighting the best you can" in probe_lower:
+                            quiet_rounds = 0
+                            response = probe
+                            continue
+                        if any(p in probe_lower for p in _DEAD_PATTERNS):
+                            result = f"Combat complete: {target} defeated after {rounds} round(s)."
+                            if auto_loot:
+                                loot_resp = _get_item(session, "all", "corpse", None)
+                                result += f"\nLoot: {loot_resp}"
+                            return result
                         return (
                             f"No combat activity for {quiet_rounds} rounds after attacking "
-                            f"'{target}' — it likely fled or wandered off. Re-check the room "
-                            "with look/consider before trying again."
+                            f"'{target}', and re-attacking got {probe.strip()!r} — it likely "
+                            "fled, died, or wandered off. Re-check the room with look/consider "
+                            "before trying again."
                         )
 
                 time.sleep(0.5)

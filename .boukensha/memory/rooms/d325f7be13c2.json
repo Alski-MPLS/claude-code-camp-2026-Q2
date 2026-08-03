@@ -1,0 +1,11 @@
+{
+  "title": "The Red Room",
+  "description": "It takes you a moment to realize that the red glow here is coming from a round portal on the floor.  It looks almost as if someone had painted a picture of a dirt running through a field on the floor of this room.  Oddly enough, it is so realistic you can feel the wind in the field coming out of the picture.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "down": null
+  },
+  "npcs": [],
+  "items": []
+}
