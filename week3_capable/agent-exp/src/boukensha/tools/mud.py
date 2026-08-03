@@ -354,10 +354,12 @@ def _format_affects(affects: dict[str, int]) -> str:
 
 
 def _affects_score(affects: dict[str, int]) -> int:
-    # Lower AC is better in CircleMUD; every other tracked affect (hitroll,
-    # damroll, stat mods) is better when higher — negate AC so a single sum
-    # ranks both consistently.
-    return sum(-v if k == "ac" else v for k, v in affects.items())
+    # Lower AC is better in CircleMUD, and the same holds for every SAVING_*
+    # affect (saving_spell, saving_para, saving_breath, saving_rod,
+    # saving_petri, ...) — every other tracked affect (hitroll, damroll,
+    # stat mods) is better when higher. Negate AC and saving throws so a
+    # single sum ranks both consistently.
+    return sum(-v if k == "ac" or k.startswith("saving") else v for k, v in affects.items())
 
 
 def _equipment_upgrade_advisory(
@@ -383,11 +385,12 @@ def _equipment_upgrade_advisory(
     if _affects_score(new_affects) <= _affects_score(current_affects):
         return ""
 
+    action = "wield" if slot == "wielded" else "wear"
     return (
         f"\n\n[Equipment] '{parsed['name']}' ({_format_affects(new_affects)}) is stronger "
         f"than what's currently worn in your {slot} slot ('{current_item}', "
         f"{_format_affects(current_affects)}). Consider equip_item(item={parsed['name']!r}, "
-        f"action=\"wear\")."
+        f'action="{action}").'
     )
 
 

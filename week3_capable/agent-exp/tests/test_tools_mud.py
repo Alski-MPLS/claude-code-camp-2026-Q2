@@ -980,6 +980,94 @@ def test_use_magic_item_identify_omits_advisory_when_new_item_not_better(tmp_pat
     assert "[Equipment]" not in result
 
 
+def test_use_magic_item_identify_weapon_upgrade_advisory_suggests_wield_not_wear(tmp_path):
+    from boukensha.memory.item_stats import ItemStatsStore
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    ItemStatsStore(tmp_path).save(
+        "a rusty sword", {"wear_slot": "wielded", "affects": {"hitroll": 0}}
+    )
+    PlayerTracker(tmp_path).update_equipment("Tester", {"wielded": "a rusty sword"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "Object 'a flaming longsword', Item type: WEAPON\n"
+        "Can affect you as :\n"
+        "   Affects: HITROLL By 3\n"
+        " > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item",
+        {"item": "scroll of identify", "mode": "recite", "target_args": "flaming longsword"},
+    )
+
+    assert "[Equipment]" in result
+    assert 'action="wield"' in result
+    assert 'action="wear"' not in result
+
+
+def test_affects_score_negates_saving_throws_like_ac():
+    from boukensha.tools.mud import _affects_score
+
+    # A saving throw of -3 is better than +2 (lower is better), so the
+    # score for the -3 case must exceed the score for the +2 case.
+    better = _affects_score({"saving_spell": -3})
+    worse = _affects_score({"saving_spell": 2})
+    assert better > worse
+
+    # Other saving-throw variants are negated the same way.
+    assert _affects_score({"saving_para": -5}) == 5
+    assert _affects_score({"saving_breath": 4}) == -4
+    assert _affects_score({"saving_rod": -1}) == 1
+    assert _affects_score({"saving_petri": 2}) == -2
+
+    # Non-saving, non-ac affects remain additive.
+    assert _affects_score({"hitroll": 3, "damroll": 2, "str": 1}) == 6
+
+    # AC and saving throws combine correctly alongside additive affects.
+    assert _affects_score({"ac": -10, "saving_spell": -2, "hitroll": 4}) == 10 + 2 + 4
+
+
+def test_use_magic_item_identify_appends_advisory_for_better_saving_throw(tmp_path):
+    from boukensha.memory.item_stats import ItemStatsStore
+    from boukensha.memory.player_tracker import PlayerTracker
+
+    ItemStatsStore(tmp_path).save(
+        "a plain cloak", {"wear_slot": "neck", "affects": {"saving_spell": 2}}
+    )
+    PlayerTracker(tmp_path).update_equipment("Tester", {"neck": "a plain cloak"})
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "Object 'a warded cloak', Item type: WORN\n"
+        "This item can be worn on: NECK\n"
+        "Can affect you as :\n"
+        "   Affects: SAVING_SPELL By -3\n"
+        " > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch(
+        "use_magic_item",
+        {"item": "scroll of identify", "mode": "recite", "target_args": "warded cloak"},
+    )
+
+    assert "[Equipment]" in result
+    assert "a warded cloak" in result
+
+
 def test_identify_without_memory_dir_does_not_crash():
     registry = _make_registry()
     mock_session = MagicMock()
