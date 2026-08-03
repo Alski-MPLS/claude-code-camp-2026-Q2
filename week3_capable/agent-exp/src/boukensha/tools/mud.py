@@ -65,6 +65,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
+from boukensha.memory.equipment_parser import parse_equipment
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
 from boukensha.memory.room_memory import RoomMemory
@@ -466,7 +467,8 @@ class Mud:
 
         def _check_and_record(kind: str) -> str:
             raw = _check_info(session, kind)
-            if kind.strip().lower() == "score" and not raw.startswith("error:"):
+            k = kind.strip().lower()
+            if k == "score" and not raw.startswith("error:"):
                 stats = PlayerStats.parse_score(raw)
                 if stats:
                     previous_level = None
@@ -482,6 +484,10 @@ class Mud:
                         and new_level > previous_level
                     ):
                         raw += _level_up_advisory(previous_level, stats)
+            elif k == "equipment" and not raw.startswith("error:"):
+                slots = parse_equipment(raw)
+                if slots and tracker is not None:
+                    tracker.update_equipment(name, slots)
             return raw
 
         registry.tool(

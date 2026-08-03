@@ -784,3 +784,53 @@ def test_wait_returns_error_when_not_connected():
 
     mock_sleep.assert_not_called()
     assert "error" in result.lower()
+
+
+def test_check_equipment_persists_slots_to_player_tracker(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You are using:\n"
+        "<worn on finger>      a gold ring\n"
+        "<wielded>              a long sword\n"
+        "> "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "equipment"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    data = PlayerTracker(tmp_path).read_all()
+    assert data["Tester"]["equipment"] == {
+        "finger": "a gold ring",
+        "wielded": "a long sword",
+    }
+
+
+def test_check_equipment_without_memory_dir_does_not_crash():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "<wielded> a long sword\n> "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("check", {"kind": "equipment"})
+    assert "a long sword" in result
+
+
+def test_check_equipment_with_no_items_worn_does_not_crash(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You are using: nothing.\n> "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    result = registry.dispatch("check", {"kind": "equipment"})
+    assert "nothing" in result
+    from boukensha.memory.player_tracker import PlayerTracker
+    assert PlayerTracker(tmp_path).read_all() == {}
