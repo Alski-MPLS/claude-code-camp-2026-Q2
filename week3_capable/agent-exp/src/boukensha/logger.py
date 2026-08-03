@@ -161,12 +161,19 @@ def _provider_name(backend: Any) -> str | None:
 
 def _usage_tokens(usage: Any) -> dict[str, int | None]:
     if not isinstance(usage, dict):
-        return {"input": None, "output": None}
+        return {"input": None, "output": None, "cache_creation": 0, "cache_read": 0}
     input_keys = ("input_tokens", "prompt_tokens", "promptTokenCount", "prompt_eval_count")
     output_keys = ("output_tokens", "completion_tokens", "candidatesTokenCount", "eval_count")
+    # cache_creation/cache_read only exist on Anthropic's usage object (once
+    # prompt caching is in use); providers/calls without them default to 0
+    # rather than None — absence means "no cache activity", not "unknown",
+    # so it never blocks a cost estimate the way a missing input/output
+    # count does.
     return {
         "input": _first_int(usage, input_keys),
         "output": _first_int(usage, output_keys),
+        "cache_creation": _first_int(usage, ("cache_creation_input_tokens",)) or 0,
+        "cache_read": _first_int(usage, ("cache_read_input_tokens",)) or 0,
     }
 
 
@@ -186,4 +193,9 @@ def _estimate_cost(backend: Any, tokens: dict[str, int | None]) -> float | None:
         return None
     if tokens["input"] is None or tokens["output"] is None:
         return None
-    return backend.estimate_cost(input_tokens=tokens["input"], output_tokens=tokens["output"])
+    return backend.estimate_cost(
+        input_tokens=tokens["input"],
+        output_tokens=tokens["output"],
+        cache_creation_tokens=tokens.get("cache_creation", 0),
+        cache_read_tokens=tokens.get("cache_read", 0),
+    )

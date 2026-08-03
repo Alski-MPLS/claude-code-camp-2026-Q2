@@ -182,6 +182,35 @@ def test_logger_response_with_anthropic_usage():
         assert isinstance(r["cost_usd"], float)
 
 
+def test_logger_response_bills_cache_creation_and_cache_read_tokens():
+    """Regression test: a real live Anthropic response (captured after
+    enabling prompt caching) reported cache_creation_input_tokens=402 and
+    cache_read_input_tokens=9224 alongside input_tokens=7 — before this
+    fix, cost_usd silently ignored both cache fields and only billed the
+    base input_tokens, undercounting real spend by orders of magnitude
+    once caching kicked in."""
+    from boukensha.backends.anthropic import Anthropic
+    backend = Anthropic(api_key="k", model="claude-haiku-4-5")
+    with tempfile.TemporaryDirectory() as d:
+        lg = Logger(dir=d)
+        lg.response(
+            text="hi",
+            usage={
+                "input_tokens": 7,
+                "cache_creation_input_tokens": 402,
+                "cache_read_input_tokens": 9224,
+                "output_tokens": 69,
+            },
+            stop_reason="end_turn",
+            backend=backend,
+        )
+        lg.close()
+        lines = _read_lines(lg.path)
+        r = next(l for l in lines if l["phase"] == "response")
+        expected = (7 * 1.0 + 69 * 5.0 + 402 * 1.0 * 1.25 + 9224 * 1.0 * 0.1) / 1_000_000.0
+        assert r["cost_usd"] == expected
+
+
 def test_logger_raw_no_op_when_debug_false():
     import boukensha
     boukensha._debug = False

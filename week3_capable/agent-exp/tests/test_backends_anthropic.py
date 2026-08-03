@@ -117,3 +117,45 @@ def test_to_messages_caches_last_block_when_content_is_already_a_list():
 def test_to_messages_handles_empty_history():
     backend = _make_backend()
     assert backend.to_messages([]) == []
+
+
+def test_estimate_cost_with_no_cache_activity_matches_pre_caching_behavior():
+    backend = _make_backend()  # claude-haiku-4-5: $1/MTok in, $5/MTok out
+
+    cost = backend.estimate_cost(input_tokens=1000, output_tokens=1000)
+
+    assert cost == (1000 * 1.0 + 1000 * 5.0) / 1_000_000.0
+
+
+def test_estimate_cost_bills_cache_write_at_1_25x_input_price():
+    backend = _make_backend()
+
+    cost = backend.estimate_cost(
+        input_tokens=0, output_tokens=0, cache_creation_tokens=1_000_000
+    )
+
+    assert cost == 1.25  # 1,000,000 tokens * $1/MTok * 1.25
+
+
+def test_estimate_cost_bills_cache_read_at_one_tenth_input_price():
+    backend = _make_backend()
+
+    cost = backend.estimate_cost(
+        input_tokens=0, output_tokens=0, cache_read_tokens=1_000_000
+    )
+
+    assert cost == 0.1  # 1,000,000 tokens * $1/MTok * 0.1
+
+
+def test_estimate_cost_combines_all_four_token_buckets():
+    backend = _make_backend()
+
+    cost = backend.estimate_cost(
+        input_tokens=7,
+        output_tokens=69,
+        cache_creation_tokens=402,
+        cache_read_tokens=9224,
+    )
+
+    expected = (7 * 1.0 + 69 * 5.0 + 402 * 1.0 * 1.25 + 9224 * 1.0 * 0.1) / 1_000_000.0
+    assert cost == expected

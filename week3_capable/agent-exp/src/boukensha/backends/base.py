@@ -70,13 +70,33 @@ class Base:
     def usage_level(self) -> str | None:
         return self._model_info.get("usage_level")
 
-    def estimate_cost(self, *, input_tokens: int, output_tokens: int) -> float | None:
+    # Anthropic's published prompt-caching multipliers, relative to the
+    # base input price: writing to the (default 5-minute) cache costs 1.25x
+    # a normal input token; reading from it costs 0.1x. Providers without
+    # caching never populate these token counts, so they default to 0 and
+    # this has no effect on their cost.
+    CACHE_WRITE_MULTIPLIER = 1.25
+    CACHE_READ_MULTIPLIER = 0.1
+
+    def estimate_cost(
+        self,
+        *,
+        input_tokens: int,
+        output_tokens: int,
+        cache_creation_tokens: int = 0,
+        cache_read_tokens: int = 0,
+    ) -> float | None:
         in_cost = self.input_token_cost_per_million
         out_cost = self.output_token_cost_per_million
         if in_cost is None or out_cost is None:
             return None
 
-        return ((input_tokens * in_cost) + (output_tokens * out_cost)) / 1_000_000.0
+        return (
+            (input_tokens * in_cost)
+            + (output_tokens * out_cost)
+            + (cache_creation_tokens * in_cost * self.CACHE_WRITE_MULTIPLIER)
+            + (cache_read_tokens * in_cost * self.CACHE_READ_MULTIPLIER)
+        ) / 1_000_000.0
 
     def _configure_model(self, model: str) -> None:
         self.model = type(self).validate_model(model)
