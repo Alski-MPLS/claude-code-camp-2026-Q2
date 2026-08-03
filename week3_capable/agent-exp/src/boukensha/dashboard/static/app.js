@@ -72,6 +72,7 @@ async function loadOverview() {
     ['Rooms known', data.rooms_known, null],
     ['Frontier', data.frontier.frontier, `of ${data.frontier.known_exits} exits · ${data.frontier.walked} mapped`],
     ['Entities', data.entities.total, `${data.entities.mobs} mobs · ${data.entities.objects} objects`],
+    ['Total cost', '$' + (data.total_cost_usd || 0).toFixed(4), 'across all sessions'],
   ].map(([label, value, sub]) =>
     `<div class="overview-card">
       <div class="overview-card-label">${escapeHtml(label)}</div>
@@ -162,9 +163,9 @@ async function loadSessions() {
   const r = await fetch('/api/sessions');
   const sessions = await r.json();
   const container = document.getElementById('sessions-list');
-  container.innerHTML = '<table><thead><tr><th>Session</th><th>Started</th><th>Model</th><th>Input tokens</th><th>Output tokens</th></tr></thead><tbody>' +
+  container.innerHTML = '<table><thead><tr><th>Session</th><th>Started</th><th>Model</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th></tr></thead><tbody>' +
     sessions.map(s =>
-      `<tr data-id="${escapeHtml(s.id)}"><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.started_at || '')}</td><td>${escapeHtml(s.model || '')}</td><td>${s.total_input_tokens}</td><td>${s.total_output_tokens}</td></tr>`
+      `<tr data-id="${escapeHtml(s.id)}"><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.started_at || '')}</td><td>${escapeHtml(s.model || '')}</td><td>${s.total_input_tokens}</td><td>${s.total_output_tokens}</td><td>$${(s.total_cost_usd || 0).toFixed(4)}</td></tr>`
     ).join('') + '</tbody></table>';
   container.querySelectorAll('tr[data-id]').forEach(row => {
     row.addEventListener('click', () => {

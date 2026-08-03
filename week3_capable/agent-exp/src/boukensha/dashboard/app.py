@@ -120,11 +120,16 @@ def create_dashboard_app(
             {"name": name, **info}
             for name, info in PlayerTracker(memory_path).read_all().items()
         ]
+        total_cost_usd = 0.0
+        if sessions_path.exists():
+            for f in sessions_path.glob("*.jsonl"):
+                total_cost_usd += _parse_session_meta(f)["total_cost_usd"]
         return jsonify({
             "rooms_known": g.graph.number_of_nodes(),
             "frontier": frontier_stats(g, mem),
             "entities": entity_stats(g, mem),
             "players": players,
+            "total_cost_usd": total_cost_usd,
         })
 
     @app.route("/api/room/<room_hash>")
@@ -177,6 +182,7 @@ def _parse_session_meta(path: Path) -> dict[str, Any]:
         "provider": None,
         "total_input_tokens": 0,
         "total_output_tokens": 0,
+        "total_cost_usd": 0.0,
     }
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
@@ -192,9 +198,14 @@ def _parse_session_meta(path: Path) -> dict[str, Any]:
             meta["model"] = event.get("model")
             meta["provider"] = event.get("provider")
         elif phase == "response":
-            usage = event.get("usage") or {}
-            meta["total_input_tokens"] += int(usage.get("input_tokens", 0))
-            meta["total_output_tokens"] += int(usage.get("output_tokens", 0))
+            # input_tokens/output_tokens/cost_usd are written at the top
+            # level of the event by logger._execution_metadata — not
+            # nested under "usage" (that sub-dict holds the provider's
+            # raw, differently-named counters, e.g. Ollama's
+            # prompt_eval_count/eval_count).
+            meta["total_input_tokens"] += int(event.get("input_tokens") or 0)
+            meta["total_output_tokens"] += int(event.get("output_tokens") or 0)
+            meta["total_cost_usd"] += float(event.get("cost_usd") or 0.0)
     return meta
 
 

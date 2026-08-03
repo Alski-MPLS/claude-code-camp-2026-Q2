@@ -1,6 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
+import pytest
 from boukensha.dashboard.app import create_dashboard_app
 
 
@@ -112,6 +113,59 @@ def test_api_overview_returns_zero_stats_when_no_data(tmp_path):
         assert data["frontier"] == {"known_exits": 0, "walked": 0, "frontier": 0}
         assert data["entities"] == {"mobs": 0, "objects": 0, "total": 0}
         assert data["players"] == []
+        assert data["total_cost_usd"] == 0.0
+
+
+def test_api_sessions_reports_token_and_cost_totals(tmp_path):
+    app, sessions_dir = _make_app(tmp_path)
+    session_file = sessions_dir / "20260803T000000Z-abc12345.jsonl"
+    lines = [
+        {"phase": "session_start", "at": "2026-08-03T00:00:00Z", "model": "claude-haiku-4-5", "provider": "anthropic", "session_id": "abc12345"},
+        {"phase": "response", "text": "hi", "usage": {"input_tokens": 100, "output_tokens": 50}, "input_tokens": 100, "output_tokens": 50, "cost_usd": 0.00035, "session_id": "abc12345"},
+        {"phase": "response", "text": "hi again", "usage": {"input_tokens": 200, "output_tokens": 75}, "input_tokens": 200, "output_tokens": 75, "cost_usd": 0.00058, "session_id": "abc12345"},
+    ]
+    session_file.write_text("\n".join(json.dumps(l) for l in lines) + "\n")
+    with app.test_client() as c:
+        r = c.get("/api/sessions")
+        data = json.loads(r.data)
+        assert data[0]["total_input_tokens"] == 300
+        assert data[0]["total_output_tokens"] == 125
+        assert data[0]["total_cost_usd"] == pytest.approx(0.00093)
+
+
+def test_api_sessions_ignores_provider_native_usage_keys_not_at_top_level(tmp_path):
+    """Ollama's raw usage dict uses prompt_eval_count/eval_count — those
+    must not be mistaken for input_tokens/output_tokens. Only the
+    top-level input_tokens/output_tokens/cost_usd (written by
+    logger._execution_metadata) should be summed."""
+    app, sessions_dir = _make_app(tmp_path)
+    session_file = sessions_dir / "20260803T000001Z-def67890.jsonl"
+    lines = [
+        {"phase": "session_start", "at": "2026-08-03T00:00:01Z", "model": "qwen3:14b", "provider": "ollama", "session_id": "def67890"},
+        {"phase": "response", "text": "hi", "usage": {"prompt_eval_count": 8950, "eval_count": 362}, "input_tokens": 8950, "output_tokens": 362, "cost_usd": 0.0, "session_id": "def67890"},
+    ]
+    session_file.write_text("\n".join(json.dumps(l) for l in lines) + "\n")
+    with app.test_client() as c:
+        r = c.get("/api/sessions")
+        data = json.loads(r.data)
+        assert data[0]["total_input_tokens"] == 8950
+        assert data[0]["total_output_tokens"] == 362
+        assert data[0]["total_cost_usd"] == 0.0
+
+
+def test_api_overview_sums_cost_across_sessions(tmp_path):
+    app, sessions_dir = _make_app(tmp_path)
+    for i, cost in enumerate([0.001, 0.0025]):
+        f = sessions_dir / f"2026080{i}T000000Z-sess{i}0000.jsonl"
+        f.write_text(json.dumps({
+            "phase": "response", "text": "x",
+            "input_tokens": 10, "output_tokens": 5, "cost_usd": cost,
+            "session_id": f"sess{i}0000",
+        }) + "\n")
+    with app.test_client() as c:
+        r = c.get("/api/overview")
+        data = json.loads(r.data)
+        assert data["total_cost_usd"] == pytest.approx(0.0035)
 
 
 def test_api_overview_reports_rooms_and_players(tmp_path):
