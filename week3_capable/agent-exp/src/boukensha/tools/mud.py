@@ -471,7 +471,7 @@ class Mud:
                     if tracker is not None:
                         previous = (tracker.read_all().get(name) or {}).get("stats") or {}
                         previous_level = previous.get("level")
-                        tracker.update_stats(name, stats)
+                        tracker.update_stats(name, {**previous, **stats})
                     raw += _sustenance_advisory(stats)
                     new_level = stats.get("level")
                     if (

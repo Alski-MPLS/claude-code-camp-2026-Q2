@@ -615,6 +615,35 @@ def test_check_score_omits_level_up_advisory_when_level_unchanged(tmp_path):
     assert "[Level up!]" not in result
 
 
+def test_check_score_partial_read_does_not_delete_stored_level(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    PlayerTracker(tmp_path).update_stats("Tester", {
+        "hp": 37, "max_hp": 37, "mana": 100, "max_mana": 100,
+        "move": 87, "max_move": 87, "hungry": False, "thirsty": False,
+        "level": 3, "title": "Dummy the Sentry",
+        "exp": 5829, "exp_to_next": 2171, "gold": 130,
+    })
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    # Truncated read: only the HP/mana/move line, no "This ranks you as..."
+    # line and no exp/gold line, so parse_score's dict has no level/title/
+    # exp/exp_to_next/gold keys at all.
+    mock_session.read_until_prompt.return_value = (
+        "You have 45(50) hit, 100(100) mana and 88(88) movement points.\n> "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    registry.dispatch("check", {"kind": "score"})
+
+    stored = PlayerTracker(tmp_path).read_all()["Tester"]["stats"]
+    assert stored["level"] == 3
+
+
 def test_door_open_with_direction_sends_open_door_direction():
     registry = _make_registry()
     mock_session = MagicMock()
