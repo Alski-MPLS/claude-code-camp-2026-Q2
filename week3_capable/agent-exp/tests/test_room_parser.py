@@ -105,6 +105,34 @@ def test_parse_classifies_longer_named_npc_correctly():
     assert r["items"] == []
 
 
+def test_parse_npc_line_ending_in_exclamation_mark_is_not_dropped():
+    # Real-world regression: "The newbie monster stands here looking
+    # confused.  Kill him!  Kill him!" ends in "!", not ".", so the old
+    # endswith(".") check silently dropped it from both npcs and items —
+    # look() showed the mob but combat_loop/attack always said nothing
+    # living was here, since _match_npc had nothing to match against.
+    raw = (
+        "The Beginning Of The Passage\n"
+        "   A long corridor.\n"
+        "[ Exits: e s ]\n"
+        "The newbie monster stands here looking confused.  Kill him!  Kill him!\n"
+    )
+    r = RoomParser.parse(raw)
+    assert any("newbie monster" in n.lower() for n in r["npcs"])
+    assert r["items"] == []
+
+
+def test_parse_npc_line_ending_in_question_mark_is_not_dropped():
+    raw = (
+        "A Small Room\n"
+        "   A cramped room.\n"
+        "[ Exits: n ]\n"
+        "A confused guard looks around, lost. Where am I?\n"
+    )
+    r = RoomParser.parse(raw)
+    assert any("confused guard" in n.lower() for n in r["npcs"])
+
+
 def test_parse_corpse_stays_an_item_even_with_a_short_name():
     raw = (
         "The Dirty Hallway\n"

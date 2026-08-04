@@ -165,7 +165,7 @@ async function loadScore() {
       ${'exp' in s && 'exp_to_next' in s
         ? `<div class="score-exp-row">${s.exp} exp — ${s.exp_to_next} to next level</div>`
         : ''}
-      ${'gold' in s ? `<div class="score-gold">${s.gold} gold</div>` : ''}
+      ${'gold' in s ? `<div class="score-gold">${s.gold} gold${'bank_gold' in s ? ` · ${s.bank_gold} banked` : ''}</div>` : ''}
       ${flags.length ? `<div class="score-flags">${flags.join(', ')}</div>` : ''}
     </div>`;
   }).join('');

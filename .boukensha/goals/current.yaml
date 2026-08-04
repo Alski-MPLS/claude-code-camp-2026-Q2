@@ -1,7 +1,12 @@
-current_goal: Reach level 5 by farming weak newbie mobs; then continue farming toward
-  level 7+ for Minotaur attempt
+current_goal: You are at The Lane with low movement, not yet safe. First rest (set_position
+  rest) and wait repeatedly (seconds=90) until movement recovers to at least 40-50.
+  Then navigate_to a definitely known location like "Market Square" or "Behind The
+  Temple Altar" or "The Entrance Hall To The Guild Of Swordsmen". Confirm with look
+  that you are not in combat and nothing dangerous is in the room. Then call save_character.
+  Then stop and take no further actions.
+gold_deposit_threshold: 200
 hp_flee_threshold: 10
-last_updated: '2026-08-03T18:28:38.780532+00:00'
+last_updated: '2026-08-04T22:25:17.372430+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
 
   - Use ''look'' to describe current room
@@ -13,13 +18,9 @@ mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
   - ''kill <target>'' to attack
 
   - ''flee'' to escape combat'
-notes: 'Level 4, 12021/15720 exp (need 3979 more for level 5). Gold: 146 coins. HP/movement
-  fully recovered. Resting at Guild of Swordsmen entrance. FARMING LOOP ESTABLISHED:
-  (1) Newbie Alchemist (Alchemist''s Room) ~1315 exp/kill, (2) Newbie Guard (A Small
-  Room) ~487 exp/kill, (3) Baby dragon (The Dirty Hallway) ~754 exp/kill. All mobs
-  respawn. Access route: From guild, navigate to Alchemist''s Room or Small Room in
-  newbie zone west of town. Equipped with full armor set (breast plate, shield, cap,
-  boots, gloves, sleeves, cape, belt, wristguards, rings, candle) + small sword (wielded)
-  + metal staff (held). Ready to resume farming when session resumes.'
+notes: 'Level 6 achieved and trained. Farming route: newbie zone entrance → Beginning
+  of Passage → Dirty Hallway → Nexus → More of Hallway → Another Corner (dragon).
+  HP 74/93, movement 18/94. Thirsty but manageable. Bank at 907 coins; deposit when
+  carrying exceeds 200.'
 priority: fight
-status: paused
+status: active

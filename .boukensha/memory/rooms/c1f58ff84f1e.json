@@ -2,7 +2,8 @@
   "title": "A Bright Hallway",
   "description": "Wow!  What a change from the dismal passage to the south.  Whoever keeps this room up must really like newbies.  The walls and floor are clean, and tastefully decorated.  You also notice an interesting design on the floor.",
   "exits": {
-    "north": null
+    "north": null,
+    "south": null
   },
   "npcs": [],
   "items": []

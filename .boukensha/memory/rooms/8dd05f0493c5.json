@@ -6,7 +6,12 @@
     "west": null
   },
   "npcs": [
-    "A newbie is here, and he looks quite sure of himself."
+    "A finely crafted newbie mace is waiting for a worthy owner. ..It has a soft glowing aura!",
+    "A set of nifty sleeves is here.",
+    "A pair of neat looking leggings are here."
   ],
-  "items": []
+  "items": [
+    "A little pile of gold coins is lying here.",
+    "A bright green newbie vest is lying here looking for a body to hug."
+  ]
 }

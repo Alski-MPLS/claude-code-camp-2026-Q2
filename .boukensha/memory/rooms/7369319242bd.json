@@ -1,0 +1,10 @@
+{
+  "title": "The King's Road",
+  "description": "You stand in the center of the great King's Road.  The road is very well built, and goes in a straight line due east-west.",
+  "exits": {
+    "east": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

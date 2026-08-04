@@ -494,6 +494,22 @@
     {
       "title": "A Small Room",
       "id": "6d55de2203fc"
+    },
+    {
+      "title": "The King's Road",
+      "id": "840e49b16f35"
+    },
+    {
+      "title": "The Lane",
+      "id": "bb2fc6fc08c4"
+    },
+    {
+      "title": "The Plains",
+      "id": "88b89b19e9f1"
+    },
+    {
+      "title": "The King's Road",
+      "id": "7369319242bd"
     }
   ],
   "edges": [
@@ -1438,6 +1454,16 @@
       "target": "40726c06ba3c"
     },
     {
+      "direction": "east",
+      "source": "459c6aa111e8",
+      "target": "840e49b16f35"
+    },
+    {
+      "direction": "north",
+      "source": "459c6aa111e8",
+      "target": "bb2fc6fc08c4"
+    },
+    {
       "direction": "up",
       "source": "40726c06ba3c",
       "target": "459c6aa111e8"
@@ -1816,6 +1842,36 @@
       "direction": "north",
       "source": "6d55de2203fc",
       "target": "113bd65b27a4"
+    },
+    {
+      "direction": "west",
+      "source": "840e49b16f35",
+      "target": "459c6aa111e8"
+    },
+    {
+      "direction": "east",
+      "source": "840e49b16f35",
+      "target": "7369319242bd"
+    },
+    {
+      "direction": "south",
+      "source": "bb2fc6fc08c4",
+      "target": "459c6aa111e8"
+    },
+    {
+      "direction": "north",
+      "source": "bb2fc6fc08c4",
+      "target": "88b89b19e9f1"
+    },
+    {
+      "direction": "south",
+      "source": "88b89b19e9f1",
+      "target": "bb2fc6fc08c4"
+    },
+    {
+      "direction": "west",
+      "source": "7369319242bd",
+      "target": "840e49b16f35"
     }
   ]
 }

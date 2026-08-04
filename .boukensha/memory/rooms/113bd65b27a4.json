@@ -6,9 +6,8 @@
     "west": null
   },
   "npcs": [
-    "A creepy little crawling thing is scuttling along the floor at your feet."
+    "Someone's pet dragon has escaped and left his collar here.",
+    "A newbie is here looking terribly confused."
   ],
-  "items": [
-    "The corpse of the baby dragon is lying here."
-  ]
+  "items": []
 }

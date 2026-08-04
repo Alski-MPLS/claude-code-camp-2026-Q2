@@ -6,7 +6,9 @@
     "south": null
   },
   "npcs": [
-    "A creepy little crawling thing is scuttling along the floor at your feet."
+    "The newbie monster stands here looking confused.  Kill him!  Kill him!"
   ],
-  "items": []
+  "items": [
+    "The corpse of the newbie monster is lying here."
+  ]
 }

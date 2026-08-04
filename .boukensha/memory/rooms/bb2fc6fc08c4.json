@@ -1,0 +1,10 @@
+{
+  "title": "The Lane",
+  "description": "You are strolling along a pleasant, shady lane.  The road is lined on both sides by tall, stately trees which lend the scene with a sense of quiet serenity. You can follow the road north or south.",
+  "exits": {
+    "north": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

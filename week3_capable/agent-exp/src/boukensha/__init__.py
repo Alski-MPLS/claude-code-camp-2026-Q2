@@ -212,6 +212,7 @@ def run(
             world_graph=_shared_graph,
             prev_hash_ref=_prev_hash_ref,
             current_npcs_ref=_current_npcs_ref,
+            goals_dir=_goals_dir,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session
@@ -406,6 +407,7 @@ def repl(
             world_graph=_shared_graph,
             prev_hash_ref=_prev_hash_ref,
             current_npcs_ref=_current_npcs_ref,
+            goals_dir=_goals_dir,
             **{k: v for k, v in resolved_mud.items() if k in ("name", "password")},
         )
         # Register token-saving tools that share the same session

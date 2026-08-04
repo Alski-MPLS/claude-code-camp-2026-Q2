@@ -2,6 +2,8 @@
   "title": "A Nexus",
   "description": "Well... you've reached an intersection of two passages, to the north and east, the passage brightens, while the darker hallway continues to the south.",
   "exits": {
+    "north": null,
+    "east": null,
     "south": null,
     "west": null
   },

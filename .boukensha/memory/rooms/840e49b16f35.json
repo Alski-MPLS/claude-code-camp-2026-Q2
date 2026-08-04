@@ -1,0 +1,11 @@
+{
+  "title": "The King's Road",
+  "description": "You stand at the beginning of the actual King's Road.  The road is wide enough for several horses to ride along side by side with room to spare. The stones which make up the road have been put into place with such skill that the road seems to be perfectly smooth and perfectly straight. You spot a small trail leading to the south through the undergrowth which surrounds the road at this point. A traveller passes by and waves cheerfully at you.",
+  "exits": {
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": []
+}

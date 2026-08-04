@@ -15,6 +15,7 @@ class GoalManager:
         "current_goal": "Explore the MUD",
         "priority": "explore",
         "hp_flee_threshold": 5,
+        "gold_deposit_threshold": 200,
         "status": "active",
         "notes": "",
         "last_updated": None,

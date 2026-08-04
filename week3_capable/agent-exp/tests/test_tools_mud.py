@@ -65,7 +65,7 @@ def test_mud_register_adds_expected_tools():
 
     expected = [
         "mud_connect", "mud_disconnect", "mud_status",
-        "look", "examine", "check", "wait",
+        "look", "examine", "read", "check", "wait",
         "move", "flee", "set_position", "track", "door", "portal",
         "attack", "skill_strike", "consider",
         "say", "tell", "channel_say",
@@ -104,6 +104,85 @@ def test_tool_returns_error_when_not_connected():
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
     result = registry.dispatch("look", {})
     assert result.startswith("error:")
+
+
+def test_get_item_with_count_one_and_multiword_item_omits_leading_numeral():
+    # Real-world bug: get_item(item="shiny newbie dagger", count=1) sent
+    # "get 1 shiny newbie dagger" — the bare leading numeral desynced
+    # CircleMUD's argument parsing, which misfired onto an unrelated
+    # container ("A bright green newbie vest is not a container.") instead
+    # of picking up the dagger. count=1 means the same as omitting it.
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You get a shiny newbie dagger. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    registry.dispatch("get_item", {"item": "shiny newbie dagger", "count": 1})
+
+    mock_session.send_command.assert_called_once_with("get shiny newbie dagger")
+
+
+def test_get_item_without_count_sends_plain_item_name():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You get a dagger. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    registry.dispatch("get_item", {"item": "dagger"})
+
+    mock_session.send_command.assert_called_once_with("get dagger")
+
+
+def test_get_item_with_count_greater_than_one_still_includes_numeral():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You get 3 coins. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    registry.dispatch("get_item", {"item": "coins", "count": 3})
+
+    mock_session.send_command.assert_called_once_with("get 3 coins")
+
+
+def test_get_item_with_container_appends_it_after_item():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You get all from the corpse. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    registry.dispatch("get_item", {"item": "all", "container": "corpse", "count": 1})
+
+    mock_session.send_command.assert_called_once_with("get all corpse")
+
+
+def test_read_sends_read_command_when_connected():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "It's a large sign warning of danger ahead. > "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("read", {"target": "sign"})
+    mock_session.send_command.assert_called_once_with("read sign")
+    assert "sign" in result
+
+
+def test_read_returns_error_when_not_connected():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = False
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("read", {"target": "sign"})
+    assert result.startswith("error:")
+    mock_session.send_command.assert_not_called()
 
 
 def test_look_sends_look_command_when_connected():
@@ -149,6 +228,22 @@ def test_attack_succeeds_when_target_matches_known_npc():
     result = registry.dispatch("attack", {"target": "creepy crawler"})
     mock_session.send_command.assert_called_once_with("kill creepy crawler")
     assert "hit" in result.lower()
+
+
+def test_attack_redirects_to_combat_loop_when_already_fighting():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You're fighting the best you can! > "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret",
+        current_npcs_ref=[["a creepy crawler"]],
+    )
+    result = registry.dispatch("attack", {"target": "creepy crawler"})
+    assert "fighting the best you can" in result.lower()
+    assert "combat_loop" in result
+    assert "creepy crawler" in result
 
 
 def test_move_refreshes_known_npcs_for_combat_tools():
@@ -615,6 +710,63 @@ def test_check_score_omits_level_up_advisory_when_level_unchanged(tmp_path):
     assert "[Level up!]" not in result
 
 
+def test_check_score_appends_gold_deposit_advisory_when_over_threshold(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 50(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "You have 5829 exp, 214 gold coins, and 0 questpoints.\n"
+        "This ranks you as Dummy the Sentry (level 3). > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", goals_dir=tmp_path
+    )
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Bank]" in result
+    assert "214 gold" in result
+    assert "amount=107" in result
+
+
+def test_check_score_omits_gold_deposit_advisory_below_threshold(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 50(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "You have 5829 exp, 40 gold coins, and 0 questpoints.\n"
+        "This ranks you as Dummy the Sentry (level 3). > "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", goals_dir=tmp_path
+    )
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Bank]" not in result
+
+
+def test_check_score_omits_gold_deposit_advisory_without_goals_dir():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You have 50(50) hit, 100(100) mana and 88(88) movement points.\n"
+        "You have 5829 exp, 214 gold coins, and 0 questpoints.\n"
+        "This ranks you as Dummy the Sentry (level 3). > "
+    )
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("check", {"kind": "score"})
+
+    assert "[Bank]" not in result
+
+
 def test_check_score_partial_read_does_not_delete_stored_level(tmp_path):
     from boukensha.memory.player_tracker import PlayerTracker
     PlayerTracker(tmp_path).update_stats("Tester", {
@@ -686,17 +838,42 @@ def test_door_lock_with_direction_sends_lock_door_direction():
     assert "click" in result
 
 
+def test_parse_bank_balance_matches_current_balance_line():
+    from boukensha.tools.mud import _parse_bank_balance
+    assert _parse_bank_balance("Current balance: 200 coins.\n") == 200
+
+
+def test_parse_bank_balance_matches_live_server_phrasing():
+    # Real transcript from the live MUD: "Your current balance is 135 coins."
+    from boukensha.tools.mud import _parse_bank_balance
+    assert _parse_bank_balance("Your current balance is 135 coins.\n") == 135
+
+
+def test_parse_bank_balance_handles_comma_thousands():
+    from boukensha.tools.mud import _parse_bank_balance
+    assert _parse_bank_balance("Current balance: 1,500 coins.\n") == 1500
+
+
+def test_parse_bank_balance_returns_none_when_no_match():
+    from boukensha.tools.mud import _parse_bank_balance
+    assert _parse_bank_balance("You deposit 400 coins.\n") is None
+
+
 def test_bank_deposit_sends_deposit_amount():
     registry = _make_registry()
     mock_session = MagicMock()
     mock_session.is_open = True
     mock_session.drain.return_value = ""
-    mock_session.read_until_prompt.return_value = "You deposit 400 coins.\n"
+    mock_session.read_until_prompt.side_effect = [
+        "You deposit 400 coins.\n",
+        "Current balance: 400 coins.\n",
+    ]
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
 
     result = registry.dispatch("bank", {"action": "deposit", "amount": 400})
 
-    mock_session.send_command.assert_called_once_with("deposit 400")
+    mock_session.send_command.assert_any_call("deposit 400")
+    mock_session.send_command.assert_any_call("balance")
     assert "deposit" in result
 
 
@@ -705,12 +882,16 @@ def test_bank_withdraw_sends_withdraw_amount():
     mock_session = MagicMock()
     mock_session.is_open = True
     mock_session.drain.return_value = ""
-    mock_session.read_until_prompt.return_value = "You withdraw 100 coins.\n"
+    mock_session.read_until_prompt.side_effect = [
+        "You withdraw 100 coins.\n",
+        "Current balance: 300 coins.\n",
+    ]
     Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
 
     result = registry.dispatch("bank", {"action": "withdraw", "amount": 100})
 
-    mock_session.send_command.assert_called_once_with("withdraw 100")
+    mock_session.send_command.assert_any_call("withdraw 100")
+    mock_session.send_command.assert_any_call("balance")
     assert "withdraw" in result
 
 
@@ -726,6 +907,97 @@ def test_bank_balance_ignores_amount():
 
     mock_session.send_command.assert_called_once_with("balance")
     assert "balance" in result
+
+
+def test_bank_balance_persists_bank_gold_to_tracker(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Current balance: 200 coins.\n"
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    registry.dispatch("bank", {"action": "balance"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    stats = PlayerTracker(tmp_path).read_all()["Tester"]["stats"]
+    assert stats["bank_gold"] == 200
+
+
+def test_bank_balance_does_not_append_extra_line():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Current balance: 200 coins.\n"
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "balance"})
+
+    assert "[Bank balance]" not in result
+
+
+def test_bank_deposit_appends_bank_balance_line_and_persists(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "You deposit 400 coins.\n",
+        "Current balance: 400 coins.\n",
+    ]
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+
+    result = registry.dispatch("bank", {"action": "deposit", "amount": 400})
+
+    assert "[Bank balance] You now have 400 coins in the bank." in result
+    from boukensha.memory.player_tracker import PlayerTracker
+    stats = PlayerTracker(tmp_path).read_all()["Tester"]["stats"]
+    assert stats["bank_gold"] == 400
+
+
+def test_bank_deposit_preserves_existing_tracked_stats(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "You deposit 100 coins.\n",
+        "Current balance: 100 coins.\n",
+    ]
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    from boukensha.memory.player_tracker import PlayerTracker
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_stats("Tester", {"hp": 50, "max_hp": 50, "gold": 218})
+
+    registry.dispatch("bank", {"action": "deposit", "amount": 100})
+
+    stats = tracker.read_all()["Tester"]["stats"]
+    assert stats["bank_gold"] == 100
+    assert stats["hp"] == 50
+    assert stats["gold"] == 218
+
+
+def test_bank_without_memory_dir_does_not_crash():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "You deposit 100 coins.\n",
+        "Current balance: 100 coins.\n",
+    ]
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+
+    result = registry.dispatch("bank", {"action": "deposit", "amount": 100})
+
+    assert "deposit" in result
 
 
 def test_bank_rejects_invalid_action():

@@ -1,0 +1,11 @@
+{
+  "title": "The Plains",
+  "description": "You are standing on the plains.  This is a vast desolate place where the wind can howl undisturbed since nothing but you bars its way.  However you are not the first to wander here.  Before you somebody has left a small path.  The path looks rather bewildered and is not the kind of path to lead to anywhere significant or important but it seems to have made up its mind to enter the hills far away north.  A narrow trail scars its way off to the east as it leads up towards a hillside.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null
+  },
+  "npcs": [],
+  "items": []
+}

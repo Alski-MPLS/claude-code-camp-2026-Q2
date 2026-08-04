@@ -225,13 +225,16 @@ class Combat:
             "goal_update",
             description=(
                 "Update the agent's current goal. Fields: current_goal (str), "
-                "priority (explore|fight|heal|flee|idle), status (active|paused|completed|flee), notes (str)."
+                "priority (explore|fight|heal|flee|idle), status (active|paused|completed|flee), "
+                "notes (str), hp_flee_threshold (int), gold_deposit_threshold (int)."
             ),
             parameters={
                 "current_goal": {"type": "string", "description": "New goal description (optional)"},
                 "priority": {"type": "string", "description": "explore | fight | heal | flee | idle (optional)"},
                 "status": {"type": "string", "description": "active | paused | completed | flee (optional)"},
                 "notes": {"type": "string", "description": "Additional notes (optional)"},
+                "hp_flee_threshold": {"type": "integer", "description": "Flee combat when HP drops to this value (optional)"},
+                "gold_deposit_threshold": {"type": "integer", "description": "Advise depositing gold once carried gold reaches this value (optional)"},
             },
             block=lambda **kwargs: _do_goal_update(gm, kwargs),
         )
@@ -243,6 +246,7 @@ def _format_goal(goal: dict[str, Any]) -> str:
         f"priority: {goal.get('priority', '')}",
         f"status: {goal.get('status', '')}",
         f"hp_flee_threshold: {goal.get('hp_flee_threshold', 5)}",
+        f"gold_deposit_threshold: {goal.get('gold_deposit_threshold', 200)}",
         f"notes: {goal.get('notes', '')}",
     ]
     return "\n".join(lines)
@@ -250,7 +254,7 @@ def _format_goal(goal: dict[str, Any]) -> str:
 
 def _do_goal_update(gm: GoalManager, kwargs: dict[str, Any]) -> str:
     filtered = {k: v for k, v in kwargs.items() if v is not None and k in (
-        "current_goal", "priority", "status", "notes", "hp_flee_threshold"
+        "current_goal", "priority", "status", "notes", "hp_flee_threshold", "gold_deposit_threshold"
     )}
     if filtered:
         gm.update(**filtered)

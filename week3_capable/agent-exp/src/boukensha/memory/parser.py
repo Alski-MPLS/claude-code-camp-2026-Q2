@@ -73,7 +73,7 @@ class RoomParser:
 
             # After exits: classify remaining lines as NPC or item (heuristic)
             low = stripped.lower()
-            if low.endswith("is here.") or low.endswith("lies here.") or low.endswith("here.") or low.endswith("."):
+            if low.endswith(("is here.", "lies here.", "here.", ".", "!", "?")):
                 if "lies here" in low or "is lying here" in low:
                     items.append(stripped)
                 elif low.endswith("is here.") and re.match(r"^[A-Z]", stripped):

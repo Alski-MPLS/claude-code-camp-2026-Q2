@@ -14,6 +14,7 @@ Tools registered (grouped by concern):
   Perception
     look              — look at the room or a specific target
     examine           — examine something in detail
+    read              — read a sign, note, scroll, book, or board message
     check             — query self-info (score = HP/exp/gold/level, inventory, equipment, exits…)
     wait              — pause real seconds so server-side regen ticks can actually happen
 
@@ -71,6 +72,8 @@ from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
 from boukensha.memory.room_memory import RoomMemory
 from boukensha.memory.player_tracker import PlayerTracker
+from boukensha.goals.goal_manager import GoalManager
+from boukensha.goals.gold_monitor import GoldMonitor
 
 if TYPE_CHECKING:
     from boukensha.memory.world_graph import WorldGraph
@@ -107,6 +110,7 @@ _EQUIP_OPS     = {"wear", "wield", "hold", "grab", "remove"}
 _CONSUME_MODES = {"eat", "drink", "taste", "sip"}
 _SHOP_OPS      = {"buy", "sell", "list", "value", "offer"}
 _BANK_OPS      = {"deposit", "withdraw", "balance"}
+_BANK_BALANCE_RE = re.compile(r"balance\b[:\s]*(?:is\s+)?([\d,]+)\s*coins?", re.IGNORECASE)
 _DOOR_OPS      = {"open", "close", "lock", "unlock"}
 _PORTAL_OPS    = {"enter", "leave"}
 _INFO_SELF     = {
@@ -444,6 +448,7 @@ class Mud:
         world_graph: "WorldGraph | None" = None,
         prev_hash_ref: list[str | None] | None = None,
         current_npcs_ref: list[list[str]] | None = None,
+        goals_dir: str | Path | None = None,
     ) -> None:
         # Recording the world graph here — not just in process_room/navigate_to —
         # means every raw 'move' updates the map immediately, so navigate_to can
@@ -451,6 +456,7 @@ class Mud:
         # process_room call in between.
         mem = RoomMemory(memory_dir) if memory_dir is not None else None
         graph = world_graph if (memory_dir is not None and world_graph is not None) else None
+        gm = GoalManager(goals_dir) if goals_dir is not None else None
         tracker = PlayerTracker(memory_dir) if memory_dir is not None else None
         item_stats = ItemStatsStore(memory_dir) if memory_dir is not None else None
         _prev: list[str | None] = prev_hash_ref if prev_hash_ref is not None else [None]
@@ -535,6 +541,19 @@ class Mud:
             block=lambda target, **_: _guard(session) or _send(session, f"examine {target}"),
         )
 
+        registry.tool(
+            "read",
+            description=(
+                "Read a sign, note, scroll, book, or other readable object — distinct from "
+                "look/examine, which only describe an object, not its written text. Also "
+                "reads numbered bulletin board messages (pass the number as target)."
+            ),
+            parameters={
+                "target": {"type": "string", "description": "The object to read, or a board message number"},
+            },
+            block=lambda target, **_: _guard(session) or _send(session, f"read {target}"),
+        )
+
         def _check_and_record(kind: str) -> str:
             raw = _check_info(session, kind)
             k = kind.strip().lower()
@@ -554,6 +573,11 @@ class Mud:
                         and new_level > previous_level
                     ):
                         raw += _level_up_advisory(previous_level, stats)
+                    gold = stats.get("gold")
+                    if gm is not None and gold is not None:
+                        advisory = GoldMonitor.check(gold, gm.read())
+                        if advisory:
+                            raw += advisory
             elif k == "equipment" and not raw.startswith("error:"):
                 slots = parse_equipment(raw)
                 # `{}` means "this IS equipment output and nothing is worn" —
@@ -656,7 +680,16 @@ class Mud:
         registry.tool(
             "set_position",
             description=(
-                "Change body position. Use 'rest' or 'sleep' to recover HP/mana. "
+                "Change body position. Sitting/standing regenerates HP/mana/movement "
+                "slowly; 'rest' regenerates faster than standing; 'sleep' regenerates "
+                "fastest of all but leaves you vulnerable to attack while asleep — only "
+                "sleep in a known-safe spot (e.g. back in town, or an open area known to "
+                "be free of mobs like the Great Field), never out exploring or near mobs; "
+                "use 'rest' instead if there's any chance something could wander in. "
+                "Movement points in particular regen on a slow real-time tick "
+                "— a single wait(seconds=30) can easily land between ticks and show ~0 "
+                "recovery; don't mistake that for being broken, just wait() again "
+                "(repeatedly, up to seconds=90 per call) while resting or sleeping. "
                 "Must be standing to move or fight."
             ),
             parameters={
@@ -897,6 +930,22 @@ class Mud:
             block=lambda action, args=None, **_: _shop(session, action, args),
         )
 
+        def _bank_and_record(action: str, amount: int | None) -> str:
+            result = _bank(session, action, amount)
+            if result.startswith("error:"):
+                return result
+            act = action.strip().lower()
+            # deposit/withdraw replies only confirm the amount transacted, not the
+            # new total — ask the server for ground truth rather than inferring it.
+            balance_text = result if act == "balance" else _bank(session, "balance", None)
+            balance = _parse_bank_balance(balance_text)
+            if balance is not None and tracker is not None:
+                previous = (tracker.read_all().get(name) or {}).get("stats") or {}
+                tracker.update_stats(name, {**previous, "bank_gold": balance})
+                if act != "balance":
+                    result += f"\n\n[Bank balance] You now have {balance} coins in the bank."
+            return result
+
         registry.tool(
             "bank",
             description=(
@@ -908,7 +957,7 @@ class Mud:
                 "action": {"type": "string", "description": "deposit | withdraw | balance"},
                 "amount": {"type": "integer", "description": "Gold amount (omit for balance)"},
             },
-            block=lambda action, amount=None, **_: _bank(session, action, amount),
+            block=lambda action, amount=None, **_: _bank_and_record(action, amount),
         )
 
         registry.tool(
@@ -1082,7 +1131,23 @@ def _attack(session: MudSession, target: str, style: str, npcs: list[str]) -> st
         return err
     if not _match_npc(target, npcs):
         return _no_living_target_message(target, npcs)
-    return _send(session, f"{style.strip().lower()} {target}")
+    result = _send(session, f"{style.strip().lower()} {target}")
+    if "fighting the best you can" in result.lower():
+        # Combat rounds happen automatically on the MUD's own pulse, pushed
+        # asynchronously between tool calls — but _send() drains the socket
+        # buffer before every command, so that round output is silently
+        # discarded by the time the LLM calls attack() again. All a repeated
+        # attack/kill gets back is this same static line forever, with no
+        # visible progress, because it's a no-op while already fighting.
+        # combat_loop() reads rounds without draining between them, so it
+        # actually sees the fight play out — redirect there instead of
+        # inviting another blind retry of this tool.
+        result += (
+            "\n\n[Already fighting] Repeated attack calls won't show round-by-round "
+            f"progress once combat has started. Use combat_loop(target={target!r}) "
+            "to let the fight play out automatically instead."
+        )
+    return result
 
 
 def _skill_strike(session: MudSession, skill: str, target: str, npcs: list[str]) -> str:
@@ -1132,7 +1197,13 @@ def _get_item(session: MudSession, item: str, container: str | None, count: int 
     if err:
         return err
     parts = ["get"]
-    if count is not None:
+    # CircleMUD's `get` only ever takes <object> or <object> <container> — there's
+    # no "get <N> <item>" form. A bare leading numeral desyncs the server's
+    # argument parsing once `item` has more than one word (confirmed: "get 1 shiny
+    # newbie dagger" misfires onto an unrelated container, while "get 1 dagger"
+    # happens to survive by luck). count=1 means the same thing as omitting it, so
+    # only emit a count token when it's actually asking for more than one.
+    if count is not None and count != 1:
         parts.append(str(count))
     parts.append(item)
     if container:
@@ -1235,6 +1306,13 @@ def _shop(session: MudSession, action: str, args: str | None) -> str:
     if args:
         cmd += f" {args}"
     return _send(session, cmd)
+
+
+def _parse_bank_balance(text: str) -> int | None:
+    m = _BANK_BALANCE_RE.search(text)
+    if not m:
+        return None
+    return int(m.group(1).replace(",", ""))
 
 
 def _bank(session: MudSession, action: str, amount: int | None) -> str:

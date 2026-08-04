@@ -3,9 +3,10 @@
   "description": "Another corner of the passage, and just as untidy as the rest of this place (maybe more so?).  There is a door to the east though... wonder where that leads?  Oh, and the hallway continues west and north.",
   "exits": {
     "north": null,
-    "east": null,
     "west": null
   },
   "npcs": [],
-  "items": []
+  "items": [
+    "The corpse of the baby dragon is lying here."
+  ]
 }

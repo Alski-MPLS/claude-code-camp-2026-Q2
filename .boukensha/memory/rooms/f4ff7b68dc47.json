@@ -3,11 +3,10 @@
   "description": "Lots of bottles and flasks lie about this room, but it all looks like worthless clutter.  It appears whatever alchemist has been working here is really very adept at his art.  There are a lot of formulae and spells written on the walls too... couldn't he buy some paper?  There is a door to the north, and also a dark stairway in the corner leading down, with a large sign next to it that you probably should read...",
   "exits": {
     "north": null,
+    "west": null,
     "down": null
   },
-  "npcs": [
-    "The Newbie Alchemist is here trying to make something."
-  ],
+  "npcs": [],
   "items": [
     "The corpse of the Newbie Alchemist is lying here."
   ]

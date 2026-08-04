@@ -4,8 +4,6 @@
   "exits": {
     "east": null
   },
-  "npcs": [
-    "A newbie is here wandering about aimlessly."
-  ],
+  "npcs": [],
   "items": []
 }

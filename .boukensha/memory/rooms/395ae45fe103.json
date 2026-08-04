@@ -2,11 +2,8 @@
   "title": "Outside The East Gate Of Midgaard",
   "description": "You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  To the east the plains stretch out in the distance.",
   "exits": {
-    "east": null,
-    "west": null
+    "east": null
   },
   "npcs": [],
-  "items": [
-    "A Peacekeeper is standing here, ready to jump in at the first sign of trouble."
-  ]
+  "items": []
 }

@@ -6,10 +6,12 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
+    "The Mayor is standing here.",
+    "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate."
-  ]
+  ],
+  "items": []
 }
