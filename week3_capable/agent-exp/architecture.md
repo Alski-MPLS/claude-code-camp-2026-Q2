@@ -580,6 +580,6 @@ agent-exp/
 - **WorldGraph uses networkx** — already a transitive dependency via graphify; if not, add it to `pyproject.toml`.
 - **Dashboard is modular** — each tab is a separate JS module. Adding a new tab means: (1) add a `<button>` in `index.html`, (2) add a JS module, (3) optionally add a `/api/...` endpoint in `app.py`. No changes to core agent code.
 - **`--no-web` still works** — `repl(tui=True)` launches the Textual TUI exactly as before; `repl(tui=False)` gives the plain REPL. The web path is additive.
-- **Log_viz Ruby app** — superseded by the Sessions tab in the Python dashboard. The `log_viz/` folder can be kept for reference or deleted.
+- **Log_viz Ruby app** — superseded by the Sessions tab in the Python dashboard. The `log_viz/` folder has been deleted.
 - **Reverse-edge inference is guarded, not naive** — `WorldGraph.add_edge()` only fabricates a return path when nothing contradicts it (see "Exploration & Route-Walking Reliability" above). A confirmed one-way passage is never silently overwritten.
 - **Combat and navigation gates are code, not prompt instructions** — both were added after an LLM demonstrably saw a clear warning (a dangerous `consider` result, an absent target) and proceeded anyway. A hard refusal in the tool itself can't be argued past the way a system-prompt instruction can; `force=true` exists for the rare deliberate override.
