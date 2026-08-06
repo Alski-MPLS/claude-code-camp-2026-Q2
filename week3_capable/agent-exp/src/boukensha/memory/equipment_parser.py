@@ -144,6 +144,18 @@ def parse_equipment(text: str) -> dict[str, str] | None:
 _INVENTORY_HEADER_RE = re.compile(r"you are (carrying:|not carrying anything)", re.IGNORECASE)
 _INVENTORY_COUNT_RE = re.compile(r"^\(\s*(\d+)\s*\)\s*(.+)$")
 
+# A leaked prompt/vitals remnant, not a real inventory line — either a bare
+# ">" or a compact status line like "93H 100M 89V >" or "< 100H 100M 100V >"
+# that survived _strip_vitals_prompt (which only strips prompts with no
+# leading "<"). Anything asynchronous the MUD pushed between the command
+# echo and the actual listing (mob movement, tells, hunger ticks) is *not*
+# covered by this — see the "only scan after the header line" fix below,
+# which handles leading noise; this regex only handles trailing noise that
+# looks like a prompt.
+_PROMPT_REMNANT_RE = re.compile(
+    r"^[<(]?\s*(-?\d+H\s+-?\d+M\s+-?\d+V\b[^>]*)?>\s*$", re.IGNORECASE
+)
+
 
 def parse_inventory(text: str) -> list[dict] | None:
     """Parse 'inventory' command output into [{"name": str, "count": int}, ...].
@@ -152,14 +164,25 @@ def parse_inventory(text: str) -> list[dict] | None:
     command), and ``[]`` when it IS inventory output but nothing is carried
     ("You are not carrying anything.") — same None-vs-empty contract as
     ``parse_equipment``.
+
+    Only scans lines *after* the header — a live server can push
+    asynchronous text (mob movement, tells, sustenance ticks) between the
+    command echo and the actual listing, and treating every non-empty line
+    in the whole response as a potential item would record that noise as
+    phantom inventory. Trailing prompt/vitals remnants after the last real
+    item are filtered by ``_PROMPT_REMNANT_RE``.
     """
-    if not _INVENTORY_HEADER_RE.search(text):
+    lines = text.splitlines()
+    header_idx = next(
+        (i for i, line in enumerate(lines) if _INVENTORY_HEADER_RE.search(line)), None
+    )
+    if header_idx is None:
         return None
 
     items: list[dict] = []
-    for line in text.splitlines():
+    for line in lines[header_idx + 1:]:
         stripped = line.strip()
-        if not stripped or stripped == ">" or _INVENTORY_HEADER_RE.search(stripped):
+        if not stripped or _PROMPT_REMNANT_RE.match(stripped):
             continue
         m = _INVENTORY_COUNT_RE.match(stripped)
         if m:

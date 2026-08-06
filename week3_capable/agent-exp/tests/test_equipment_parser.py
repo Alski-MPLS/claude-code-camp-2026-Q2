@@ -245,3 +245,29 @@ def test_parse_inventory_returns_none_for_empty_string():
 def test_parse_inventory_strips_trailing_whitespace_from_item_name():
     text = "You are carrying:\n( 3) a torch   \n"
     assert parse_inventory(text) == [{"name": "a torch", "count": 3}]
+
+
+def test_parse_inventory_ignores_bare_prompt_remnant():
+    text = "You are carrying:\na torch\n> \n"
+    assert parse_inventory(text) == [{"name": "a torch", "count": 1}]
+
+
+def test_parse_inventory_ignores_bracketed_vitals_prompt_remnant():
+    # A live server can push a compact vitals prompt like "< 100H 100M 100V >"
+    # that _strip_vitals_prompt doesn't catch because of the leading "<" —
+    # this must not be recorded as a carried item.
+    text = "You are carrying:\na torch\n< 100H 100M 100V >\n"
+    assert parse_inventory(text) == [{"name": "a torch", "count": 1}]
+
+
+def test_parse_inventory_ignores_bare_vitals_prompt_remnant():
+    text = "You are carrying:\na torch\n93H 100M 89V >\n"
+    assert parse_inventory(text) == [{"name": "a torch", "count": 1}]
+
+
+def test_parse_inventory_ignores_noise_lines_before_the_header():
+    # Anything the MUD pushed asynchronously before the actual inventory
+    # listing (mob movement, tells, sustenance ticks) must not be treated
+    # as a carried item just because it's a non-empty line in the response.
+    text = "The city guard leaves west.\nYou are hungry.\nYou are carrying:\na torch\n"
+    assert parse_inventory(text) == [{"name": "a torch", "count": 1}]
