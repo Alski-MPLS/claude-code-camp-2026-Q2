@@ -15,6 +15,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'overview') loadOverview();
     if (btn.dataset.tab === 'score') loadScore();
+    if (btn.dataset.tab === 'inventory') loadInventory();
     if (btn.dataset.tab === 'map') window.loadMap && window.loadMap();
     if (btn.dataset.tab === 'goals') loadGoals();
     if (btn.dataset.tab === 'sessions') loadSessions();
@@ -79,6 +80,10 @@ es.onmessage = e => {
     const scoreTab = document.getElementById('tab-score');
     if (scoreTab && scoreTab.classList.contains('active')) {
       loadScore();
+    }
+    const inventoryTab = document.getElementById('tab-inventory');
+    if (inventoryTab && inventoryTab.classList.contains('active')) {
+      loadInventory();
     }
   }
 };
@@ -169,6 +174,46 @@ async function loadScore() {
       ${flags.length ? `<div class="score-flags">${flags.join(', ')}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// Inventory tab
+function equipmentList(equipment) {
+  const entries = Object.entries(equipment || {});
+  if (!entries.length) return '<p class="overview-empty">Nothing equipped.</p>';
+  return '<ul class="inventory-list">' + entries.map(([slot, item]) =>
+    `<li><span class="inventory-slot">${escapeHtml(slot)}</span> ${escapeHtml(item)}</li>`
+  ).join('') + '</ul>';
+}
+
+function carriedList(inventory) {
+  if (inventory == null) return '<p class="overview-empty">Inventory not yet checked.</p>';
+  if (!inventory.length) return '<p class="overview-empty">Not carrying anything.</p>';
+  return '<ul class="inventory-list">' + inventory.map(item =>
+    `<li>${escapeHtml(item.name)}${item.count > 1 ? ` <span class="inventory-count">×${item.count}</span>` : ''}</li>`
+  ).join('') + '</ul>';
+}
+
+async function loadInventory() {
+  const el = document.getElementById('inventory-cards');
+  const r = await fetch('/api/players');
+  const players = await r.json();
+  if (!players.length) {
+    el.innerHTML = '<p class="overview-empty">No players tracked yet.</p>';
+    return;
+  }
+  el.innerHTML = players.map(p => `<div class="score-card">
+    <div class="score-card-header"><span class="score-card-name">${escapeHtml(p.name)}</span></div>
+    <div class="inventory-columns">
+      <div>
+        <div class="inventory-column-label">Equipped</div>
+        ${equipmentList(p.equipment)}
+      </div>
+      <div>
+        <div class="inventory-column-label">Carrying</div>
+        ${carriedList(p.inventory)}
+      </div>
+    </div>
+  </div>`).join('');
 }
 
 // Goals tab
