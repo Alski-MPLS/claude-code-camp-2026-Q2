@@ -1,4 +1,4 @@
-from boukensha.memory.equipment_parser import parse_equipment, parse_identify
+from boukensha.memory.equipment_parser import parse_equipment, parse_identify, parse_inventory
 
 
 def test_parse_equipment_extracts_worn_slots():
@@ -210,3 +210,38 @@ def test_parse_equipment_and_parse_identify_agree_on_slot_keys():
             f"Object 'a thing', Item type: WORN\nThis item can be worn on: TAKE {bit}\n"
         )
         assert list(eq) == [ident["wear_slot"]], (equip_line, bit)
+
+
+def test_parse_inventory_extracts_counted_and_uncounted_items():
+    text = (
+        "You are carrying:\n"
+        "( 2) a Black Pawn's Sword\n"
+        "some Black Pawn Armor\n"
+        "a shiny newbie dagger ..It has a soft glowing aura!\n"
+    )
+    assert parse_inventory(text) == [
+        {"name": "a Black Pawn's Sword", "count": 2},
+        {"name": "some Black Pawn Armor", "count": 1},
+        {"name": "a shiny newbie dagger ..It has a soft glowing aura!", "count": 1},
+    ]
+
+
+def test_parse_inventory_returns_empty_list_for_carrying_nothing():
+    assert parse_inventory("You are not carrying anything.\n") == []
+
+
+def test_parse_inventory_returns_empty_list_for_header_with_no_items():
+    assert parse_inventory("You are carrying:\n") == []
+
+
+def test_parse_inventory_returns_none_for_unrelated_text():
+    assert parse_inventory("You aren't holding that item.\n") is None
+
+
+def test_parse_inventory_returns_none_for_empty_string():
+    assert parse_inventory("") is None
+
+
+def test_parse_inventory_strips_trailing_whitespace_from_item_name():
+    text = "You are carrying:\n( 3) a torch   \n"
+    assert parse_inventory(text) == [{"name": "a torch", "count": 3}]

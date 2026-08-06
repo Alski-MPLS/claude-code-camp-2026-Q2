@@ -139,6 +139,36 @@ def parse_equipment(text: str) -> dict[str, str] | None:
     return {} if _EQUIP_HEADER_RE.search(text) else None
 
 
+# ── 'inventory' output ───────────────────────────────────────────────────────
+
+_INVENTORY_HEADER_RE = re.compile(r"you are (carrying:|not carrying anything)", re.IGNORECASE)
+_INVENTORY_COUNT_RE = re.compile(r"^\(\s*(\d+)\s*\)\s*(.+)$")
+
+
+def parse_inventory(text: str) -> list[dict] | None:
+    """Parse 'inventory' command output into [{"name": str, "count": int}, ...].
+
+    Returns ``None`` when the text isn't inventory output at all (unrelated
+    command), and ``[]`` when it IS inventory output but nothing is carried
+    ("You are not carrying anything.") — same None-vs-empty contract as
+    ``parse_equipment``.
+    """
+    if not _INVENTORY_HEADER_RE.search(text):
+        return None
+
+    items: list[dict] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or _INVENTORY_HEADER_RE.search(stripped):
+            continue
+        m = _INVENTORY_COUNT_RE.match(stripped)
+        if m:
+            items.append({"name": m.group(2).strip(), "count": int(m.group(1))})
+        else:
+            items.append({"name": stripped, "count": 1})
+    return items
+
+
 # ── 'identify' output ────────────────────────────────────────────────────────
 
 # Non-greedy up to the literal "', Item type:" so item names containing an
