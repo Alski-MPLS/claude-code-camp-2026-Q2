@@ -80,7 +80,7 @@ def test_parse_inventory_strips_trailing_whitespace_from_item_name():
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_equipment_parser.py -k parse_inventory -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_equipment_parser.py -k parse_inventory -v`
 Expected: FAIL with `ImportError` or `NameError: name 'parse_inventory' is not defined`
 
 - [ ] **Step 3: Write the implementation**
@@ -120,7 +120,7 @@ def parse_inventory(text: str) -> list[dict] | None:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_equipment_parser.py -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_equipment_parser.py -v`
 Expected: PASS (all tests in the file, including the pre-existing equipment/identify ones — confirms no regression)
 
 - [ ] **Step 5: Commit**
@@ -179,7 +179,7 @@ def test_update_inventory_overwrites_previous_snapshot(tmp_path):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_player_tracker.py -k update_inventory -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_player_tracker.py -k update_inventory -v`
 Expected: FAIL with `AttributeError: 'PlayerTracker' object has no attribute 'update_inventory'`
 
 - [ ] **Step 3: Write the implementation**
@@ -200,7 +200,7 @@ Add to `src/boukensha/memory/player_tracker.py`, after `update_equipment` (after
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_player_tracker.py -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_player_tracker.py -v`
 Expected: PASS (all tests in the file)
 
 - [ ] **Step 5: Commit**
@@ -301,7 +301,7 @@ def test_check_non_inventory_output_does_not_clobber_recorded_snapshot(tmp_path)
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_tools_mud.py -k inventory -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_tools_mud.py -k inventory -v`
 Expected: FAIL — `data["Tester"]` has no `"inventory"` key (KeyError), since nothing persists it yet.
 
 - [ ] **Step 3: Write the implementation**
@@ -326,7 +326,7 @@ In `_check_and_record` (`src/boukensha/tools/mud.py:557-588`), add an `elif` bra
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/test_tools_mud.py -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/test_tools_mud.py -v`
 Expected: PASS (all tests in the file — confirms no regression to the score/equipment branches)
 
 - [ ] **Step 5: Commit**
@@ -349,7 +349,7 @@ git commit -m "feat: persist check(kind=inventory) results to PlayerTracker"
 
 - [ ] **Step 1: Run the full test suite**
 
-Run: `cd week3_capable/agent-exp && uv run pytest tests/ -v`
+Run: `cd week3_capable/agent-exp && uv run python -m pytest tests/ -v`
 Expected: PASS, 0 failures (this repo's existing suite plus the new tests from Tasks 1-3)
 
 - [ ] **Step 2: Commit**
