@@ -9,6 +9,9 @@ At this point, the technical goal is to continue building out the agent to make 
 - How to gain gold.
 - How to explore.
 
+*Note: I will upload a sample of session files before week 3 is over. I plan to just upload 1 session of game play into a new folder (./.boukenha/session/). There is a bunch of information. If you plan on reviewing them through the program, you will have to create a new folder called "sessions" and copy the files there.*
+
+
 ## Technical Uncertainty
 Still dealing with strange behaviors that I keep trying to fix. I think it could be the model I'm using and will need to test that out. Just not sure yet how to do that. The agent can find the bakery and knows how to eat. I doesn't go back when it gets hungary. It's not able to learn except what it should care about. So, it sees everything in a room but it can't reason what it could use in the future. That could be more tokens to use but I'm not sure.
 
