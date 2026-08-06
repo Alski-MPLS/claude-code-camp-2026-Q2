@@ -1,0 +1,9 @@
+{"phase": "session_start", "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797219+00:00"}
+{"phase": "iteration", "n": 1, "max": 25, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797239+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "go"}], "tool_count": 1, "tools": ["noop"], "context_window": 200000, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797245+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "usage": {"input_tokens": 400, "output_tokens": 200}, "task": "player", "input_tokens": 400, "output_tokens": 200, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797281+00:00"}
+{"phase": "tool_call", "name": "noop", "args": {}, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797288+00:00"}
+{"phase": "tool_result", "name": "noop", "result": "ok", "ok": true, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797298+00:00"}
+{"phase": "limit_reached", "kind": "max_tokens", "n": 600, "max": 500, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797311+00:00"}
+{"phase": "response", "text": "Token limit hit", "usage": {"input_tokens": 400, "output_tokens": 200}, "task": "player", "input_tokens": 400, "output_tokens": 200, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797331+00:00"}
+{"phase": "turn_end", "reason": "max_tokens", "iterations": 1, "tokens": 1200, "session_id": "20260806T130900Z-e19eb375", "at": "2026-08-06T13:09:00.797337+00:00"}

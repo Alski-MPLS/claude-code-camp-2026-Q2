@@ -1,0 +1,9 @@
+{"phase": "session_start", "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374151+00:00"}
+{"phase": "iteration", "n": 1, "max": 1, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374169+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "go"}], "tool_count": 1, "tools": ["noop"], "context_window": 200000, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374175+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374210+00:00"}
+{"phase": "tool_call", "name": "noop", "args": {}, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374216+00:00"}
+{"phase": "tool_result", "name": "noop", "result": "ok", "ok": true, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374225+00:00"}
+{"phase": "limit_reached", "kind": "max_iterations", "n": 1, "max": 1, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374237+00:00"}
+{"phase": "response", "text": "Wrapping up", "task": "player", "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374255+00:00"}
+{"phase": "turn_end", "reason": "max_iterations", "iterations": 1, "tokens": 0, "session_id": "20260806T132309Z-43b3f74e", "at": "2026-08-06T13:23:09.374260+00:00"}

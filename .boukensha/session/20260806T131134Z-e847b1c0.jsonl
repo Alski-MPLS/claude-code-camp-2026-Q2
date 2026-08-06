@@ -1,0 +1,5 @@
+{"phase": "session_start", "session_id": "20260806T131134Z-e847b1c0", "at": "2026-08-06T13:11:34.921150+00:00"}
+{"phase": "iteration", "n": 1, "max": 25, "session_id": "20260806T131134Z-e847b1c0", "at": "2026-08-06T13:11:34.921177+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "hi"}], "tool_count": 0, "tools": [], "context_window": 200000, "session_id": "20260806T131134Z-e847b1c0", "at": "2026-08-06T13:11:34.921186+00:00"}
+{"phase": "response", "text": "ok", "task": "player", "session_id": "20260806T131134Z-e847b1c0", "at": "2026-08-06T13:11:34.921227+00:00"}
+{"phase": "turn_end", "reason": "completed", "iterations": 1, "tokens": 0, "session_id": "20260806T131134Z-e847b1c0", "at": "2026-08-06T13:11:34.921234+00:00"}
