@@ -109,7 +109,14 @@ Will continue to push for troubleshooting this program and watch the agent as it
 
 
 ## Technical Conclusions
-[todo]
+Once I figured out how to have Claude Code load the program and watch it, I was able to make great progress. I have it so that it was seeing issues before I saw them and was making recommendations on how to fix it. That helped with finding and equiping items. I was able to get almost to level 7 but then ran into an issue that Claude Code coudn't figure out at the time. I had to point out some areas to improve when it died twice in a short amount of time (See above). So, I can see this continuing in the following way.
+- Utilize HAIKU or some other simple LLM for the MUD agent to run by itself and make decissions.
+- Have a second AI program watching the agent and making updates to the goals or the program itself.
+- When both become confused, I can perform google searches to understand how the program works or to provide instructions or hints with the MUD.
+I think the next steps (if I had more time) would be to:
+- Make it so that the second AI program and search the web for the hints without my interaction. 
+- Add in more logic to figure out quests and how to go deeper into the game. Have it reason through possible "puzzle" type scenario's.
+- Start keeping track of potential issues with the game itself and have the LLM make recommendations on how to improve it. This could be around things like difficulty levels, commands, providing hints to the players, etc.
 
 ## Key Takeaways
-[todo]
+Very fun boot camp. I've learned a ton and am able to use this at my current work. My goal was not to learn development skills or python/ruby but to understand how build and utilize agents.
