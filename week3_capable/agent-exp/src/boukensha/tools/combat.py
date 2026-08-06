@@ -14,7 +14,15 @@ from boukensha.tools.mud import _match_npc, _no_living_target_message, _get_item
 if TYPE_CHECKING:
     from boukensha.registry import Registry
 
-_HP_RE = re.compile(r"(\d+)/(\d+)H", re.IGNORECASE)
+# Two known live-prompt shapes: "45/93H" (current/max, some diku/circle
+# servers) and this server's actual shape, a bare current value with no max
+# — "45H 100M 89V". A live session confirmed the slash form NEVER appears on
+# this server (checked an entire session transcript, zero matches), which
+# meant the HP-based auto-flee below silently never fired even once — the
+# character died twice before this was caught. Match both so a flee_hp
+# setting can never again be silently inert regardless of server dialect.
+_HP_RE = re.compile(r"(-?\d+)/(-?\d+)H", re.IGNORECASE)
+_BARE_HP_RE = re.compile(r"(-?\d+)H(?=\s+-?\d+M\s+-?\d+V)", re.IGNORECASE)
 _DEAD_PATTERNS = ["is dead!", "you receive", "experience points"]
 
 # Generic diku/circle-family combat-round text. Used to detect that a fight
@@ -75,6 +83,9 @@ class Combat:
 
         def _parse_hp(text: str) -> int | None:
             m = _HP_RE.search(text)
+            if m:
+                return int(m.group(1))
+            m = _BARE_HP_RE.search(text)
             if m:
                 return int(m.group(1))
             return None

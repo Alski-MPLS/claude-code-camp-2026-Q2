@@ -168,11 +168,11 @@ def test_combat_loop_bails_early_when_target_wanders_off_mid_fight(tmp_path):
     mock_session.drain.return_value = ""
     mock_session.read_until_prompt.side_effect = [
         "This will be a piece of cake.\n",  # consider
-        "You hit the crawling thing hard!\n34/37H 86/87V> ",  # kill (round 1, real hit)
-        "34/37H 86/87V> ",  # round 2: quiet (target already gone)
-        "34/37H 86/87V> ",  # round 3: quiet
-        "34/37H 86/87V> ",  # round 4: quiet -> probe
-        "You don't see them here.\n34/37H 86/87V> ",  # probe: confirms truly gone
+        "You hit the crawling thing hard!\n34H 100M 86V> ",  # kill (round 1, real hit)
+        "34H 100M 86V> ",  # round 2: quiet (target already gone)
+        "34H 100M 86V> ",  # round 3: quiet
+        "34H 100M 86V> ",  # round 4: quiet -> probe
+        "You don't see them here.\n34H 100M 86V> ",  # probe: confirms truly gone
     ]
     Combat.register(
         registry, session=mock_session, goals_dir=tmp_path,
@@ -198,11 +198,11 @@ def test_combat_loop_does_not_bail_when_target_is_still_actually_fighting(tmp_pa
     mock_session.drain.return_value = ""
     mock_session.read_until_prompt.side_effect = [
         "The perfect match!\n",  # consider
-        "34/37H 86/87V> ",  # kill (round 1: unusual round text, no matched keyword)
-        "34/37H 86/87V> ",  # round 2: quiet
-        "34/37H 86/87V> ",  # round 3: quiet -> probe
-        "You're fighting the best you can!\n34/37H 86/87V> ",  # probe: still fighting
-        "You hit the newbie hard!\nIt is DEAD!!\nYou get experience points.\n34/37H 86/87V> ",
+        "34H 100M 86V> ",  # kill (round 1: unusual round text, no matched keyword)
+        "34H 100M 86V> ",  # round 2: quiet
+        "34H 100M 86V> ",  # round 3: quiet -> probe
+        "You're fighting the best you can!\n34H 100M 86V> ",  # probe: still fighting
+        "You hit the newbie hard!\nIt is DEAD!!\nYou get experience points.\n34H 100M 86V> ",
     ]
     Combat.register(
         registry, session=mock_session, goals_dir=tmp_path,
@@ -213,6 +213,59 @@ def test_combat_loop_does_not_bail_when_target_is_still_actually_fighting(tmp_pa
 
     assert "Combat complete" in result
     assert "newbie defeated" in result
+
+
+def test_combat_loop_flees_on_bare_hp_prompt_at_or_below_threshold(tmp_path):
+    """Real-world bug: this server's live combat prompt is a bare
+    "45H 100M 89V" (current values only, no max, no slash) — not the
+    "45/93H" current/max shape the HP regex used to require exclusively.
+    That mismatch meant flee_hp silently never fired, on any fight, all
+    session, and the character died twice as a result. Confirm the bare
+    format is actually parsed and triggers a flee."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "The perfect match!\n",  # consider
+        "You hit the pawn hard!\n40H 100M 89V> ",  # kill (round 1, above threshold)
+        "It hits you hard!\n10H 100M 85V> ",  # round 2, at threshold — must flee here
+        "You flee head over heels.\n10H 100M 85V> ",  # flee
+    ]
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["a pawn"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "pawn", "flee_hp": 15})
+
+    assert "Fled combat" in result
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert sent == ["consider pawn", "kill pawn", "flee"]
+
+
+def test_combat_loop_flees_on_slash_hp_prompt_at_or_below_threshold(tmp_path):
+    """The older "current/max" slash shape (e.g. "10/93H") must keep working
+    too, for any server dialect that actually uses it."""
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.side_effect = [
+        "This will be a piece of cake.\n",  # consider
+        "It hits you hard!\n10/93H 85/94V> ",  # round 1, at threshold — must flee here
+        "You flee head over heels.\n10/93H 85/94V> ",  # flee
+    ]
+    Combat.register(
+        registry, session=mock_session, goals_dir=tmp_path,
+        current_npcs_ref=[["a pawn"]],
+    )
+
+    result = registry.dispatch("combat_loop", {"target": "pawn", "flee_hp": 15})
+
+    assert "Fled combat" in result
+    sent = [c.args[0] for c in mock_session.send_command.call_args_list]
+    assert sent == ["consider pawn", "kill pawn", "flee"]
 
 
 def test_combat_loop_auto_loot_false_skips_looting(tmp_path):
