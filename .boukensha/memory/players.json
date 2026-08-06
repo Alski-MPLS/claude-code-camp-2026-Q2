@@ -1,40 +1,63 @@
 {
   "dummy": {
-    "room_hash": "113bd65b27a4",
-    "title": "The Dirty Hallway",
-    "updated_at": "2026-08-06T13:25:01.397409+00:00",
-    "prev_room_hash": "6d55de2203fc",
+    "room_hash": "bdf5cb167134",
+    "title": "Market Square",
+    "updated_at": "2026-08-06T20:33:51.154886+00:00",
+    "prev_room_hash": "45991aa22d38",
     "stats": {
-      "hp": 63,
+      "hp": 81,
       "max_hp": 93,
       "mana": 100,
       "max_mana": 100,
-      "move": 94,
+      "move": 92,
       "max_move": 94,
       "hungry": false,
       "thirsty": false,
       "title": "Dummy the Warrior",
       "level": 6,
-      "exp": 13924,
-      "gold": 117,
-      "exp_to_next": 50076,
-      "bank_gold": 740
+      "exp": 26724,
+      "gold": 174,
+      "exp_to_next": 37276,
+      "bank_gold": 1283
     },
-    "stats_updated_at": "2026-08-06T13:24:55.884979+00:00",
+    "stats_updated_at": "2026-08-06T20:33:43.549245+00:00",
     "equipment": {
-      "wield": "a wooden club"
+      "light": "a torch",
+      "body": "a bright green newbie vest",
+      "hands": "a pair of leather gloves",
+      "wield": "a warhammer"
     },
-    "equipment_updated_at": "2026-08-06T12:46:57.207699+00:00",
+    "equipment_updated_at": "2026-08-06T20:22:28.927613+00:00",
     "inventory": [
       {
-        "name": "a torch",
+        "name": "a bright green newbie vest",
+        "count": 3
+      },
+      {
+        "name": "a pet dragon collar",
+        "count": 2
+      },
+      {
+        "name": "a brightly glowing jar ..It has a soft glowing aura!",
+        "count": 2
+      },
+      {
+        "name": "some cool newbie leggings",
         "count": 1
       },
       {
-        "name": "a Black Pawn's Sword",
-        "count": 2
+        "name": "some cool newbie sleeves",
+        "count": 1
+      },
+      {
+        "name": "a glowing newbie mace ..It has a soft glowing aura!",
+        "count": 1
+      },
+      {
+        "name": "a shiny newbie dagger ..It has a soft glowing aura!",
+        "count": 1
       }
     ],
-    "inventory_updated_at": "2026-08-06T13:17:38.454339+00:00"
+    "inventory_updated_at": "2026-08-06T20:22:28.827855+00:00"
   }
 }

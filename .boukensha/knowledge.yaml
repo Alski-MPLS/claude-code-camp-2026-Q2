@@ -39,3 +39,25 @@
   source: explored
   timestamp: '2026-08-03T17:37:07.675666+00:00'
   topic: ATM location
+- fact: 'This MUD matches item names on a single distinctive keyword (usually the
+    last noun), not the full descriptive string shown in inventory/room listings.
+    Passing the full name (e.g. "a bright green newbie vest" or "shiny newbie
+    dagger") to examine/get_item/equip_item/drop_item often fails with "You do
+    not see that here" or "You don''t have a(n) <first word>." Strip articles and
+    color/material adjectives and use just the noun (e.g. "vest", "dagger", "jar")
+    — retry with a shorter keyword immediately on that failure instead of
+    repeating the full name.'
+  source: repeated tool failures during equip_item/get_item/examine (observed 2026-08-06)
+  timestamp: '2026-08-06T15:15:00.000000+00:00'
+  topic: item name keyword matching
+- fact: 'Standard CircleMUD way to check unidentified magic gear: cast_spell(spell="detect
+    magic") reveals only whether an item radiates magic (an aura); cast_spell(spell="identify",
+    target="<item keyword>") reveals its full stats (level, charges, affects/bonuses)
+    — or use a scroll of identify the same way via use_magic_item(mode="recite").
+    If the character has no spellcasting skill (e.g. pure Warrior class), the
+    fallback on some CircleMUD-derived servers is a sage/shopkeeper NPC who
+    identifies gear for a fee — check shop(action="list") text and NPC dialogue
+    in any shop for an "identify" service before giving up.'
+  source: user research (CircleMUD identify/detect magic mechanics)
+  timestamp: '2026-08-06T15:20:00.000000+00:00'
+  topic: identifying magic items

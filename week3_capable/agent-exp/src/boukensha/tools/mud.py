@@ -647,6 +647,11 @@ class Mud:
             # onto it.
             if raw.startswith("error:"):
                 return raw
+            if "seems to be closed" in raw.lower():
+                raw += (
+                    f"\n\n[hint] That exit has a closed door. Try "
+                    f'door(action="open", target={direction!r}) then move again.'
+                )
             room = RoomParser.parse(raw)
             if room["title"]:
                 # Independent of map memory — combat tools need this even
@@ -867,7 +872,16 @@ class Mud:
             parameters={
                 "item":     {"type": "string", "description": "Name of the item"},
                 "action":   {"type": "string", "description": "wear | wield | hold | grab | remove"},
-                "body_loc": {"type": "string", "description": "Body location to wear on (optional, e.g. 'head', 'finger')"},
+                "body_loc": {
+                    "type": "string",
+                    "description": (
+                        "Leave unset for almost every item — single-slot gear "
+                        "(torso, head, legs, feet, hands, etc.) is placed "
+                        "automatically and a body_loc will make the command fail. "
+                        "Only pass this for genuinely multi-slot gear, e.g. which "
+                        "finger a ring goes on ('left finger' / 'right finger')."
+                    ),
+                },
             },
             block=lambda item, action, body_loc=None, **_: _equip_item(session, item, action, body_loc),
         )
@@ -1196,18 +1210,33 @@ def _channel_say(session: MudSession, channel: str, text: str) -> str:
     return _send(session, f"{channel.strip().lower()} {text}")
 
 
+def _normalize_count(count: object) -> int | None:
+    """Tool params are typed as integer, but models sometimes send count as a
+    string (e.g. "1"); comparing a str to an int raises TypeError, so coerce
+    (or drop anything unparseable) before any numeric comparison."""
+    if count is None:
+        return None
+    try:
+        return int(count)
+    except (TypeError, ValueError):
+        return None
+
+
 def _get_item(session: MudSession, item: str, container: str | None, count: int | None) -> str:
     err = _guard(session)
     if err:
         return err
+    count = _normalize_count(count)
     parts = ["get"]
     # CircleMUD's `get` only ever takes <object> or <object> <container> — there's
     # no "get <N> <item>" form. A bare leading numeral desyncs the server's
     # argument parsing once `item` has more than one word (confirmed: "get 1 shiny
     # newbie dagger" misfires onto an unrelated container, while "get 1 dagger"
-    # happens to survive by luck). count=1 means the same thing as omitting it, so
+    # happens to survive by luck). count=1 means the same thing as omitting it, and
+    # count=0 is nonsensical (the model sometimes sends it instead of omitting the
+    # arg) — either desyncs the server's parsing the same way a stray "0" would, so
     # only emit a count token when it's actually asking for more than one.
-    if count is not None and count != 1:
+    if count is not None and count > 1:
         parts.append(str(count))
     parts.append(item)
     if container:
@@ -1222,8 +1251,9 @@ def _drop_item(session: MudSession, item: str, mode: str, count: int | None) -> 
     err = _check_enum(mode, _DROP_MODES, "mode")
     if err:
         return err
+    count = _normalize_count(count)
     parts = [mode.strip().lower()]
-    if count is not None:
+    if count is not None and count > 1:
         parts.append(str(count))
     parts.append(item)
     return _send(session, " ".join(parts))
@@ -1233,8 +1263,9 @@ def _put_item(session: MudSession, item: str, container: str, count: int | None)
     err = _guard(session)
     if err:
         return err
+    count = _normalize_count(count)
     parts = ["put"]
-    if count is not None:
+    if count is not None and count > 1:
         parts.append(str(count))
     parts.append(item)
     parts.append(container)
@@ -1245,8 +1276,9 @@ def _give_item(session: MudSession, item: str, target: str, count: int | None) -
     err = _guard(session)
     if err:
         return err
+    count = _normalize_count(count)
     parts = ["give"]
-    if count is not None:
+    if count is not None and count > 1:
         parts.append(str(count))
     parts.append(item)
     parts.append(target)
@@ -1260,10 +1292,17 @@ def _equip_item(session: MudSession, item: str, action: str, body_loc: str | Non
     err = _check_enum(action, _EQUIP_OPS, "action")
     if err:
         return err
-    cmd = f"{action.strip().lower()} {item}"
-    if body_loc:
-        cmd += f" {body_loc}"
-    return _send(session, cmd)
+    # body_loc is accepted for API compatibility but deliberately never sent:
+    # this server's `wear`/`wield`/etc. auto-infer the slot from the item, and
+    # every observed body_loc value across many sessions (including the tool
+    # description explicitly warning it's for multi-slot items like rings)
+    # has instead been the model echoing the item's own slot name back
+    # ("sleeves", "legs", "torso") — the server treats that as a bogus extra
+    # argument and replies "What part of your body is THAT?", silently
+    # failing the equip. No session has ever recorded a body_loc value that
+    # helped. If a real multi-slot case (e.g. choosing a finger for a ring)
+    # turns up, re-add a validated allowlist here instead of passing through.
+    return _send(session, f"{action.strip().lower()} {item}")
 
 
 def _consume_item(session: MudSession, item: str, mode: str) -> str:

@@ -5,13 +5,6 @@
     "east": null,
     "west": null
   },
-  "npcs": [
-    "A finely crafted newbie mace is waiting for a worthy owner. ..It has a soft glowing aura!",
-    "A set of nifty sleeves is here.",
-    "A pair of neat looking leggings are here."
-  ],
-  "items": [
-    "A little pile of gold coins is lying here.",
-    "A bright green newbie vest is lying here looking for a body to hug."
-  ]
+  "npcs": [],
+  "items": []
 }

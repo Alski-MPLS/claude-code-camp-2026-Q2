@@ -5,8 +5,8 @@
     "south": null,
     "down": null
   },
-  "npcs": [
-    "A newbie is here wandering about aimlessly."
-  ],
-  "items": []
+  "npcs": [],
+  "items": [
+    "The corpse of the lost newbie is lying here."
+  ]
 }
