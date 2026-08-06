@@ -5,9 +5,8 @@
     "east": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "A handful of gold coins is lying here.",
-    "A shiny newbie dagger is lying here looking for a back to stab. ..It has a soft glowing aura!"
-  ]
+  "npcs": [
+    "A newbie is here talking a lot."
+  ],
+  "items": []
 }

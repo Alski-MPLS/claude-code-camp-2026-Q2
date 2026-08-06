@@ -1,0 +1,14 @@
+{
+  "title": "A Black Square",
+  "description": "You are standing on a black marble square.  This is usually the home of one of the Black Queen's Pawns.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the Pawn of the Black Court is lying here."
+  ]
+}

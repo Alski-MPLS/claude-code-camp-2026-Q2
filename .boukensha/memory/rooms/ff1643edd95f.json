@@ -6,8 +6,8 @@
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "You see a pawn standing here waiting for orders."
-  ]
+  "npcs": [
+    "A pile of white armor is here."
+  ],
+  "items": []
 }

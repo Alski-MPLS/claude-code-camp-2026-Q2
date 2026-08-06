@@ -1,43 +1,40 @@
 {
   "dummy": {
-    "room_hash": "bb2fc6fc08c4",
-    "title": "The Lane",
-    "updated_at": "2026-08-04T22:23:39.893661+00:00",
-    "prev_room_hash": "459c6aa111e8",
+    "room_hash": "113bd65b27a4",
+    "title": "The Dirty Hallway",
+    "updated_at": "2026-08-06T13:25:01.397409+00:00",
+    "prev_room_hash": "6d55de2203fc",
     "stats": {
-      "hp": 93,
+      "hp": 63,
       "max_hp": 93,
       "mana": 100,
       "max_mana": 100,
-      "move": 16,
+      "move": 94,
       "max_move": 94,
-      "hungry": true,
-      "thirsty": true,
+      "hungry": false,
+      "thirsty": false,
       "title": "Dummy the Warrior",
       "level": 6,
-      "exp": 32334,
-      "gold": 128,
-      "exp_to_next": 31666,
-      "bank_gold": 907
+      "exp": 13924,
+      "gold": 117,
+      "exp_to_next": 50076,
+      "bank_gold": 740
     },
-    "stats_updated_at": "2026-08-04T22:26:51.986969+00:00",
+    "stats_updated_at": "2026-08-06T13:24:55.884979+00:00",
     "equipment": {
-      "light": "a candle",
-      "finger": "a leather ring",
-      "neck": "a leather gorget",
-      "body": "a breast plate",
-      "head": "a leather cap",
-      "legs": "a pair of bronze leggings",
-      "feet": "a pair of leather boots",
-      "hands": "a pair of leather gloves",
-      "arms": "a pair of leather sleeves",
-      "shield": "a shield",
-      "about": "a brown leather cape",
-      "about waist": "an old leather belt",
-      "wrist": "a leather wristguard",
-      "wield": "a small sword",
-      "hold": "a metal staff"
+      "wield": "a wooden club"
     },
-    "equipment_updated_at": "2026-08-04T22:11:44.075236+00:00"
+    "equipment_updated_at": "2026-08-06T12:46:57.207699+00:00",
+    "inventory": [
+      {
+        "name": "a torch",
+        "count": 1
+      },
+      {
+        "name": "a Black Pawn's Sword",
+        "count": 2
+      }
+    ],
+    "inventory_updated_at": "2026-08-06T13:17:38.454339+00:00"
   }
 }

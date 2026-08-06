@@ -1,12 +1,9 @@
-current_goal: You are at The Lane with low movement, not yet safe. First rest (set_position
-  rest) and wait repeatedly (seconds=90) until movement recovers to at least 40-50.
-  Then navigate_to a definitely known location like "Market Square" or "Behind The
-  Temple Altar" or "The Entrance Hall To The Guild Of Swordsmen". Confirm with look
-  that you are not in combat and nothing dangerous is in the room. Then call save_character.
-  Then stop and take no further actions.
-gold_deposit_threshold: 200
-hp_flee_threshold: 10
-last_updated: '2026-08-04T22:25:17.372430+00:00'
+current_goal: Farm experience in the Newbie Zone to reach level 7 safely. Two deaths
+  have proven that riskier farming strategies fail. Newbie zone mobs are weak but
+  reliable; will grind here until level 7 is achieved, then reassess Minotaur approach.
+gold_deposit_threshold: 100
+hp_flee_threshold: 25
+last_updated: '2026-08-06T13:24:49.969731+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
 
   - Use ''look'' to describe current room
@@ -18,9 +15,8 @@ mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
   - ''kill <target>'' to attack
 
   - ''flee'' to escape combat'
-notes: 'Level 6 achieved and trained. Farming route: newbie zone entrance → Beginning
-  of Passage → Dirty Hallway → Nexus → More of Hallway → Another Corner (dragon).
-  HP 74/93, movement 18/94. Thirsty but manageable. Bank at 907 coins; deposit when
-  carrying exceeds 200.'
+notes: 'Level 6 → need 51,159 exp for level 7. Newbie zone is the only proven safe
+  path. Avoid Chessboard and other high-risk areas. Bank: 740g, carrying: 37g. HP:
+  53/93 — rest between fights.'
 priority: fight
 status: active

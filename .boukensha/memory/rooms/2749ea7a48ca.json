@@ -1,0 +1,12 @@
+{
+  "title": "A Black Square",
+  "description": "You are standing on a black marble square.  This is usually the home of the Black King's Rook.",
+  "exits": {
+    "south": null,
+    "west": null
+  },
+  "npcs": [
+    "In the corner you see a large, black, stone castle on wheels."
+  ],
+  "items": []
+}

@@ -1,0 +1,13 @@
+{
+  "title": "A White Square",
+  "description": "You are standing on a white marble square.  This is usually the home of the Black King's Knight.",
+  "exits": {
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [
+    "Here stands a magnificent knight of the dark realm."
+  ],
+  "items": []
+}

@@ -1,0 +1,36 @@
+{
+  "title": "A Black Square",
+  "description": "You are standing on a black marble square.  This is usually the home of one of the Black King's Pawns.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [
+    "A belt made of leather was left here.",
+    "A small wooden shield is lying on the ground.",
+    "A pair of leather gloves is lying on the ground.",
+    "A pair of bronze leggings is lying on the ground.",
+    "A leather cap is lying on the ground.",
+    "A breast plate is lying on the ground.",
+    "A pair of neat looking leggings are here.",
+    "A finely crafted newbie mace is waiting for a worthy owner. ..It has a soft glowing aura!",
+    "A jar of glowing fluid wants to brighten your day. ..It has a soft glowing aura!",
+    "A key with the newbie crest on it is here.",
+    "A large torch.",
+    "A medium sized warhammer is here.",
+    "You see a pawn standing here waiting for orders."
+  ],
+  "items": [
+    "A small pile of gold coins is lying here.",
+    "A small sword lies here.",
+    "A pair of leather boots is lying here.",
+    "( 2) A leather ring with strange symbols lies here.",
+    "A candle lies here, unlit.",
+    "The sword of a White Pawn lies here.",
+    "The sword of a Black Pawn lies here.",
+    "A shiny newbie dagger is lying here looking for a back to stab. ..It has a soft glowing aura!",
+    "A bright green newbie vest is lying here looking for a body to hug."
+  ]
+}

@@ -2,11 +2,14 @@
   "title": "A Nexus",
   "description": "Well... you've reached an intersection of two passages, to the north and east, the passage brightens, while the darker hallway continues to the south.",
   "exits": {
-    "north": null,
-    "east": null,
     "south": null,
     "west": null
   },
   "npcs": [],
-  "items": []
+  "items": [
+    "A handful of gold coins is lying here.",
+    "A bright green newbie vest is lying here looking for a body to hug.",
+    "A little pile of gold coins is lying here.",
+    "A tiny pile of gold coins is lying here."
+  ]
 }

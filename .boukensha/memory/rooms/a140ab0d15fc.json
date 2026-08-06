@@ -1,6 +1,6 @@
 {
-  "title": "A White Square",
-  "description": "You are standing on a white marble square.",
+  "title": "A Black Square",
+  "description": "You are standing on a black marble square.",
   "exits": {
     "north": null,
     "east": null,

@@ -5,9 +5,7 @@
     "east": null,
     "south": null
   },
-  "npcs": [
-    "The newbie monster stands here looking confused.  Kill him!  Kill him!"
-  ],
+  "npcs": [],
   "items": [
     "The corpse of the newbie monster is lying here."
   ]

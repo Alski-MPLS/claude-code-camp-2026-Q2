@@ -5,8 +5,8 @@
     "north": null,
     "west": null
   },
-  "npcs": [],
-  "items": [
-    "The corpse of the baby dragon is lying here."
-  ]
+  "npcs": [
+    "The newbie monster stands here looking confused.  Kill him!  Kill him!"
+  ],
+  "items": []
 }

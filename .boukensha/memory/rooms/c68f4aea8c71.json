@@ -1,0 +1,15 @@
+{
+  "title": "A White Square",
+  "description": "You are standing on a white marble square.  This is usually the home of one of the White King's Pawns.",
+  "exits": {
+    "north": null,
+    "east": null,
+    "south": null,
+    "west": null
+  },
+  "npcs": [],
+  "items": [
+    "The corpse of the Pawn of the White Court is lying here.",
+    "The sword of a Black Pawn lies here."
+  ]
+}
