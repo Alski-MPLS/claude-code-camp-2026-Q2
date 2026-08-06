@@ -66,7 +66,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
-from boukensha.memory.equipment_parser import _item_lookup_key, parse_equipment, parse_identify
+from boukensha.memory.equipment_parser import _item_lookup_key, parse_equipment, parse_identify, parse_inventory
 from boukensha.memory.item_stats import ItemStatsStore
 from boukensha.memory.parser import RoomParser
 from boukensha.memory.player_stats import PlayerStats
@@ -585,6 +585,10 @@ class Mud:
                 # `None` means the text wasn't equipment output at all.
                 if slots is not None and tracker is not None:
                     tracker.update_equipment(name, slots)
+            elif k == "inventory" and not raw.startswith("error:"):
+                items = parse_inventory(raw)
+                if items is not None and tracker is not None:
+                    tracker.update_inventory(name, items)
             return raw
 
         registry.tool(

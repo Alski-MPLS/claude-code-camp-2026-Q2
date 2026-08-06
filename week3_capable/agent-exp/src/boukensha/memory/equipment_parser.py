@@ -159,7 +159,7 @@ def parse_inventory(text: str) -> list[dict] | None:
     items: list[dict] = []
     for line in text.splitlines():
         stripped = line.strip()
-        if not stripped or _INVENTORY_HEADER_RE.search(stripped):
+        if not stripped or stripped == ">" or _INVENTORY_HEADER_RE.search(stripped):
             continue
         m = _INVENTORY_COUNT_RE.match(stripped)
         if m:

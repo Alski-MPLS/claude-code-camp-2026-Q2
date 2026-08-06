@@ -1129,6 +1129,77 @@ def test_check_non_equipment_output_does_not_clobber_recorded_loadout(tmp_path):
     }
 
 
+def test_check_inventory_persists_items_to_player_tracker(tmp_path):
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = (
+        "You are carrying:\n"
+        "( 2) a Black Pawn's Sword\n"
+        "a shiny newbie dagger\n"
+        "> "
+    )
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "inventory"})
+
+    from boukensha.memory.player_tracker import PlayerTracker
+    data = PlayerTracker(tmp_path).read_all()
+    assert data["Tester"]["inventory"] == [
+        {"name": "a Black Pawn's Sword", "count": 2},
+        {"name": "a shiny newbie dagger", "count": 1},
+    ]
+
+
+def test_check_inventory_without_memory_dir_does_not_crash():
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You are carrying:\na torch\n> "
+    Mud._register_with_session(registry, mock_session, name="Tester", password="secret")
+    result = registry.dispatch("check", {"kind": "inventory"})
+    assert "a torch" in result
+
+
+def test_check_inventory_with_nothing_carried_records_empty_list(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    # A previously recorded snapshot must be cleared, not left stale.
+    PlayerTracker(tmp_path).update_inventory("Tester", [{"name": "a torch", "count": 1}])
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "You are not carrying anything.\n> "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    result = registry.dispatch("check", {"kind": "inventory"})
+    assert "not carrying" in result
+    assert PlayerTracker(tmp_path).read_all()["Tester"]["inventory"] == []
+
+
+def test_check_non_inventory_output_does_not_clobber_recorded_snapshot(tmp_path):
+    from boukensha.memory.player_tracker import PlayerTracker
+    PlayerTracker(tmp_path).update_inventory("Tester", [{"name": "a torch", "count": 1}])
+
+    registry = _make_registry()
+    mock_session = MagicMock()
+    mock_session.is_open = True
+    mock_session.drain.return_value = ""
+    mock_session.read_until_prompt.return_value = "Huh?!?\n> "
+    Mud._register_with_session(
+        registry, mock_session, name="Tester", password="secret", memory_dir=tmp_path
+    )
+    registry.dispatch("check", {"kind": "inventory"})
+    assert PlayerTracker(tmp_path).read_all()["Tester"]["inventory"] == [
+        {"name": "a torch", "count": 1}
+    ]
+
+
 def _identify_output(name: str, wear_slot: str | None, affects: dict[str, int]) -> str:
     lines = [f"Object '{name}', Item type: WORN"]
     if wear_slot:
