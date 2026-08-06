@@ -47,6 +47,16 @@ class PlayerTracker:
         }
         self._write(data)
 
+    def update_inventory(self, name: str, items: list[dict[str, Any]]) -> None:
+        data = self.read_all()
+        existing = data.get(name, {})
+        data[name] = {
+            **existing,
+            "inventory": items,
+            "inventory_updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._write(data)
+
     def read_all(self) -> dict[str, Any]:
         if not self._path.exists():
             return {}

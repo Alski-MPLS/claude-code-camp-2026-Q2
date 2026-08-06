@@ -116,3 +116,32 @@ def test_update_equipment_overwrites_previous_loadout(tmp_path):
     tracker.update_equipment("Hero", {"finger": "a gold ring"})
     data = tracker.read_all()
     assert data["Hero"]["equipment"] == {"finger": "a gold ring"}
+
+
+def test_update_inventory_records_items_for_new_player(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_inventory("Hero", [{"name": "a torch", "count": 1}])
+    data = tracker.read_all()
+    assert data["Hero"]["inventory"] == [{"name": "a torch", "count": 1}]
+    assert "inventory_updated_at" in data["Hero"]
+
+
+def test_update_inventory_preserves_existing_position_stats_and_equipment(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update("Hero", "abc123", "Temple Square")
+    tracker.update_stats("Hero", {"hp": 20, "max_hp": 20})
+    tracker.update_equipment("Hero", {"finger": "a gold ring"})
+    tracker.update_inventory("Hero", [{"name": "a torch", "count": 1}])
+    data = tracker.read_all()
+    assert data["Hero"]["room_hash"] == "abc123"
+    assert data["Hero"]["stats"]["hp"] == 20
+    assert data["Hero"]["equipment"] == {"finger": "a gold ring"}
+    assert data["Hero"]["inventory"] == [{"name": "a torch", "count": 1}]
+
+
+def test_update_inventory_overwrites_previous_snapshot(tmp_path):
+    tracker = PlayerTracker(tmp_path)
+    tracker.update_inventory("Hero", [{"name": "a torch", "count": 1}])
+    tracker.update_inventory("Hero", [{"name": "a sword", "count": 1}])
+    data = tracker.read_all()
+    assert data["Hero"]["inventory"] == [{"name": "a sword", "count": 1}]
