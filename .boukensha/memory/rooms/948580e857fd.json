@@ -4,9 +4,9 @@
   "exits": {
     "north": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "A beggar is here, asking for a few coins.",
     "Filthy is standing here, eager to serve you a special drink."
-  ]
+  ],
+  "items": []
 }

@@ -2,11 +2,15 @@
   "title": "A Nexus",
   "description": "Well... you've reached an intersection of two passages, to the north and east, the passage brightens, while the darker hallway continues to the south.",
   "exits": {
-    "north": null,
-    "east": null,
     "south": null,
     "west": null
   },
-  "npcs": [],
-  "items": []
+  "npcs": [
+    "The newbie monster stands here looking confused.  Kill him!  Kill him!",
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ],
+  "items": [
+    "( 2) A shiny newbie dagger is lying here looking for a back to stab. ..It has a soft glowing aura!",
+    "The corpse of the quasit is lying here."
+  ]
 }

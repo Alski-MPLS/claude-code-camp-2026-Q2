@@ -5,6 +5,8 @@
     "north": null,
     "west": null
   },
-  "npcs": [],
+  "npcs": [
+    "The newbie monster stands here looking confused.  Kill him!  Kill him!"
+  ],
   "items": []
 }

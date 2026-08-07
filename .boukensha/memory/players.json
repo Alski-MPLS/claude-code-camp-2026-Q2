@@ -2,62 +2,69 @@
   "dummy": {
     "room_hash": "bdf5cb167134",
     "title": "Market Square",
-    "updated_at": "2026-08-06T20:33:51.154886+00:00",
+    "updated_at": "2026-08-07T22:53:16.038073+00:00",
     "prev_room_hash": "45991aa22d38",
     "stats": {
-      "hp": 81,
+      "hp": 53,
       "max_hp": 93,
       "mana": 100,
       "max_mana": 100,
-      "move": 92,
+      "move": 36,
       "max_move": 94,
       "hungry": false,
       "thirsty": false,
       "title": "Dummy the Warrior",
       "level": 6,
-      "exp": 26724,
-      "gold": 174,
-      "exp_to_next": 37276,
-      "bank_gold": 1283
+      "exp": 38016,
+      "gold": 72,
+      "exp_to_next": 25984,
+      "bank_gold": 1891
     },
-    "stats_updated_at": "2026-08-06T20:33:43.549245+00:00",
+    "stats_updated_at": "2026-08-07T22:53:11.338402+00:00",
     "equipment": {
       "light": "a torch",
       "body": "a bright green newbie vest",
+      "head": "a bright newbie helm ..It has a soft glowing aura!",
+      "legs": "some cool newbie leggings",
       "hands": "a pair of leather gloves",
+      "arms": "some cool newbie sleeves",
       "wield": "a warhammer"
     },
-    "equipment_updated_at": "2026-08-06T20:22:28.927613+00:00",
+    "equipment_updated_at": "2026-08-07T22:23:53.939379+00:00",
     "inventory": [
       {
         "name": "a bright green newbie vest",
-        "count": 3
-      },
-      {
-        "name": "a pet dragon collar",
-        "count": 2
-      },
-      {
-        "name": "a brightly glowing jar ..It has a soft glowing aura!",
-        "count": 2
-      },
-      {
-        "name": "some cool newbie leggings",
         "count": 1
       },
       {
-        "name": "some cool newbie sleeves",
+        "name": "a wee little key",
+        "count": 1
+      },
+      {
+        "name": "a bright newbie helm ..It has a soft glowing aura!",
+        "count": 1
+      },
+      {
+        "name": "a shiny newbie dagger ..It has a soft glowing aura!",
+        "count": 5
+      },
+      {
+        "name": "a small sword",
+        "count": 1
+      },
+      {
+        "name": "a torch",
+        "count": 1
+      },
+      {
+        "name": "a pet dragon collar",
         "count": 1
       },
       {
         "name": "a glowing newbie mace ..It has a soft glowing aura!",
         "count": 1
-      },
-      {
-        "name": "a shiny newbie dagger ..It has a soft glowing aura!",
-        "count": 1
       }
     ],
-    "inventory_updated_at": "2026-08-06T20:22:28.827855+00:00"
+    "inventory_updated_at": "2026-08-07T22:53:11.433916+00:00"
   }
 }

@@ -26,5 +26,8 @@
   },
   "291b4d949d93": {
     "north": "blocked"
+  },
+  "6d55de2203fc": {
+    "down": "dark (needs a light source)"
   }
 }

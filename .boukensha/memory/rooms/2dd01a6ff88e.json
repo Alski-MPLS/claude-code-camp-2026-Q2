@@ -5,6 +5,8 @@
     "east": null,
     "south": null
   },
-  "npcs": [],
+  "npcs": [
+    "A creepy little crawling thing is scuttling along the floor at your feet."
+  ],
   "items": []
 }

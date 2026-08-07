@@ -61,3 +61,55 @@
   source: user research (CircleMUD identify/detect magic mechanics)
   timestamp: '2026-08-06T15:20:00.000000+00:00'
   topic: identifying magic items
+- fact: 'A "pitch black" room is not always fixable by equipping a light source —
+    confirmed by equip_item(item="torch", action="hold") returning "You''re
+    already using a light" while still in total darkness, meaning some rooms
+    (an unmapped area east of "The Entrance Hall Of The Grunting Boar Inn",
+    reached via a formerly-closed door) are permanently dark regardless of
+    carried light, likely a deliberate zone-difficulty flag. When this
+    happens: look() and process_room() are useless (both just return "It is
+    pitch black..."), but check(kind="exits") still works and lists which
+    directions have an exit (shown as "north - Too dark to tell." — the
+    destination is unknown but the presence of the exit is not). Use
+    check(kind="exits") before each move() to only try directions that
+    actually have an exit, instead of blindly guessing all 6 directions. This
+    turns blind-maze escape from random guessing into directed search, and
+    got the agent out in ~10 moves. Treat any always-dark area as a sign to
+    turn back rather than press forward, unless specifically prepared for it.'
+  source: observed during dark-maze recovery, 2026-08-07
+  timestamp: '2026-08-07T22:05:00.000000+00:00'
+  topic: navigating dark rooms without a light source
+- fact: 'Always call shop(action="list") when entering or passing through any
+    shop room, even if not planning to buy anything -- this builds a running
+    record of what each shop sells for future reference (e.g. per user
+    request, checking "Ye Olde Water Shoppe" — south of Inside/Outside The
+    East Gate Of Midgaard, run by "Wally the Watermaster" — for
+    waterskins/jugs useful on long trips). It is easy to walk straight
+    through a shop room without checking its inventory (this happened once
+    already), so make shop(action="list") a habit whenever a shopkeeper NPC
+    is present in process_room() output.'
+  source: user request, 2026-08-07
+  timestamp: '2026-08-07T22:50:00.000000+00:00'
+  topic: shop inventory habit
+- fact: 'Some named/roaming town NPCs are far above newbie level and should
+    never be farmed: a "green gelatinous blob" and a "Peacekeeper" (The
+    Grunting Boar bar) both triggered combat_loop''s safety refusal with
+    consider warning "You ARE mad!" (the most severe danger rating seen). The
+    blob is NOT confined to one room -- it was first seen at Temple Square,
+    then encountered again roaming in Market Square itself, where it
+    auto-engaged the character just from trying to move ("No way! You''re
+    fighting for your life!") and did real damage (92 -> 56 HP, about 39%)
+    before a successful flee. Market Square and other "safe" town hub rooms
+    are NOT guaranteed safe -- always check process_room()/NPCs before
+    moving through them if you''ve seen the blob recently, and be ready to
+    flee immediately if auto-engaged. Separately: if consider fails to
+    resolve a target''s keyword ("Consider killing who?" / "No living
+    known"), do not fall back to attack() to "test" it -- that lands one
+    real hit before any danger check happens. Treat unresolvable
+    named/unique NPCs in town as probably too dangerous and skip them;
+    reserve the attack()-to-reveal-keyword trick for mobs already known safe
+    elsewhere, or ordinary Newbie Zone/Dark Alley mobs.'
+  source: observed near-misses with blob (x2, including real damage) and
+    Peacekeeper, 2026-08-07
+  timestamp: '2026-08-07T22:58:00.000000+00:00'
+  topic: dangerous town NPCs to avoid

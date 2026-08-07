@@ -6,9 +6,8 @@
     "west": null
   },
   "npcs": [
+    "A creepy little crawling thing is scuttling along the floor at your feet.",
     "A creepy little crawling thing is scuttling along the floor at your feet."
   ],
-  "items": [
-    "The corpse of the creepy crawler is lying here."
-  ]
+  "items": []
 }

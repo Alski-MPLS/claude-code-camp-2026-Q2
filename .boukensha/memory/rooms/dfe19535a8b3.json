@@ -4,8 +4,8 @@
   "exits": {
     "north": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
     "Wally the Watermaster is standing behind the counter."
-  ]
+  ],
+  "items": []
 }

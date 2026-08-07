@@ -1,10 +1,15 @@
-current_goal: Session is ending. Stop farming/fighting now (finish any fight already
-  in progress, then no new combat). Navigate to Market Square and stop there — do
-  not explore further. Once you arrive at Market Square, confirm your location with
-  look and end the turn; do not take any more actions.
+current_goal: 'Session is ending. Stop farming/fighting now (finish any fight already
+  in progress, then no new combat). If HP is not near full and it''s safe to do so,
+  rest briefly first. Navigate to Market Square and stop there -- do not explore further.
+  Note: a dangerous roaming ''green gelatinous blob'' has been seen in Market Square
+  before, so check process_room() for it before settling there; if it''s present,
+  flee to Temple Square instead and stop there. Deposit any gold on hand above the
+  threshold at the Guild of Swordsmen ATM on the way if convenient, but don''t go
+  out of your way. Once you arrive at a safe stopping point, confirm your location
+  with look and end the turn -- do not take any more actions.'
 gold_deposit_threshold: 100
-hp_flee_threshold: 25
-last_updated: '2026-08-06T20:33:34.155801+00:00'
+hp_flee_threshold: 30
+last_updated: '2026-08-07T22:53:21.033537+00:00'
 mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
 
   - Use ''look'' to describe current room
@@ -16,25 +21,8 @@ mud_basics: '- Use ''score'' to check HP/mana/moves and sustenance
   - ''kill <target>'' to attack
 
   - ''flee'' to escape combat'
-notes: 'Level 6, grinding Newbie Zone toward level 8 (was level 7, target raised per
-  user request). Two prior deaths outside Newbie Zone — stay there until level 8.
-  Now wielding a warhammer with vest + gloves + sleeves + leggings worn — solid baseline
-  gear. Minotaur is confirmed dangerous below level 7 per Alchemist''s Room sign;
-  reassess at level 8 with gear equipped. PICK UP: "A Small Room" (in the Newbie Zone)
-  has "a bright newbie helm" sitting on the ground with a magic aura — process_room
-  lists it under NPCs because of a known, deliberate room-parser heuristic (ambiguous
-  descriptive lines default to npc for combat safety), but it is actually a ground
-  item, same pattern as "a bright green newbie vest is lying here". If consider/attack
-  on it says nothing living is there, that confirms it — get_item(item="helm") then
-  equip_item(item="helm", action="wear") next time in that room. UNRESOLVED (low priority,
-  do not block farming on this): carrying "a brightly glowing jar" and "a shiny newbie
-  dagger", still unidentified. Full descriptive names fail on examine/get_item/equip_item
-  — see the "item name keyword matching" world-knowledge fact: use just the noun keyword
-  instead (e.g. examine(target="jar"), examine(target="dagger")). Try that once; if
-  still unclear, check whether a magic/mage shop exists in Midgaard (shop(action="list")
-  in any shop you pass, or look for a shopkeeper mentioning identify/magic items)
-  — a mage-type shop is a plausible place to get items identified for a fee. If no
-  such shop turns up within a couple of tries, stop investigating and resume farming
-  — do not pause the session asking for input over an unidentified item.'
-priority: fight
-status: active
+notes: Arrived at Market Square safely (no blob). HP is 53/93 (low but safe for session
+  end, was in immediate danger before and needed to navigate out). Gold on hand 72
+  (below 100 threshold). All objectives completed.
+priority: idle
+status: completed

@@ -5,8 +5,8 @@
     "north": null,
     "east": null
   },
-  "npcs": [],
-  "items": [
-    "The corpse of the Newbie Guard is lying here."
-  ]
+  "npcs": [
+    "A key with the newbie crest on it is here."
+  ],
+  "items": []
 }

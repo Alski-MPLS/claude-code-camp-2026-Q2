@@ -4,8 +4,9 @@
   "exits": {
     "north": null
   },
-  "npcs": [],
-  "items": [
+  "npcs": [
+    "A cityguard stands here.",
     "A sailor stands here, waiting to help you."
-  ]
+  ],
+  "items": []
 }

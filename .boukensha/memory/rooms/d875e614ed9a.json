@@ -3,11 +3,10 @@
   "description": "Oh joy!  More of this annoying passage.  Perhaps there is something more exciting through that door to the west?  Or you can keep searching the hallways to the north or south.",
   "exits": {
     "north": null,
-    "south": null,
-    "west": null
+    "south": null
   },
   "npcs": [],
   "items": [
-    "The corpse of the newbie monster is lying here."
+    "( 7) A bright green newbie vest is lying here looking for a body to hug."
   ]
 }

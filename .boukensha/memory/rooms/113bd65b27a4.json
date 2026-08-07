@@ -3,14 +3,12 @@
   "description": "You continue wandering down the hallway.  Nothing much different here, but you are positive you here noises behind the door to the south, and coming from the east.  The walls are a bit slimy and moldy here... yeech, couldn't they hire someone to clean this place?  What will the newbies think?  Oh well, you can continue along the hallway to the east or west.",
   "exits": {
     "east": null,
-    "south": null,
     "west": null
   },
   "npcs": [
     "Someone's pet dragon has escaped and left his collar here."
   ],
   "items": [
-    "A shiny newbie dagger is lying here looking for a back to stab. ..It has a soft glowing aura!",
-    "A little pile of gold coins is lying here."
+    "A bright green newbie vest is lying here looking for a body to hug."
   ]
 }

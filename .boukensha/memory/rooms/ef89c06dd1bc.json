@@ -2,13 +2,10 @@
   "title": "Inside The East Gate Of Midgaard",
   "description": "You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  Main Street leads west from here.  To the south you see the Water Shop.",
   "exits": {
-    "east": null,
     "south": null,
     "west": null
   },
   "npcs": [
-    "The Mayor is standing here.",
-    "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate.",
     "A cityguard is here, guarding the gate."

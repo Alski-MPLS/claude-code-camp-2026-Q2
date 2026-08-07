@@ -6,8 +6,8 @@
     "west": null,
     "down": null
   },
-  "npcs": [],
-  "items": [
-    "The corpse of the Newbie Alchemist is lying here."
-  ]
+  "npcs": [
+    "The Newbie Alchemist is here trying to make something."
+  ],
+  "items": []
 }
