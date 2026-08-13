@@ -1,0 +1,15 @@
+{"phase": "session_start", "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345468+00:00"}
+{"phase": "iteration", "n": 1, "max": 25, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345668+00:00"}
+{"phase": "prompt", "message_count": 1, "messages": [{"role": "user", "content": "go"}], "tool_count": 1, "tools": ["move"], "context_window": 200000, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345675+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345704+00:00"}
+{"phase": "tool_call", "name": "move", "args": {"direction": "north"}, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345709+00:00"}
+{"phase": "tool_result", "name": "move", "result": "You move north.", "ok": true, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345717+00:00"}
+{"phase": "iteration", "n": 2, "max": 25, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345726+00:00"}
+{"phase": "prompt", "message_count": 3, "messages": [{"role": "user", "content": "go"}, {"role": "assistant", "content": [{"type": "tool_use", "id": "tu_1", "name": "move", "input": {"direction": "north"}}]}, {"role": "tool_result", "content": "You move north."}], "tool_count": 1, "tools": ["move"], "context_window": 200000, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345730+00:00"}
+{"phase": "response", "text": "(tool use \u2014 1 call)", "task": "player", "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345750+00:00"}
+{"phase": "tool_call", "name": "move", "args": {"direction": "east"}, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345755+00:00"}
+{"phase": "tool_result", "name": "move", "result": "You move east.", "ok": true, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345762+00:00"}
+{"phase": "iteration", "n": 3, "max": 25, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345770+00:00"}
+{"phase": "prompt", "message_count": 5, "messages": [{"role": "user", "content": "go"}, {"role": "assistant", "content": [{"type": "tool_use", "id": "tu_1", "name": "move", "input": {"direction": "north"}}]}, {"role": "tool_result", "content": "You move north."}, {"role": "assistant", "content": [{"type": "tool_use", "id": "tu_2", "name": "move", "input": {"direction": "east"}}]}, {"role": "tool_result", "content": "You move east."}], "tool_count": 1, "tools": ["move"], "context_window": 200000, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345774+00:00"}
+{"phase": "response", "text": "Arrived", "task": "player", "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345792+00:00"}
+{"phase": "turn_end", "reason": "completed", "iterations": 3, "tokens": 0, "session_id": "20260806T132309Z-2db92143", "at": "2026-08-06T13:23:09.345797+00:00"}
